@@ -25,7 +25,7 @@ class FileChangeHandler(FileSystemEventHandler):
         self.run_script()
 
 if __name__ == "__main__":
-    script_name = "patient.py"  # Change this to the tkinter script you are working on
+    script_name = "admin.py"  # Change this to the tkinter script you are working on
     event_handler = FileChangeHandler(script_name)
     observer = Observer()
     observer.schedule(event_handler, path=".", recursive=False)

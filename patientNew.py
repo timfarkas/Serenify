@@ -55,21 +55,3 @@ def open_patient_window():
 
     button = tk.Button(patient_root, text="Submit", command=patient_root.destroy)
     button.pack()
-
-
-
-# # Create a button widget
-# button = tk.Button(root, text="Click Me!")
-# button.pack()
-
-# ######### Currently only here to show how sites connect ######
-# def open_patient_window():
-#     patient_root = tk.Tk()
-#     patient_root.title("Patient Information")
-
-#     # Add widgets for patient information here
-#     label = tk.Label(patient_root, text="Patient Information")
-#     label.pack(pady=20)
-
-# # Run the application
-# root.mainloop()
