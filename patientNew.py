@@ -1,24 +1,75 @@
 import tkinter as tk
 
-# Create the main window
-root = tk.Tk()
-root.title("Sample tkinter App")
+def open_patient_window():
+    patient_root = tk.Toplevel()  # Toplevel for the patient window
+    patient_root.title("New Patient Submission")
 
-# Create a button widget
-button = tk.Button(root, text="Click Me!")
-button.pack()
+    # H1 equivalent
+    h1_label = tk.Label(patient_root, text="Sign up", font=("Arial", 24, "bold"))
+    h1_label.pack()
 
-# H1 equivalent
-h1_label = tk.Label(root, text="Heading ", font=("Arial", 24, "bold"))
-h1_label.pack()
+    h2_label = tk.Label(patient_root, text="Welcome! Please fill out the below:", font=("Arial", 18, "bold"))
+    h2_label.pack()
 
-# H2 equivalent
-h2_label = tk.Label(root, text="Heading 2", font=("Arial", 18, "bold"))
-h2_label.pack()
+    fieldset = tk.LabelFrame(patient_root, text="Personal Information", padx=10, pady=10)
+    fieldset.pack(padx=10, pady=10)
 
-# H3 equivalent
-h3_label = tk.Label(root, text="Heading 3", font=("Arial", 14, "bold"))
-h3_label.pack()
+    name_label = tk.Label(fieldset, text="Name:")
+    name_label.grid(row=0, column=0)
+    name_entry = tk.Entry(fieldset)
+    name_entry.grid(row=0, column=1)
 
-# Run the application
-root.mainloop()
+    age_label = tk.Label(fieldset, text="Age:")
+    age_label.grid(row=1, column=0)
+    age_entry = tk.Entry(fieldset)
+    age_entry.grid(row=1, column=1)
+
+    age_label = tk.Label(fieldset, text="Home address:")
+    age_label.grid(row=2, column=0)
+    age_entry = tk.Entry(fieldset)
+    age_entry.grid(row=2, column=1)
+
+    age_label = tk.Label(fieldset, text="Diagnosis:")
+    age_label.grid(row=3, column=0)
+    age_entry = tk.Entry(fieldset)
+    age_entry.grid(row=3, column=1)
+
+    age_label = tk.Label(fieldset, text="Email:")
+    age_label.grid(row=4, column=0)
+    age_entry = tk.Entry(fieldset)
+    age_entry.grid(row=4, column=1)
+
+    age_label = tk.Label(fieldset, text="Mobile:")
+    age_label.grid(row=5, column=0)
+    age_entry = tk.Entry(fieldset)
+    age_entry.grid(row=5, column=1)
+
+    age_label = tk.Label(fieldset, text="ICE name and mobile:")
+    age_label.grid(row=6, column=0)
+    age_entry = tk.Entry(fieldset)
+    age_entry.grid(row=6, column=1)
+
+    # Add a button to the patient info window
+    button = tk.Button(patient_root, text="Submit", command=patient_root.destroy)
+    button.pack()
+
+    button = tk.Button(patient_root, text="Submit", command=patient_root.destroy)
+    button.pack()
+
+
+
+# # Create a button widget
+# button = tk.Button(root, text="Click Me!")
+# button.pack()
+
+# ######### Currently only here to show how sites connect ######
+# def open_patient_window():
+#     patient_root = tk.Tk()
+#     patient_root.title("Patient Information")
+
+#     # Add widgets for patient information here
+#     label = tk.Label(patient_root, text="Patient Information")
+#     label.pack(pady=20)
+
+# # Run the application
+# root.mainloop()
