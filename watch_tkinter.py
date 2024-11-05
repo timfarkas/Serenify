@@ -18,14 +18,14 @@ class FileChangeHandler(FileSystemEventHandler):
     def run_script(self):
         if self.process:
             self.process.terminate()
-        self.process = subprocess.Popen(["python", self.script_name])
+        self.process = subprocess.Popen(["python3", self.script_name]) # Change 'python3' to 'python' if that is the version you are using
 
     def restart_script(self):
         self.process.terminate()
         self.run_script()
 
 if __name__ == "__main__":
-    script_name = "your_script.py"  # Change this to your actual tkinter script
+    script_name = "patientNew.py"  # Change this to the tkinter script you are working on
     event_handler = FileChangeHandler(script_name)
     observer = Observer()
     observer.schedule(event_handler, path=".", recursive=False)
