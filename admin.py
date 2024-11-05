@@ -22,12 +22,12 @@ change_button = tk.Button(root, text="Assign")
 change_button.pack()
 
 #Buttons
-delete_button = tk.Button(root, text="Edit personal info", command='') 
-disable_button = tk.Button(root, text="Book/Cancel appointment")  
-summary_button = tk.Button(root, text="Book/Cancel appointment")  
+delete_button = tk.Button(root, text="Delete patient(s)", command='') 
+disable_button = tk.Button(root, text="Disable patient(s)")  
+summary_button = tk.Button(root, text="Summarise an individual")  
 delete_button.pack()
 disable_button.pack()
-summary_button.pack()
+summary_button.pack() 
 
 
 # Run the application
