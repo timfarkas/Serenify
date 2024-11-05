@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="contact.css" />
+    <title>Wess Vex</title>
+    </head>
+    <span></span>
+    <body>
+        <div class="return">
+            <button id="return" class="return">X</button>
+        </div>
+
+        <div class="heading-container">
+            <h1>-.-. --- -. - .- -.-. -</h1>
+            <h4>Contact</h4>
+
+        </div>
+
+        <section class="container">
+            <form>
+                <fieldset>
+                    <legend>Touching briefly across the digital cosmos</legend>
+                    <div class="contactFields">
+                        <div class="field">
+                            <label class="field__label" for="ContactForm-name">Name</label>
+                            <input class="field__input" autocomplete="name" type="text" id="ContactForm-name" name="contact[Name]" value="" placeholder="Name">
+                        </div>
+
+                        <div class="field field--with-error">
+                            <label class="field__label" for="ContactForm-email">Email <span aria-hidden="true"></span></label>
+                            <input autocomplete="email" type="email" id="ContactForm-email" class="field__input" name="contact[email]" spellcheck="false" autocapitalize="off" value="" aria-required="true" placeholder="Email">
+                        </div>
+
+                        <div class="field">
+                            <label class="field__label" for="ContactForm-phone">Cellular</label>
+                            <input type="tel" id="ContactForm-phone" class="field__input" autocomplete="tel" name="contact[Phone number]" pattern="[0-9\-]*" value="" placeholder="Phone number">
+                        </div>
+
+                        <div class="field">
+                            <label class="form__label field__label" for="ContactForm-body">Enquiry</label>
+                            <textarea rows="10" id="ContactForm-body" class="text-area field__input" name="contact[Comment]" placeholder="Enquiry"></textarea>
+                        </div>
+                        <div class="contact__button">
+                            <button type="submit" class="button">Send</button>
+                        </div>
+                </fieldset>
+            </form>
+        </section>
+        <section class="outerContainer">
+            <div class="processContainer">
+                <h3>Process</h3>
+                <p>Wess Vex. A creative endevour by Dexter Vex to share passions and creations here, today.<br>
+                    Wess Vex grows to embody city culture; the abstract beauty of being one lost amongst millions that eat, sleep, and breath around you. A brand for those who prefer the un-aesthetic, that enjoy the muck and dirt of the city imperfection which hums. A provider of quality and stylistic streetwear for the ones who deserve to enjoy it and should.<br>
+                    Raised on a Northern English farm to festering in Amsterdam; we're certainly not from Paris madame.<br>
+                    Founded in 2021 so you can find Wess Vex now and long into the future.</p>
+            </div>
+        </section>
+
+        <section class="outerOuterContainer">
+            <div class="subscribeContainer">
+                <h5>Subscribe to only the most Wessly updates</h3>
+                <div class="field field--with-error">
+                    <input autocomplete="email" type="email" id="ContactForm-email" class="subscribeInput" name="contact[email]" spellcheck="false" autocapitalize="off" value="" aria-required="true" placeholder="Email">
+                    <label class="label" for="ContactForm-email"><span aria-hidden="true"></span></label>
+                </div>
+            </div>
+        </section>
+        <script src="contact.js"></script>
+    </body>
+</html>
