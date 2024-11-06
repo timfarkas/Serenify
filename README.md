@@ -1,8 +1,15 @@
-# Breeze - Programming Project
+# Serenify
+
+### Stack
+Add here
+
+### Features
+Add here
 
 ## About
 Provide a mental health communication, support and management platform.<br>
 Fully functional front &amp; backend using Python and various libraries (Tkinter, Pandas, NumPy,).
+Mental health patient management software developed for MSc Computer Science course at UCL.
 
 
 ## Database fundamentals
