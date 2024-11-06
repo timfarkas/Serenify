@@ -13,22 +13,26 @@ class FileChangeHandler(FileSystemEventHandler):
 
     def on_modified(self, event):
         if event.src_path.endswith(self.script_name):
+            print(f"Change detected in {self.script_name}. Restarting script...")
             self.restart_script()
 
     def run_script(self):
         if self.process:
             self.process.terminate()
-        self.process = subprocess.Popen(["python3", self.script_name]) # Change 'python3' to 'python' if that is the version you are using
+            self.process.wait()  
+        self.process = subprocess.Popen(["python3", self.script_name])
 
     def restart_script(self):
         self.process.terminate()
+        self.process.wait()  
         self.run_script()
 
 if __name__ == "__main__":
-    script_name = "admin/summarise.py"  # Change this to the tkinter script you are working on
+    script_name = "mhwp/dashboard.py"  # Ensure this path is accurate
     event_handler = FileChangeHandler(script_name)
+
     observer = Observer()
-    observer.schedule(event_handler, path=".", recursive=False)
+    observer.schedule(event_handler, path="./mhwp", recursive=False)  # Adjust path if needed for folder
     observer.start()
 
     try:

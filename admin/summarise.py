@@ -4,7 +4,7 @@ root = tk.Tk()
 root.title("Profile summary")
 
 # H1 equivalent
-h1_label = tk.Label(root, text="Profile summary", font=("Arial", 24, "bold"))
+h1_label = tk.Label(root, text="Profile summary ", font=("Arial", 24, "bold"))
 h1_label.pack()
 
 fieldset = tk.LabelFrame(root, text="Personal Information", padx=10, pady=10)
