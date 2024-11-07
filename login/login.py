@@ -8,7 +8,7 @@ def open_patient_new():
 # Create the main window
 root = tk.Tk()
 root.title("Login")
-
+-
 # H1 equivalent
 h1_label = tk.Label(root, text="Sign up", font=("Arial", 24, "bold"))
 h1_label.pack()
@@ -42,4 +42,4 @@ login_button = tk.Button(root, text="Login", command=open_patient_new)
 login_button.pack()
 
 # Run the application
-root.mainloop() 
+root.mainloop()

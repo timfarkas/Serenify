@@ -4,7 +4,7 @@ root = tk.Tk()
 root.title("Admin")
 
 # H1 equivalent
-h1_label = tk.Label(root, text="Welcome back admin", font=("Arial", 24, "bold"))
+h1_label = tk.Label(root, text="Welcome back admin.", font=("Arial", 24, "bold"))
 h1_label.pack()
 
 # Table of doctors and their patients
