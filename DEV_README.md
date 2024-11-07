@@ -20,4 +20,4 @@
 
 ## Back End
 Entity relationship diagram
-![ER diagram](ERdiagram/serenify_erd.png)
+![ER diagram](database/ERdiagram/serenify_erd.png)
