@@ -13,6 +13,14 @@ def search():
     else:
         tk.messagebox.showwarning("Warning", "Please enter a search term.")
 
+######### Likely needed for the search bar to function: ###########
+# def open_link():
+#     print("Link clicked!")  # Replace this with opening a web link if desired
+
+# link = tk.Label(root, text="Click here", fg="blue", cursor="hand2")
+# link.bind("<Button-1>", lambda e: open_link())
+# link.pack()
+
 root = tk.Tk()
 root.title("Patient")
 
