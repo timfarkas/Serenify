@@ -1,4 +1,9 @@
 # introProgrammingProject
+
+[Todd's diagram of overall structure](https://lucid.app/lucidspark/0daace95-f237-4da9-b69d-43f0215e82d1/edit?invitationId=inv_7aa9b477-44f2-47d7-93aa-e2f762b3ea6f&page=0_0#)
+
+[Aleksandra's task allocation plan](task_allocation.pdf)
+
 # Set-up
 ## Front End
 <!-- tkinter is a standalone library within Python so does not require terminal commands -->
