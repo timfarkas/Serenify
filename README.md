@@ -19,6 +19,8 @@ Mental health patient management software developed for MSc Computer Science cou
 #### Chart explaining workpath:
 ![Image](https://github.com/user-attachments/assets/8d3305be-44bc-4af5-8f10-146d7a8a7b6d)
 
+[Live work flow chart](https://lucid.app/lucidspark/0daace95-f237-4da9-b69d-43f0215e82d1/edit?viewport_loc=-1309%2C-1405%2C8207%2C4674%2C0_0&invitationId=inv_7aa9b477-44f2-47d7-93aa-e2f762b3ea6f)
+
 -
 -
 
