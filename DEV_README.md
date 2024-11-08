@@ -21,3 +21,25 @@
 ## Back End
 Entity relationship diagram
 ![ER diagram](database/ERdiagram/serenify_erd.png)
+
+#### General code whenever dealing with data storage
+
+```python
+from database.database import Database
+db = Database() ## opens database (loading all previously stored info automatically)
+
+### INSERT CODE FOR STORING/RETRIEVING DATA HERE
+
+db.close() ## Saves the database state to storage and closes it (IMPORTANT, CHANGES WON'T BE SAVED OTHERWISE)
+```
+
+#### Example of how you can init a patient
+```python
+from database.database import Database, Patient
+db = Database() ## opens database
+### insert logic on getting user details from user
+patient1 = Patient(user_id, username, password, name, email, emergency_contact_email, mood, mood_comment, is_disabled)
+db.insert_patient(patient1)
+db.close() # Save the database state and closes it 
+
+ 
