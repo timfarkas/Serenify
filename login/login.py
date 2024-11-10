@@ -54,28 +54,31 @@ class LoginPage:
     
     def correctDetails(self, username, password, role):
         ################ THESE MUST BE REPLACED WITH DATABASE DATA!!!!!!!! ##############
-        # Example: only allow access to "admin" user if role is "admin"
         if role == "admin" and username == "admin" and password == "admin123":
             return True
-        # ADD VALIDATION LOGIC FOR THE OTHER USER TYPES
-        return False
+        elif role == "mhwp" and username == "mhwp" and password == "mhwp123":
+            return True
+        elif role == "patient" and username == "patient" and password == "patient123":
+            return True
+        else:
+            return False
 
     def findMainPage(self, role):
         # Takes user to the main page
         if role == "admin":
-            subprocess.Popen(["admin/adminMain.py", "admin/adminMain.py"])
+            subprocess.Popen(["python3", "admin/adminMain.py"])
             self.root.destroy()
         elif role == "mhwp":
-            subprocess.Popen(["mhwp/mhwpMain.py", "mhwp/mhwpMain.py"])
+            subprocess.Popen(["python3", "mhwp/mhwpMain.py"])
             self.root.destroy()
         elif role == "patient": 
-            subprocess.Popen(["patient/patientMain.py", "patient/patientMain.py"])
+            subprocess.Popen(["python3", "patient/patientMain.py"])
             self.root.destroy()
         else:
             messagebox.showerror("Error", "Role not recognised.")
 
     def newPatientPage(self):
-        subprocess.Popen("patient/patientNew.py", "patient/patientNew.py")
+        subprocess.Popen("python3", "patient/patientNew.py")
         self.root.destroy()
 
 # Run the application
