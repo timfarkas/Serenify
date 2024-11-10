@@ -22,11 +22,8 @@ class LoginPage:
             tk.Radiobutton(root, text=role.capitalize(), variable=self.user_role, value=role).pack()
         
         # New patient button
-        self.login_button = tk.Button(root, text="New Patient")
+        self.login_button = tk.Button(root, text="New Patient", command=self.newPatientPage)
         self.login_button.pack()
-        ########### NEED TO LINK THIS TO patientNew.py ###########
-        # subprocess.Popen(["python", "adminMain.py"])
-        # self.root.destroy()
 
         # Username and password fields
         self.username_label = tk.Label(root, text="Username:")
@@ -50,8 +47,8 @@ class LoginPage:
         role = self.user_role.get()
 
         # Check credentials (replace with real validation logic)
-        if self.validate_credentials(username, password, role):
-            self.redirect_user(role)
+        if self.correctDetails(username, password, role):
+            self.findMainPage(role)
         else:
             messagebox.showerror("Login Failed", "Invalid username or password")
     
@@ -66,16 +63,20 @@ class LoginPage:
     def findMainPage(self, role):
         # Takes user to the main page
         if role == "admin":
-            subprocess.Popen(["python", "admin/adminMain.py"])
+            subprocess.Popen(["admin/adminMain.py", "admin/adminMain.py"])
             self.root.destroy()
         elif role == "mhwp":
-            subprocess.Popen(["python", "mhwp/mhwpMain.py"])
+            subprocess.Popen(["mhwp/mhwpMain.py", "mhwp/mhwpMain.py"])
             self.root.destroy()
         elif role == "patient": 
-            subprocess.Popen(["python", "patient/Main.py"])
+            subprocess.Popen(["patient/patientMain.py", "patient/patientMain.py"])
             self.root.destroy()
         else:
             messagebox.showerror("Error", "Role not recognised.")
+
+    def newPatientPage(self):
+        subprocess.Popen("patient/patientNew.py", "patient/patientNew.py")
+        self.root.destroy()
 
 # Run the application
 if __name__ == "__main__":
