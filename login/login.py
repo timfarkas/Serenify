@@ -10,19 +10,24 @@ class LoginPage:
 
 
         # H1 equivalent
-        h1_label = tk.Label(root, text="Sign up", font=("Arial", 24, "bold"))
+        h1_label = tk.Label(root, text="Signing in.", font=("Arial", 24, "bold"))
         h1_label.pack()
 
         # Radio buttons for role selection
-        self.role_label = tk.Label(root, text="Select Role:")
+        self.user_role = tk.StringVar(value="admin")  # Default radio button is "admin"
+        self.role_label = tk.Label(root, text="Please select your user type:")
         self.role_label.pack()
-        roles = ["admin", "doctor", "patient", "new patient"]
+        roles = ["admin", "mhwp", "patient"]
         for role in roles:
             tk.Radiobutton(root, text=role.capitalize(), variable=self.user_role, value=role).pack()
-
-        # Set default role to None
-        self.user_role = tk.StringVar(value="admin")  # Default radio button is "admin"
         
+        # New patient button
+        self.login_button = tk.Button(root, text="New Patient")
+        self.login_button.pack()
+        ########### NEED TO LINK THIS TO patientNew.py ###########
+        # subprocess.Popen(["python", "adminMain.py"])
+        # self.root.destroy()
+
         # Username and password fields
         self.username_label = tk.Label(root, text="Username:")
         self.username_label.pack()
@@ -35,38 +40,42 @@ class LoginPage:
         self.password_entry.pack()
 
         # Login button
-        login_button = tk.Button(root, text="Login")
-        login_button.pack()
+        self.login_button = tk.Button(root, text="Login", command=self.handle_login)
+        self.login_button.pack()
+
+    def handle_login(self):
+        # Retrieve inputs
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        role = self.user_role.get()
+
+        # Check credentials (replace with real validation logic)
+        if self.validate_credentials(username, password, role):
+            self.redirect_user(role)
+        else:
+            messagebox.showerror("Login Failed", "Invalid username or password")
+    
+    def correctDetails(self, username, password, role):
+        ################ THESE MUST BE REPLACED WITH DATABASE DATA!!!!!!!! ##############
+        # Example: only allow access to "admin" user if role is "admin"
+        if role == "admin" and username == "admin" and password == "admin123":
+            return True
+        # ADD VALIDATION LOGIC FOR THE OTHER USER TYPES
+        return False
 
     def findMainPage(self, role):
         # Takes user to the main page
-        if role == "admin" #FINISHHHHHHHHHH
-class findMainPage():
-    def __init__(self, name_entry, password_entry):
-        self.name_entry = name_entry
-        self.password_entry = password_entry
-
-    def adminDirect(self):
-        if name_entry == name_entry logged in pandas:
-    if password_entry == password_entry in pandas:
-        print('Login successful!')
-        Need to link this to the radio buttons
-    def patientDirect(self):
-        if name_entry == name_entry logged in pandas:
-    if password_entry == password_entry in pandas:
-        print('Login successful!')
-        Need to link this to the radio buttons
-    def newPatientDirect(self):
-        if name_entry == name_entry logged in pandas:
-    if password_entry == password_entry in pandas:
-        print('Login successful!')
-        Need to link this to the radio buttons
-    def mhwpDirect(self):
-        if name_entry == name_entry logged in pandas:
-    if password_entry == password_entry in pandas:
-        print('Login successful!')
-        Need to link this to the radio buttons
-    
+        if role == "admin":
+            subprocess.Popen(["python", "admin/adminMain.py"])
+            self.root.destroy()
+        elif role == "mhwp":
+            subprocess.Popen(["python", "mhwp/mhwpMain.py"])
+            self.root.destroy()
+        elif role == "patient": 
+            subprocess.Popen(["python", "patient/Main.py"])
+            self.root.destroy()
+        else:
+            messagebox.showerror("Error", "Role not recognised.")
 
 # Run the application
 if __name__ == "__main__":
