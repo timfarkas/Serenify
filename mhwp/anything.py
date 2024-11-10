@@ -1,0 +1,1 @@
+priunt('Hello world!')
