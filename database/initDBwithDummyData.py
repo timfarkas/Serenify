@@ -1,5 +1,16 @@
+import os
+import sys
+
+# Get the absolute path of the project root directory
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Add the project root to sys.path if it's not already there
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+# Now absolute imports will work
 from database import Database
-from entities import UserError, RecordError,Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry
+from entities import UserError, RecordError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry
 import datetime
 
 
@@ -38,8 +49,8 @@ def initDummyDatabase(db: Database):
             admin_id=admin_user.user_id,
             patient_id=patient_user.user_id,
             mhwp_id=mhwp_user.user_id,
-            start_date=datetime.date.today(),
-            end_date=datetime.date.today()
+            start_date=datetime.datetime.now(),
+            end_date=datetime.datetime.now()
             #start_date=datetime('2024-01-01'),
             #end_date='2025-12-31'
         )
@@ -51,7 +62,7 @@ def initDummyDatabase(db: Database):
             entry_id=1,
             patient_id=patient_user.user_id,
             text='Feeling really good today.',
-            timestamp=datetime.date.today()#'2024-11-07 14:26:00'
+            timestamp=datetime.datetime.now()#'2024-11-07 14:26:00'
         )
 
         db.insert_journal_entry(journal_entry)
@@ -97,8 +108,8 @@ def initDummyDatabase(db: Database):
             admin_id=admin_user.user_id,
             patient_id=patient_user2.user_id,
             mhwp_id=mhwp_user2.user_id,
-            start_date=datetime.date.today(),#'2024-02-01',
-            end_date=datetime.date.today()#'2025-11-30'
+            start_date=datetime.datetime.now(),#'2024-02-01',
+            end_date=datetime.datetime.now()#'2025-11-30'
         )
 
         db.insert_allocation(allocation2)
@@ -108,7 +119,7 @@ def initDummyDatabase(db: Database):
             entry_id=2,
             patient_id=patient_user2.user_id,
             text='Had a productive session today.',
-            timestamp=datetime.date.today()#'2024-11-08 10:00:00'
+            timestamp=datetime.datetime.now()#'2024-11-08 10:00:00'
         )
 
         db.insert_journal_entry(journal_entry2)
@@ -122,14 +133,23 @@ def initDummyDatabase(db: Database):
             conditions=['Depression']
         )
 
+        patient_record3 = PatientRecord(
+            record_id=2,
+            patient_id=patient_user2.user_id,
+            mhwp_id=mhwp_user.user_id,
+            notes='Second round of follow-up assessment notes.',
+            conditions=['Depression']
+        )
+
+
         db.insert_patient_record(patient_record2)
+        db.insert_patient_record(patient_record3)
 
     except (UserError, RecordError) as e:
         print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
-    db = Database()
-    db.printAll()
+    db = Database(overwrite = True)
     initDummyDatabase(db)
     db.close()

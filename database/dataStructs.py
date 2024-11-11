@@ -134,7 +134,7 @@ class Relation():
         if self.data[attribute].empty:
             return None 
         resultRelation = Relation(self.name+"_where",self.attributeLabels,self.types,autoIncrementPrimaryKey=False)
-        results = self.data[self.data[attribute] == value]
+        results = self.data[self.data[attribute].apply(lambda x: x == value)]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
             resultRelation.insertRows(resultRows)    
@@ -262,6 +262,9 @@ class Relation():
     def __str__(self) -> str:
         return str(self.data)
     
+    def __len__(self) -> str:
+        return len(self.data)
+
     @staticmethod
     def _rowFromSeries(series : pd.Series, labels : list = None) -> Row:
         return Row(series.values.tolist(),labels=labels)

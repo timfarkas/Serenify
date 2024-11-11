@@ -2,7 +2,16 @@ import pandas as pd
 import pickle
 import os
 import logging
-from datetime import date
+import sys
+from datetime import datetime as date
+
+# Get the absolute path of the project root directory
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Add the project root to sys.path if it's not already there
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 from entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation
 from dataStructs import Row, Relation, RowList
 
@@ -26,7 +35,7 @@ class Database:
         Saves the database state and closes database. 
     """
 
-    def __init__(self, data_file:str='database.pkl', logger: logging.Logger = None, verbose: bool = False):
+    def __init__(self, data_file:str='database.pkl', logger: logging.Logger = None, verbose: bool = False, overwrite : bool = False):
         """
         Constructs all the necessary attributes for the Database object.
 
@@ -55,39 +64,46 @@ class Database:
         self.logger.info("Initializing database...")
 
         self.data_file = data_file
-        if os.path.exists(self.data_file):
+        if os.path.exists(self.data_file) and not overwrite:
             self.logger.info(f"Found database file {data_file}, loading from file...")
             self.__load_database()
             self.logger.info("Success loading database")
+        elif os.path.exists(self.data_file) and overwrite:
+            self.logger.info(f"Overwriting existing database file {data_file}...")
+            self.initRelations()
+            self.logger.info("Successfully initialized new database with overwriting.")
         else:
             # Initialize tables as DataFrames
             self.logger.info(f"Found no database file {data_file}, initializing new database...")
-            self.users = Relation('Users',
-                                  attributeLabels=['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type','emergency_contact_email', 'mood', 'mood_comment', 'specialization','is_disabled'],
-                                  relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, str, bool])
-            
-            self.journal_entries = Relation('JournalEntries',
-                                            attributeLabels=['entry_id', 'patient_id', 'text', 'timestamp'],
-                                            relationAttributeTypes= [int, int, str, date])
-            
-            self.appointments = Relation('Appointments',
-                                         attributeLabels=['appointment_id', 'patient_id', 'mhwp_id', 'date', 'status'],
-                                         relationAttributeTypes=[int,int,int,date,str])
-            
-            self.patient_records = Relation('PatientRecords',
-                                            attributeLabels=['record_id', 'patient_id', 'mhwp_id', 'notes', 'conditions'],
-                                            relationAttributeTypes=[int,int,int,str,list])
-            
-            self.allocations = Relation('Allocations',
-                                        attributeLabels=['allocation_id', 'admin_id', 'patient_id', 'mhwp_id', 'start_date', 'end_date'],
-                                        relationAttributeTypes=[int,int, int, int, date, date])
-            self.initDict()
+            self.initRelations()
         self.logger.info("Successfully initialized database.")
 
     def close(self):
         self.__save_database()
         self.logger.info("Successfully saved database, exiting")
         del self
+
+    def initRelations(self):
+        self.users = Relation('Users',
+                                  attributeLabels=['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type','emergency_contact_email', 'mood', 'mood_comment', 'specialization','is_disabled'],
+                                  relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, str, bool])
+            
+        self.journal_entries = Relation('JournalEntries',
+                                        attributeLabels=['entry_id', 'patient_id', 'text', 'timestamp'],
+                                        relationAttributeTypes= [int, int, str, date])
+        
+        self.appointments = Relation('Appointments',
+                                        attributeLabels=['appointment_id', 'patient_id', 'mhwp_id', 'date', 'status'],
+                                        relationAttributeTypes=[int,int,int,date,str])
+        
+        self.patient_records = Relation('PatientRecords',
+                                        attributeLabels=['record_id', 'patient_id', 'mhwp_id', 'notes', 'conditions'],
+                                        relationAttributeTypes=[int,int,int,str,list])
+        
+        self.allocations = Relation('Allocations',
+                                    attributeLabels=['allocation_id', 'admin_id', 'patient_id', 'mhwp_id', 'start_date', 'end_date'],
+                                    relationAttributeTypes=[int,int, int, int, date, date])
+        self.initDict()
 
     def initDict(self):
         self.dataDict = {
@@ -153,7 +169,7 @@ class Database:
         else:
             raise KeyError(f"{entity} not found in data dict, available values {self.dataDict.values()}")
     
-    def getEntity(self, entity : str) -> Relation:
+    def getRelation(self, entity : str) -> Relation:
         entityData = self.dataDict.get(entity)
         if entityData != None:
             return entityData
