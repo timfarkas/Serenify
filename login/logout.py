@@ -15,13 +15,6 @@ class LogoutPage:
         self.login_button = tk.Button(root, text="Login", command=self.loginButton)
         self.login_button.pack()
 
-    def exitUser(self):
-        pass
-        ######### Inputs #########
-        # username = self.username_entry.get()
-        # password = self.password_entry.get()
-        # role = self.user_role.get()
-
     def loginButton(self):
         subprocess.Popen(["python3", "login.py"])
         self.root.destroy()
