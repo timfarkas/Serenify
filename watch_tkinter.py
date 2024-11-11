@@ -28,11 +28,11 @@ class FileChangeHandler(FileSystemEventHandler):
         self.run_script()
 
 if __name__ == "__main__":
-    script_name = "patient/patientMain.py"  # Ensure this path is accurate
+    script_name = "login/login.py"  # Ensure this path is accurate
     event_handler = FileChangeHandler(script_name)
 
     observer = Observer()
-    observer.schedule(event_handler, path="./patient", recursive=False)  # Adjust path if needed for folder
+    observer.schedule(event_handler, path="./login", recursive=False)  # Adjust path if needed for folder
     observer.start()
 
     try:
