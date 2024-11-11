@@ -28,7 +28,9 @@ class FileChangeHandler(FileSystemEventHandler):
         self.run_script()
 
 if __name__ == "__main__":
-    script_name = "login/login.py"  # Ensure this path is accurate
+
+    script_name = "login/logout.py"  # Ensure this path is accurate
+
     event_handler = FileChangeHandler(script_name)
 
     observer = Observer()
