@@ -1,5 +1,6 @@
 import tkinter as tk
 import subprocess
+# import Login ######## THIS NEEDS TO BE CORRECTED #######
 
 class LogoutPage:
     def __init__(self, root):
@@ -9,10 +10,6 @@ class LogoutPage:
 
         h1_label = tk.Label(root, text="Logout successful!", font=("Arial", 24, "bold"))
         h1_label.pack()
-
-        # # Login button
-        # login_button = tk.Button(root, text="Log back in", command=self.login.py)
-        # login_button.pack()
 
         # Login button
         self.login_button = tk.Button(root, text="Login", command=self.loginButton)
@@ -26,7 +23,7 @@ class LogoutPage:
         # role = self.user_role.get()
 
     def loginButton(self):
-        subprocess.Popen(["python3", "login/login.py"])
+        subprocess.Popen(["python3", "login.py"])
         self.root.destroy()
 
 # Run the application
