@@ -24,3 +24,4 @@ Entity relationship diagram
 
 ### Interacting with the data system
 Please refer to database/database_demo.py for a demo on how to interact with the data system.
+
