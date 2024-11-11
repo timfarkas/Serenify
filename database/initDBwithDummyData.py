@@ -10,7 +10,7 @@ if project_root not in sys.path:
 
 # Now absolute imports will work
 from database import Database
-from entities import UserError, RecordError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry
+from entities import UserError, RecordError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 import datetime
 
 
@@ -144,6 +144,27 @@ def initDummyDatabase(db: Database):
 
         db.insert_patient_record(patient_record2)
         db.insert_patient_record(patient_record3)
+
+        # Create Appointment objects and insert them into the database
+        appointment1 = Appointment(
+            appointment_id=1,
+            patient_id=patient_user2.user_id,
+            mhwp_id=mhwp_user2.user_id,
+            date=datetime.datetime.now(),
+            status='active'
+        )
+
+        appointment2 = Appointment(
+            appointment_id=2,
+            patient_id=patient_user2.user_id,
+            mhwp_id=mhwp_user2.user_id,
+            date=datetime.datetime.now(),
+            status='active'
+        )
+
+        # Insert appointments into the database
+        db.insert_appointment(appointment1)
+        db.insert_appointment(appointment2)
 
     except (UserError, RecordError) as e:
         print(f"An error occurred: {e}")

@@ -8,10 +8,15 @@ class Row(list):
     """
     def __init__(self, values : list = [], labels : list = None):
         """
+        Initialize a Row object.
+
+        Parameters:
+        values (list): The values of the row.
+        labels (list, optional): The labels corresponding to the values.
         """
         super().__init__(values)
         self.labelled = False
-        if labels != None:
+        if labels is not None:
             self.labelled = True
         if self.labelled and len(values) != len(labels):
             raise IndexError(f"Length of values ({len(values)}) must be equal to length of labels ({len(labels)})")
@@ -19,12 +24,30 @@ class Row(list):
         self.labels = labels    
 
     def __str__(self, labelled = True, indent = 0) -> str:
+        """
+        Return a string representation of the Row.
+
+        Parameters:
+        labelled (bool): Whether to include labels in the string representation.
+        indent (int): The indentation level for the string.
+
+        Returns:
+        str: The string representation of the Row.
+        """
         indentStr = "   "*indent
         return indentStr+"Row:\n"+indentStr+" Labels: "+str(self.labels)+"\n"+indentStr+" Values:"+str(self.values) if labelled else indentStr+str(self.values)
 
 class RowList(list):
+    """
+    A class to represent a list of Row objects.
+    """
     def __init__(self, rows : list = [], labels : list = None):
         """
+        Initialize a RowList object.
+
+        Parameters:
+        rows (list): A list of Row objects.
+        labels (list, optional): The labels for the rows.
         """
         super().__init__(rows)
         for row in rows:
@@ -33,11 +56,17 @@ class RowList(list):
             if self.labelled and len(row) != len(labels):
                 raise IndexError(f"Length of values ({len(rows)}) must be equal to length of labels ({len(labels)})")
         self.labelled = False
-        if labels != None:
+        if labels is not None:
             self.labelled = True
         self.labels = labels    
 
     def __str__(self):
+        """
+        Return a string representation of the RowList.
+
+        Returns:
+        str: The string representation of the RowList.
+        """
         out = "Rowlist: \n Labels: \n   "+str(self.labels)+"\n Values:\n"
         for row in self:
             out += row.__str__(labelled = False, indent = 1)+"\n"
@@ -46,31 +75,33 @@ class RowList(list):
 class Relation():
     """
     A class to represent a relation.
-        Supports initialization with primary index and variable number of attributes.
+    Supports initialization with primary index and variable number of attributes.
 
-        Initial Parameters:
-            relationName (str):
-            relationAttributeNames (list): 
-                First value will become primary key.
-            relationAttributeTypes (list, default None):
-            autoIncrementPrimaryKey (bool, default True):
-                Requires primary key to be int
+    Initial Parameters:
+        relationName (str): The name of the relation.
+        relationAttributeNames (list): The attribute names, with the first value as the primary key.
+        relationAttributeTypes (list, optional): The types of the attributes.
+        autoIncrementPrimaryKey (bool, default True): Whether the primary key should auto-increment.
     """
     
-    ### TODO 
-    ###     add data integrity constraints if necessary
     def __init__(self, relationName : str, attributeLabels : list, relationAttributeTypes : list = None, autoIncrementPrimaryKey: bool=True):
+        """
+        Initialize a Relation object.
+
+        Parameters:
+        relationName (str): The name of the relation.
+        attributeLabels (list): The labels for the attributes.
+        relationAttributeTypes (list, optional): The types of the attributes.
+        autoIncrementPrimaryKey (bool, default True): Whether the primary key should auto-increment.
+        """
         self.name = relationName
         self.numColumns = len(attributeLabels)
 
-         ### check if relationAttributeTypes is set
-        self.typeChecking = True if relationAttributeTypes != None else False
+        self.typeChecking = True if relationAttributeTypes is not None else False
 
-        ### raise error if attribute types and attribute names are not equal length
         if self.typeChecking and len(relationAttributeTypes) != self.numColumns: 
             raise ValueError(f"No. of relationAttributeNames {attributeLabels} must be equal to no. of relationAttributeTypes {relationAttributeTypes}") 
 
-        ### configure relation attribute names
         self.attributeLabels = attributeLabels
         self.primaryKeyName = attributeLabels[0]
         self.primaryKeyType = relationAttributeTypes[0]
@@ -78,13 +109,18 @@ class Relation():
         if self.primaryKeyType != int and self.autoIncrementPrimaryKey:
             raise ValueError(f"Primary key auto incrementing (set to true) is only supported with primary key type int (not {self.primaryKeyType}).  ")
         
-        ## set data and types
         self.data = pd.DataFrame(columns=attributeLabels)
         self.types = relationAttributeTypes if self.typeChecking == True else None
 
     def getAttributeMaxRow(self, attribute) -> Row:
         """
-        Returns row where specified attribute is highest
+        Returns the row where the specified attribute is highest.
+
+        Parameters:
+        attribute (str): The attribute to find the maximum value for.
+
+        Returns:
+        Row: The row with the maximum value for the specified attribute.
         """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
@@ -95,7 +131,13 @@ class Relation():
 
     def getAttributeMinRow(self, attribute) -> Row:
         """
-        Returns row where specified attribute is lowest
+        Returns the row where the specified attribute is lowest.
+
+        Parameters:
+        attribute (str): The attribute to find the minimum value for.
+
+        Returns:
+        Row: The row with the minimum value for the specified attribute.
         """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
@@ -104,6 +146,23 @@ class Relation():
         minRowIdx = self.data[attribute].idxmin()
         return Relation._rowFromSeries(self.data.iloc[minRowIdx],self.attributeLabels)
 
+    def getAllRows(self) -> RowList:
+        """
+        Returns all rows in the relation.
+
+        Returns:
+        RowList: A list of all rows in the relation.
+        """
+        return Relation._rowListFromDataFrame(self.data,self.attributeLabels)
+
+    def getAllRowIDs(self) -> list:
+        """
+        Returns all primary key IDs in the relation.
+
+        Returns:
+        list: A list of all primary key IDs.
+        """
+        return self.data[self.primaryKeyName].tolist()
 
     #### SELECTION FUNCTIONS
     ### they all do the same, 
@@ -113,6 +172,16 @@ class Relation():
         ## e.g. 
 
     def getRowsWhereEqual(self, attribute, value) -> RowList:
+        """
+        Returns rows where the specified attribute equals the given value.
+
+        Parameters:
+        attribute (str): The attribute to check.
+        value: The value to compare against.
+
+        Returns:
+        RowList: A list of rows where the attribute equals the value.
+        """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
@@ -121,6 +190,16 @@ class Relation():
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
     
     def getIdsWhereEqual(self, attribute, value) -> list:
+        """
+        Returns primary key IDs where the specified attribute equals the given value.
+
+        Parameters:
+        attribute (str): The attribute to check.
+        value: The value to compare against.
+
+        Returns:
+        list: A list of primary key IDs where the attribute equals the value.
+        """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
@@ -129,6 +208,16 @@ class Relation():
         return results
 
     def getWhereEqual(self, attribute, value):
+        """
+        Returns a new Relation where the specified attribute equals the given value.
+
+        Parameters:
+        attribute (str): The attribute to check.
+        value: The value to compare against.
+
+        Returns:
+        Relation: A new Relation object with rows where the attribute equals the value.
+        """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
@@ -141,6 +230,16 @@ class Relation():
         return resultRelation
 
     def getRowsWhereLarger(self, attribute, value) -> RowList:
+        """
+        Returns rows where the specified attribute is larger than the given value.
+
+        Parameters:
+        attribute (str): The attribute to check.
+        value: The value to compare against.
+
+        Returns:
+        RowList: A list of rows where the attribute is larger than the value.
+        """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
@@ -149,6 +248,16 @@ class Relation():
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
     
     def getIdsWhereLarger(self, attribute, value) -> list:
+        """
+        Returns primary key IDs where the specified attribute is larger than the given value.
+
+        Parameters:
+        attribute (str): The attribute to check.
+        value: The value to compare against.
+
+        Returns:
+        list: A list of primary key IDs where the attribute is larger than the value.
+        """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
@@ -157,6 +266,16 @@ class Relation():
         return results
 
     def getWhereLarger(self, attribute, value):
+        """
+        Returns a new Relation where the specified attribute is larger than the given value.
+
+        Parameters:
+        attribute (str): The attribute to check.
+        value: The value to compare against.
+
+        Returns:
+        Relation: A new Relation object with rows where the attribute is larger than the value.
+        """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
@@ -169,6 +288,16 @@ class Relation():
         return resultRelation
     
     def getRowsWhereSmaller(self, attribute, value) -> RowList:
+        """
+        Returns rows where the specified attribute is smaller than the given value.
+
+        Parameters:
+        attribute (str): The attribute to check.
+        value: The value to compare against.
+
+        Returns:
+        RowList: A list of rows where the attribute is smaller than the value.
+        """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
@@ -177,6 +306,16 @@ class Relation():
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
     
     def getIdsWhereSmaller(self, attribute, value) -> list:
+        """
+        Returns primary key IDs where the specified attribute is smaller than the given value.
+
+        Parameters:
+        attribute (str): The attribute to check.
+        value: The value to compare against.
+
+        Returns:
+        list: A list of primary key IDs where the attribute is smaller than the value.
+        """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
@@ -185,6 +324,16 @@ class Relation():
         return results
 
     def getWhereSmaller(self, attribute, value):
+        """
+        Returns a new Relation where the specified attribute is smaller than the given value.
+
+        Parameters:
+        attribute (str): The attribute to check.
+        value: The value to compare against.
+
+        Returns:
+        Relation: A new Relation object with rows where the attribute is smaller than the value.
+        """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
@@ -197,28 +346,38 @@ class Relation():
         return resultRelation
 
     def _generateIncrementedPrimaryKey(self) -> int:
+        """
+        Generates an auto-incremented primary key.
+
+        Returns:
+        int: The next primary key value.
+        """
         if self.types[0] != int:
             raise TypeError(f"Cannot generate auto-incremented key for primary key type {self.types[0]}")
         if self.data.empty:
             return 1
-        ### get highest value in primary key column
         maxKey = self.getAttributeMaxRow(self.primaryKeyName)[0]
         return maxKey + 1
 
     def insertRow(self, attributeList: list = None, row: Row = None) -> None:
+        """
+        Inserts a row into the relation.
+
+        Parameters:
+        attributeList (list, optional): The list of attributes for the row.
+        row (Row, optional): A Row object to insert.
+        """
         autoIncrementPrimaryKey = self.autoIncrementPrimaryKey
         attributes = None
-        if attributeList != None and row == None:
+        if attributeList is not None and row is None:
             attributes = attributeList
-        elif attributeList == None and row != None:
+        elif attributeList is None and row is not None:
             attributes = row.values
-        elif attributeList == None and row == None:
+        elif attributeList is None and row is None:
             raise ValueError("No attributeList and row specified.")
-        elif attributeList != None and row != None:
+        elif attributeList is not None and row is not None:
             raise ValueError("Row and attribute list passed")
 
-        ### check if passed attributes are correct length
-        #   (one shorter than self.relationAttributeNames if auto increment is on)
         if autoIncrementPrimaryKey and len(attributes) == len(self.attributeLabels):
             raise ValueError(f"Received attributes list {attributes} of length {len(attributes)}, expected {len(self.attributeLabels)-1}. Mind that you need to leave out the primary key if you set auto incrementing to true.")
         elif autoIncrementPrimaryKey and len(attributes) != len(self.attributeLabels)-1:
@@ -226,21 +385,17 @@ class Relation():
         elif not autoIncrementPrimaryKey and len(attributes) != len(self.attributeLabels):
             raise ValueError(f"Received attributes list {attributes} of length {len(attributes)}, expected {len(self.attributeLabels)-1}.") 
 
-        ### check for None values and type validity
-        o = 1 if autoIncrementPrimaryKey else 0 ### skip primary key in self._types via offset of 1 if AI is on
+        o = 1 if autoIncrementPrimaryKey else 0
         for i, value in enumerate(attributes):
-            if value == None:
+            if value is None:
                 pass
-                #raise ValueError(f"Value at index {i} is None, expected type {self.types[i+o]}.")
             elif self.typeChecking and type(value) != self.types[i+o]:
                 raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[i+o]}.")
         
-        ### check for duplicate primary key
         for i, row in enumerate(self.data[self.primaryKeyName]):
             if attributes[0] == row and not self.autoIncrementPrimaryKey:
                 raise KeyError(f"Invalid primary key. Key {attributes[0]} is a duplicate of primary key of row {i}.")
 
-        ### insert row
         if not autoIncrementPrimaryKey:
             self.data = pd.concat([self.data, pd.DataFrame([attributes],columns=self.attributeLabels)],ignore_index=True)
         else:
@@ -249,9 +404,11 @@ class Relation():
     
     def insertRows(self, rows:RowList):
         """
-        rows: 2D array of rows with attributes
+        Inserts multiple rows into the relation.
+
+        Parameters:
+        rows (RowList): A list of Row objects to insert.
         """
-        
         if type(rows[0]) == list:
             for attributeList in rows:
                 self.insertRow(attributeList=attributeList)
@@ -259,18 +416,70 @@ class Relation():
             for row in rows:
                 self.insertRow(row=row)
 
+    def dropRows(self, id : int = None, ids : list = None):
+        """
+        Drops rows from the relation based on primary key ID(s).
+
+        Parameters:
+        id (int, optional): A single primary key ID to drop.
+        ids (list, optional): A list of primary key IDs to drop.
+        """
+        if ids is not None and not isinstance(ids, list):
+            raise TypeError("ids must be a list.")
+        if id is not None and not isinstance(id, int):
+            raise TypeError("id must be an integer.")
+        
+        if id is None and ids is not None:
+            self.data = self.data[~self.data[self.primaryKeyName].isin(ids)]
+        elif id is not None and ids is None:
+            self.data = self.data[self.data[self.primaryKeyName] != id]
+        else:
+            raise ValueError("Specify either 'id' or 'ids', not both.")
+
     def __str__(self) -> str:
+        """
+        Returns a string representation of the Relation.
+
+        Returns:
+        str: The string representation of the Relation.
+        """
         return str(self.data)
     
     def __len__(self) -> str:
+        """
+        Returns the number of rows in the Relation.
+
+        Returns:
+        int: The number of rows.
+        """
         return len(self.data)
 
     @staticmethod
     def _rowFromSeries(series : pd.Series, labels : list = None) -> Row:
+        """
+        Converts a pandas Series to a Row object.
+
+        Parameters:
+        series (pd.Series): The Series to convert.
+        labels (list, optional): The labels for the Row.
+
+        Returns:
+        Row: The converted Row object.
+        """
         return Row(series.values.tolist(),labels=labels)
 
     @staticmethod
     def _rowListFromDataFrame(df : pd.DataFrame, labels : list = None) -> RowList:
+        """
+        Converts a pandas DataFrame to a RowList object.
+
+        Parameters:
+        df (pd.DataFrame): The DataFrame to convert.
+        labels (list, optional): The labels for the RowList.
+
+        Returns:
+        RowList: The converted RowList object.
+        """
         rl = RowList([],labels=labels)
         for id in df.index:
             series = df.loc[id]

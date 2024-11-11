@@ -30,9 +30,9 @@ user = userRelation.getWhereEqual('username','patient2')
 print(f"Found {len(user)} user with username patient2.")
 
 ### get the IDs where username == 'patient2' 
-userIds = userRelation.getIdsWhereEqual('username','patient2')
-print(f"List of ids found: {userIds}")
-userId = userIds[0]    ### get first element of userIds (we are assuming there is only one user with any given username)
+userIDs = userRelation.getIDsWhereEqual('username','patient2')
+print(f"List of ids found: {userIDs}")
+userId = userIDs[0]    ### get first element of userIDs (we are assuming there is only one user with any given username)
 
 
 ### get patient records relation
@@ -69,3 +69,33 @@ db.close() ## exit db, saving state
 ### load database again and print journal entries to confirm that entry was saved between sessions
 db = Database()
 print(db.getRelation('JournalEntries'))
+
+
+
+#### DELETING ROWS
+appointmentsRelation = db.getRelation('Appointments')
+print(appointmentsRelation)
+
+### gets last schedule appointment by getting row with maximum primary key
+lastScheduledAppointment = appointmentsRelation.getAttributeMaxRow(appointmentsRelation.primaryKeyName)
+lastScheduleAppointmentId = lastScheduledAppointment[0] ## index 0 is always primary key
+
+## deletes row using key
+appointmentsRelation.dropRows(id=lastScheduleAppointmentId) 
+
+print("")
+print(appointmentsRelation)
+
+
+### delete multiple rows using multiple keys
+userRelation = db.getRelation('Users')
+rowIDs = userRelation.getAllRowIDs() ## get all keys
+userRelation.dropRows(ids = rowIDs)
+
+print("User relation after deleting all rows:") ## of course, this also works for any subset of rows
+print(userRelation.getAllRowIDs())
+
+
+db.close() ## close database at the end of session to ensure change is saved between sessions
+
+
