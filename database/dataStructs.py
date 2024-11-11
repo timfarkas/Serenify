@@ -50,15 +50,15 @@ class RowList(list):
         labels (list, optional): The labels for the rows.
         """
         super().__init__(rows)
+        self.labelled = False
+        if labels is not None:
+            self.labelled = True
+        self.labels = labels
         for row in rows:
             if type(row) != Row:
                 raise TypeError(f"Expected Row but received {type(row)}. RowList must be initialized with a list of Row objects.")
             if self.labelled and len(row) != len(labels):
-                raise IndexError(f"Length of values ({len(rows)}) must be equal to length of labels ({len(labels)})")
-        self.labelled = False
-        if labels is not None:
-            self.labelled = True
-        self.labels = labels    
+                raise IndexError(f"Length of values ({len(row)}) must be equal to length of labels ({len(labels)})")
 
     def __str__(self):
         """
@@ -97,20 +97,25 @@ class Relation():
         self.name = relationName
         self.numColumns = len(attributeLabels)
 
-        self.typeChecking = True if relationAttributeTypes is not None else False
+        self.typeChecking = relationAttributeTypes is not None
 
-        if self.typeChecking and len(relationAttributeTypes) != self.numColumns: 
-            raise ValueError(f"No. of relationAttributeNames {attributeLabels} must be equal to no. of relationAttributeTypes {relationAttributeTypes}") 
+        if self.typeChecking:
+            if len(relationAttributeTypes) != self.numColumns: 
+                raise ValueError(f"No. of relationAttributeNames {attributeLabels} must be equal to no. of relationAttributeTypes {relationAttributeTypes}") 
+            self.types = relationAttributeTypes
+            self.primaryKeyType = relationAttributeTypes[0]
+        else:
+            self.types = None
+            self.primaryKeyType = int if autoIncrementPrimaryKey else None
 
         self.attributeLabels = attributeLabels
         self.primaryKeyName = attributeLabels[0]
-        self.primaryKeyType = relationAttributeTypes[0]
         self.autoIncrementPrimaryKey = autoIncrementPrimaryKey
-        if self.primaryKeyType != int and self.autoIncrementPrimaryKey:
+
+        if self.autoIncrementPrimaryKey and self.primaryKeyType != int:
             raise ValueError(f"Primary key auto incrementing (set to true) is only supported with primary key type int (not {self.primaryKeyType}).  ")
-        
+
         self.data = pd.DataFrame(columns=attributeLabels)
-        self.types = relationAttributeTypes if self.typeChecking == True else None
 
     def getAttributeMaxRow(self, attribute) -> Row:
         """
@@ -352,12 +357,81 @@ class Relation():
         Returns:
         int: The next primary key value.
         """
-        if self.types[0] != int:
-            raise TypeError(f"Cannot generate auto-incremented key for primary key type {self.types[0]}")
+        if self.primaryKeyType != int:
+            raise TypeError(f"Cannot generate auto-incremented key for primary key type {self.primaryKeyType}")
         if self.data.empty:
             return 1
         maxKey = self.getAttributeMaxRow(self.primaryKeyName)[0]
         return maxKey + 1
+    
+    def editRow(self, primaryKey: int, newValues: list = None, row: Row = None) -> None:
+        """
+        Edits a row in the relation based on the given primary key.
+
+        Parameters:
+        primaryKey (int): The primary key of the row to edit.
+        newValues (list, optional): The new values to update the row with.
+        row (Row, optional): A Row object with new values to update the row with.
+
+        Raises:
+        IndexError: If the primary key index is out of bounds or invalid.
+        ValueError: If neither newValues nor row is provided, or if both are provided.
+        ValueError: If the length of newValues or row values does not match the number of attributes.
+        TypeError: If any value in newValues or row values does not match the expected type.
+        """
+        if primaryKey not in self.data[self.primaryKeyName].values:
+            raise IndexError(f"Primary key {primaryKey} is out of bounds or invalid.")
+        
+        if (newValues is not None and row is not None) or (newValues is None and row is None):
+            raise ValueError("Provide either newValues or row, but not both or neither.")
+        
+        if row is not None:
+            if not isinstance(row, Row):
+                raise TypeError(f"Expected row to be a Row object, got {type(row)}")
+            newValues = row.values
+        
+        expectedLength = len(self.attributeLabels) - 1 if self.autoIncrementPrimaryKey else len(self.attributeLabels)
+        
+        if len(newValues) != expectedLength:
+            raise ValueError(f"Received newValues list of length {len(newValues)}, expected {expectedLength}.")
+        
+        for i, value in enumerate(newValues):
+            if self.autoIncrementPrimaryKey:
+                i += 1  # Skip primary key index
+            if value is not None and self.typeChecking and type(value) != self.types[i]:
+                raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[i]}.")
+        
+        if self.autoIncrementPrimaryKey:
+            newValues = [primaryKey] + newValues
+        
+        self.data.loc[self.data[self.primaryKeyName] == primaryKey] = newValues
+    
+    def editFieldInRow(self, primaryKey: int, targetAttribute: str, value) -> None:
+        """
+        Edits a specific field in a row based on the given primary key and attribute.
+
+        Parameters:
+        primaryKey (int): The primary key of the row to edit.
+        targetAttribute (str): The attribute to update.
+        value: The new value for the attribute.
+
+        Raises:
+        IndexError: If the primary key index is out of bounds or invalid.
+        ValueError: If the target attribute is not valid.
+        TypeError: If the value does not match the expected type.
+        """
+        if primaryKey not in self.data[self.primaryKeyName].values:
+            raise IndexError(f"Primary key {primaryKey} is out of bounds or invalid.")
+        
+        if targetAttribute not in self.attributeLabels:
+            raise ValueError(f"Attribute {targetAttribute} is not a valid attribute. Valid attributes are: {self.attributeLabels}.")
+        
+        attributeIndex = self.attributeLabels.index(targetAttribute)
+        
+        if self.typeChecking and not isinstance(value, self.types[attributeIndex]):
+            raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[attributeIndex]}.")
+        
+        self.data.loc[self.data[self.primaryKeyName] == primaryKey, targetAttribute] = value
 
     def insertRow(self, attributeList: list = None, row: Row = None) -> None:
         """
@@ -372,6 +446,8 @@ class Relation():
         if attributeList is not None and row is None:
             attributes = attributeList
         elif attributeList is None and row is not None:
+            if not isinstance(row, Row):
+                raise TypeError(f"Expected row to be a Row object, got {type(row)}")
             attributes = row.values
         elif attributeList is None and row is None:
             raise ValueError("No attributeList and row specified.")

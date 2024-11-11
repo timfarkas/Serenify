@@ -31,12 +31,12 @@ class RecordNotFoundError(RecordError):
 ## Base User class
 class User():
     """A class to represent a user in the system."""
-    def __init__(self, user_id, username, password, user_type, is_disabled=False):
+    def __init__(self, user_id=None, username='', password='', user_type='', is_disabled=False):
         """
         Initialize a User object.
 
         Parameters:
-        user_id (int): The unique identifier for the user.
+        user_id (int, optional): The unique identifier for the user. Can be None.
         username (str): The username of the user.
         password (str): The password for the user.
         user_type (str): The type of user (e.g., 'Admin', 'Patient', 'MHWP').
@@ -51,12 +51,12 @@ class User():
 ## Admin class inheriting from User
 class Admin(User):
     """A class to represent an admin user."""
-    def __init__(self, user_id, username, password, is_disabled=False):
+    def __init__(self, user_id=None, username='', password='', is_disabled=False):
         """
         Initialize an Admin object.
 
         Parameters:
-        user_id (int): The unique identifier for the admin.
+        user_id (int, optional): The unique identifier for the admin. Can be None.
         username (str): The username of the admin.
         password (str): The password for the admin.
         is_disabled (bool): Flag indicating if the admin is disabled.
@@ -66,13 +66,13 @@ class Admin(User):
 ## Patient class inheriting from User
 class Patient(User):
     """A class to represent a patient user."""
-    def __init__(self, user_id, username, password, fName, lName, email,
+    def __init__(self, user_id=None, username='', password='', fName='', lName='', email='',
                  emergency_contact_email=None, moods=None, mood_comments=None, is_disabled=False):
         """
         Initialize a Patient object.
 
         Parameters:
-        user_id (int): The unique identifier for the patient.
+        user_id (int, optional): The unique identifier for the patient. Can be None.
         username (str): The username of the patient.
         password (str): The password for the patient.
         fName (str): The first name of the patient.
@@ -94,12 +94,12 @@ class Patient(User):
 ## MHWP class inheriting from User
 class MHWP(User):
     """A class to represent a mental health worker professional (MHWP) user."""
-    def __init__(self, user_id, username, password, fName, lName, email, specialization, is_disabled=False):
+    def __init__(self, user_id=None, username='', password='', fName='', lName='', email='', specialization='', is_disabled=False):
         """
         Initialize an MHWP object.
 
         Parameters:
-        user_id (int): The unique identifier for the MHWP.
+        user_id (int, optional): The unique identifier for the MHWP. Can be None.
         username (str): The username of the MHWP.
         password (str): The password for the MHWP.
         fName (str): The first name of the MHWP.
@@ -117,15 +117,15 @@ class MHWP(User):
 ## JournalEntry class
 class JournalEntry():
     """A class to represent a journal entry."""
-    def __init__(self, entry_id, patient_id, text, timestamp):
+    def __init__(self, entry_id=None, patient_id=None, text='', timestamp=None):
         """
         Initialize a JournalEntry object.
 
         Parameters:
-        entry_id (int): The unique identifier for the journal entry.
-        patient_id (int): The ID of the patient associated with the entry.
+        entry_id (int, optional): The unique identifier for the journal entry. Can be None.
+        patient_id (int, optional): The ID of the patient associated with the entry. Can be None.
         text (str): The text content of the journal entry.
-        timestamp (datetime): The timestamp of when the entry was created.
+        timestamp (datetime, optional): The timestamp of when the entry was created. Can be None.
         """
         self.entry_id = entry_id
         self.patient_id = patient_id  # foreign key to Patient
@@ -135,15 +135,15 @@ class JournalEntry():
 ## Appointment class
 class Appointment:
     """A class to represent an appointment."""
-    def __init__(self, appointment_id, patient_id, mhwp_id, date, status):
+    def __init__(self, appointment_id=None, patient_id=None, mhwp_id=None, date=None, status=''):
         """
         Initialize an Appointment object.
 
         Parameters:
-        appointment_id (int): The unique identifier for the appointment.
-        patient_id (int): The ID of the patient associated with the appointment.
-        mhwp_id (int): The ID of the MHWP associated with the appointment.
-        date (datetime): The date of the appointment.
+        appointment_id (int, optional): The unique identifier for the appointment. Can be None.
+        patient_id (int, optional): The ID of the patient associated with the appointment. Can be None.
+        mhwp_id (int, optional): The ID of the MHWP associated with the appointment. Can be None.
+        date (datetime, optional): The date of the appointment. Can be None.
         status (str): The status of the appointment.
         """
         self.appointment_id = appointment_id
@@ -155,16 +155,16 @@ class Appointment:
 ## PatientRecord class
 class PatientRecord:
     """A class to represent a patient record."""
-    def __init__(self, record_id, patient_id, mhwp_id, notes, conditions):
+    def __init__(self, record_id=None, patient_id=None, mhwp_id=None, notes='', conditions=None):
         """
         Initialize a PatientRecord object.
 
         Parameters:
-        record_id (int): The unique identifier for the patient record.
-        patient_id (int): The ID of the patient associated with the record.
-        mhwp_id (int): The ID of the MHWP associated with the record.
+        record_id (int, optional): The unique identifier for the patient record. Can be None.
+        patient_id (int, optional): The ID of the patient associated with the record. Can be None.
+        mhwp_id (int, optional): The ID of the MHWP associated with the record. Can be None.
         notes (str): The notes associated with the patient record.
-        conditions (list): The conditions associated with the patient record.
+        conditions (list, optional): The conditions associated with the patient record.
         """
         self.record_id = record_id
         self.patient_id = patient_id  # foreign key to Patient
@@ -175,17 +175,17 @@ class PatientRecord:
 ## Allocation class
 class Allocation:
     """A class to represent an allocation."""
-    def __init__(self, allocation_id, admin_id, patient_id, mhwp_id, start_date, end_date):
+    def __init__(self, allocation_id=None, admin_id=None, patient_id=None, mhwp_id=None, start_date=None, end_date=None):
         """
         Initialize an Allocation object.
 
         Parameters:
-        allocation_id (int): The unique identifier for the allocation.
-        admin_id (int): The ID of the admin associated with the allocation.
-        patient_id (int): The ID of the patient associated with the allocation.
-        mhwp_id (int): The ID of the MHWP associated with the allocation.
-        start_date (datetime): The start date of the allocation.
-        end_date (datetime): The end date of the allocation.
+        allocation_id (int, optional): The unique identifier for the allocation. Can be None.
+        admin_id (int, optional): The ID of the admin associated with the allocation. Can be None.
+        patient_id (int, optional): The ID of the patient associated with the allocation. Can be None.
+        mhwp_id (int, optional): The ID of the MHWP associated with the allocation. Can be None.
+        start_date (datetime, optional): The start date of the allocation. Can be None.
+        end_date (datetime, optional): The end date of the allocation. Can be None.
         """
         self.allocation_id = allocation_id
         self.admin_id = admin_id      # foreign key to Admin
