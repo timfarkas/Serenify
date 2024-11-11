@@ -1,5 +1,7 @@
 from database import Database
-from database import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, UserError, RecordError
+from entities import UserError, RecordError,Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry
+import datetime
+
 
 # Test functions
 def initDummyDatabase(db: Database):
@@ -11,14 +13,16 @@ def initDummyDatabase(db: Database):
             user_id=2,
             username='patient1',
             password='pass123',
-            name='John Doe',
+            fName='John',
+            lName='Doe',
             email='johndoe@example.com'
         )
         mhwp_user = MHWP(
             user_id=3,
             username='mhwp1',
             password='pass123',
-            name='Dr. Smith',
+            fName='Dr. Martin',
+            lName='Smith',
             email='drsmith@example.com',
             specialization='Psychology'
         )
@@ -34,8 +38,10 @@ def initDummyDatabase(db: Database):
             admin_id=admin_user.user_id,
             patient_id=patient_user.user_id,
             mhwp_id=mhwp_user.user_id,
-            start_date='2024-01-01',
-            end_date='2025-12-31'
+            start_date=datetime.date.today(),
+            end_date=datetime.date.today()
+            #start_date=datetime('2024-01-01'),
+            #end_date='2025-12-31'
         )
 
         db.insert_allocation(allocation)
@@ -45,7 +51,7 @@ def initDummyDatabase(db: Database):
             entry_id=1,
             patient_id=patient_user.user_id,
             text='Feeling really good today.',
-            timestamp='2024-11-07 14:26:00'
+            timestamp=datetime.date.today()#'2024-11-07 14:26:00'
         )
 
         db.insert_journal_entry(journal_entry)
@@ -56,7 +62,7 @@ def initDummyDatabase(db: Database):
             patient_id=patient_user.user_id,
             mhwp_id=mhwp_user.user_id,
             notes='Initial assessment notes.',
-            conditions='Anxiety'
+            conditions=['Anxiety']
         )
 
         db.insert_patient_record(patient_record)
@@ -67,14 +73,16 @@ def initDummyDatabase(db: Database):
             user_id=4,
             username='patient2',
             password='pass456',
-            name='Jane Smith',
+            fName='Jane',
+            lName='Smith',
             email='janesmith@example.com'
         )
         mhwp_user2 = MHWP(
             user_id=5,
             username='mhwp2',
             password='pass456',
-            name='Dr. Brown',
+            fName='Dr.',
+            lName='Brown',
             email='drbrown@example.com',
             specialization='Counseling'
         )
@@ -89,8 +97,8 @@ def initDummyDatabase(db: Database):
             admin_id=admin_user.user_id,
             patient_id=patient_user2.user_id,
             mhwp_id=mhwp_user2.user_id,
-            start_date='2024-02-01',
-            end_date='2025-11-30'
+            start_date=datetime.date.today(),#'2024-02-01',
+            end_date=datetime.date.today()#'2025-11-30'
         )
 
         db.insert_allocation(allocation2)
@@ -100,7 +108,7 @@ def initDummyDatabase(db: Database):
             entry_id=2,
             patient_id=patient_user2.user_id,
             text='Had a productive session today.',
-            timestamp='2024-11-08 10:00:00'
+            timestamp=datetime.date.today()#'2024-11-08 10:00:00'
         )
 
         db.insert_journal_entry(journal_entry2)
@@ -111,7 +119,7 @@ def initDummyDatabase(db: Database):
             patient_id=patient_user2.user_id,
             mhwp_id=mhwp_user2.user_id,
             notes='Follow-up assessment notes.',
-            conditions='Depression'
+            conditions=['Depression']
         )
 
         db.insert_patient_record(patient_record2)
@@ -122,5 +130,6 @@ def initDummyDatabase(db: Database):
 
 if __name__ == "__main__":
     db = Database()
+    db.printAll()
     initDummyDatabase(db)
     db.close()
