@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 import subprocess
 # import Login ######## THIS NEEDS TO BE CORRECTED #######
 
@@ -20,26 +21,27 @@ class ResetPage:
         self.name_entry.grid(row=0, column=1)
 
         # Reset button
-        self.reset_button = tk.Button(root, text="Reset", command=self.resetButton)
+        self.reset_button = tk.Button(root, text="Reset", command=self.validateEmail)
         self.reset_button.pack()
+
+        # Login button
+        self.login_button = tk.Button(root, text="Return", command=self.returnToLogin)
+        self.login_button.pack()
     
     def validateEmail(self):
         checkEmail = self.name_entry.get() # Collect users email entered in fieldset
-        if self.correctDetails(checkEmail): # This must be changed to fit with database data
-            self.resetButton()
+        if self.correctDetails(checkEmail): ######## This must be changed to fit with database data
+            messagebox.showerror("Success!", "Sending a password reset link to your email now.")
+            subprocess.Popen(["python3", "login.py"])
+            self.root.destroy()
         else:
-            messagebox.showerror("Login Failed", "Invalid username or password")
+            messagebox.showerror("Error", "No user with this email address.")
 
-    def correctDetails(self):
-        if self.name_entry == 'example123@gmail.com':
-            print("This email is in our database! Sending you a password reset link now")
-            return True
+    def correctDetails(self, email):
+        return email == 'example123@gmail.com' ####### Hard-coded currently - Will use database 
 
-
-    def resetButton(self):
+    def returnToLogin(self):
         subprocess.Popen(["python3", "login.py"])
-        self.root.destroy()
-
 # Run the application
 if __name__ == "__main__":
     root = tk.Tk()
