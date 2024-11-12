@@ -169,10 +169,13 @@ class Relation():
         """
         return self.data[self.primaryKeyName].tolist()
 
+    def __str__(self):
+        return f"Relation: {self.name}"
+
     #### SELECTION FUNCTIONS
     ### they all do the same, 
     #     getRowsWhere return a RowList (basically a list of rows for easy access)
-    #     getIdsWhere returns a list of primary key ids
+    #     getIDsWhere returns a list of primary key ids
     #     getWhere returns a relation, allowing chaining
         ## e.g. 
 
@@ -194,7 +197,7 @@ class Relation():
         results = self.data[self.data[attribute] == value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
     
-    def getIdsWhereEqual(self, attribute, value) -> list:
+    def getIDsWhereEqual(self, attribute, value) -> list:
         """
         Returns primary key IDs where the specified attribute equals the given value.
 
@@ -252,7 +255,7 @@ class Relation():
         results = self.data[self.data[attribute] > value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
     
-    def getIdsWhereLarger(self, attribute, value) -> list:
+    def getIDsWhereLarger(self, attribute, value) -> list:
         """
         Returns primary key IDs where the specified attribute is larger than the given value.
 
@@ -310,7 +313,7 @@ class Relation():
         results = self.data[self.data[attribute] < value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
     
-    def getIdsWhereSmaller(self, attribute, value) -> list:
+    def getIDsWhereSmaller(self, attribute, value) -> list:
         """
         Returns primary key IDs where the specified attribute is smaller than the given value.
 

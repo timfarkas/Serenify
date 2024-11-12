@@ -71,6 +71,22 @@ db = Database()
 print(db.getRelation('JournalEntries'))
 
 
+# EDITING ROWS OR SINGLE FIELDS
+
+userRelation = db.getRelation('Users')
+
+# Update the entire row for the user with id=1
+userRelation.editRow(1, newValues=['patient1', 'password1', 'John', 'Doe', 'john.doe@example.com', None, None, None, None, None, False])
+
+# edit a single field in a row
+# update the email of the user with id=1
+userRelation.editFieldInRow(1, 'email', 'john.doe@newdomain.com')
+
+# Print the updated relation to verify changes
+print("Updated Patients Relation:")
+print(userRelation)
+
+
 
 #### DELETING ROWS
 appointmentsRelation = db.getRelation('Appointments')
@@ -95,22 +111,4 @@ userRelation.dropRows(ids = rowIDs)
 print("User relation after deleting all rows:") ## of course, this also works for any subset of rows
 print(userRelation.getAllRowIDs())
 
-# EDITING ROWS OR SINGLE FIELDS
-
-patientsRelation = db.getRelation('Patients')
-
-# update 
-patientsRelation.editRow(0, newValues=[1, 'John Doe', 45])  # Assuming the attributes are ['id', 'name', 'age']
-
-# Edit a single field in a row
-# Let's say we want to update the age of the patient with id=1 to 46
-patientsRelation.editFieldInRow(0, 'age', 46)
-
-# Print the updated relation to verify changes
-print("Updated Patients Relation:")
-print(patientsRelation)
-
-
-db.close() ## close database at the end of session to ensure change is saved between sessions
-
-
+db.close()  # Close database at the end of session to ensure changes are saved between sessions
