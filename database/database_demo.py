@@ -59,6 +59,7 @@ entry = entities.JournalEntry(
                 entry_id=None, # id will get chosen automatically upon insertion
                 patient_id=patId,
                 text="Today I had a really weird dream... The whole world was ...",
+                score=2,
                 timestamp=datetime.datetime.now()
             )
 
@@ -67,7 +68,9 @@ db.insert_journal_entry(entry)
 db.close() ## exit db, saving state
 
 ### load database again and print journal entries to confirm that entry was saved between sessions
+
 db = Database()
+print("Get Journal:")
 print(db.getRelation('JournalEntries'))
 
 
