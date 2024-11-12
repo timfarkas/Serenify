@@ -29,11 +29,11 @@ delete_button.pack()
 disable_button.pack()
 summary_button.pack() 
 
-logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
-logout_button.pack()
+# logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
+# logout_button.pack()
 
-    def exitUser(self):
-        pass
+#     def exitUser(self):
+#         pass
         ######### Inputs #########
         # username = self.username_entry.get()
         # password = self.password_entry.get()
