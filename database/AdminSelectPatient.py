@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from database import Database
-from AdminEditPatient import UserEditApp
+from adminEditPatient import UserEditApp
 
 class PatientSelectionApp:
     def __init__(self, root):
@@ -72,4 +72,3 @@ root.mainloop()
     # def backButton(self):
     #     subprocess.Popen(["python3", "adminMain.py"])
     #     self.root.destroy()
-

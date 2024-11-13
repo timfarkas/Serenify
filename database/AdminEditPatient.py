@@ -11,7 +11,6 @@ class UserEditApp:
         self.create_ui()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-
     def create_ui(self):
         self.root.title("Edit User Information")
 
