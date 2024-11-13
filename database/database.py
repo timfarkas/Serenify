@@ -130,8 +130,8 @@ class Database:
                                   relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, str, bool])
             
         self.journal_entries = Relation('JournalEntries',
-                                        attributeLabels=['entry_id', 'patient_id', 'text', 'timestamp'],
-                                        relationAttributeTypes= [int, int, str, date])
+                                        attributeLabels=['entry_id', 'patient_id', 'text', 'score', 'timestamp'],
+                                        relationAttributeTypes= [int, int, str, int, date])
         
         self.appointments = Relation('Appointments',
                                         attributeLabels=['appointment_id', 'patient_id', 'mhwp_id', 'date', 'status'],
@@ -343,8 +343,8 @@ class Database:
         journal_entry : JournalEntry
             The journal entry object to insert.
         """
-        self.insert("JournalEntries",Row([journal_entry.patient_id,journal_entry.text,journal_entry.timestamp]))
-    
+        self.insert("JournalEntries",Row([journal_entry.patient_id,journal_entry.text,journal_entry.score,journal_entry.timestamp]))
+
     def insert_patient_record(self, patient_record : PatientRecord):
         """
         Inserts a patient record into the PatientRecords relation.

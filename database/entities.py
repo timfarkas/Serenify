@@ -117,7 +117,7 @@ class MHWP(User):
 ## JournalEntry class
 class JournalEntry():
     """A class to represent a journal entry."""
-    def __init__(self, entry_id=None, patient_id=None, text='', timestamp=None):
+    def __init__(self, entry_id=None, patient_id=None, text='', score=None, timestamp=None):
         """
         Initialize a JournalEntry object.
 
@@ -130,6 +130,7 @@ class JournalEntry():
         self.entry_id = entry_id
         self.patient_id = patient_id  # foreign key to Patient
         self.text = text
+        self.score = score
         self.timestamp = timestamp
 
 ## Appointment class
