@@ -1,3 +1,5 @@
+from datetime import datetime
+
 # Custom exception classes
 class UserError(Exception):
     """Base class for exceptions related to user operations."""
@@ -29,9 +31,9 @@ class RecordNotFoundError(RecordError):
 
 # Entities
 ## Base User class
-class User():
+class User:
     """A class to represent a user in the system."""
-    def __init__(self, user_id=None, username='', password='', user_type='', is_disabled=False):
+    def __init__(self, user_id: int = None, username: str = '', password: str = '', user_type: str = '', is_disabled: bool = False):
         """
         Initialize a User object.
 
@@ -51,7 +53,7 @@ class User():
 ## Admin class inheriting from User
 class Admin(User):
     """A class to represent an admin user."""
-    def __init__(self, user_id=None, username='', password='', is_disabled=False):
+    def __init__(self, user_id: int = None, username: str = '', password: str = '', is_disabled: bool = False):
         """
         Initialize an Admin object.
 
@@ -66,8 +68,8 @@ class Admin(User):
 ## Patient class inheriting from User
 class Patient(User):
     """A class to represent a patient user."""
-    def __init__(self, user_id=None, username='', password='', fName='', lName='', email='',
-                 emergency_contact_email=None, moods=None, mood_comments=None, is_disabled=False):
+    def __init__(self, user_id: int = None, username: str = '', password: str = '', fName: str = '', lName: str = '', email: str = '',
+                 emergency_contact_email: str = None, is_disabled: bool = False):
         """
         Initialize a Patient object.
 
@@ -79,8 +81,6 @@ class Patient(User):
         lName (str): The last name of the patient.
         email (str): The email address of the patient.
         emergency_contact_email (str, optional): The emergency contact email for the patient.
-        moods (list, optional): A list of mood entries for the patient.
-        mood_comments (list, optional): A list of mood comments for the patient.
         is_disabled (bool): Flag indicating if the patient is disabled.
         """
         super().__init__(user_id, username, password, 'Patient', is_disabled)
@@ -88,13 +88,11 @@ class Patient(User):
         self.lName = lName
         self.email = email
         self.emergency_contact_email = emergency_contact_email
-        self.moods = moods
-        self.mood_comments = mood_comments
-
+        
 ## MHWP class inheriting from User
 class MHWP(User):
     """A class to represent a mental health worker professional (MHWP) user."""
-    def __init__(self, user_id=None, username='', password='', fName='', lName='', email='', specialization='', is_disabled=False):
+    def __init__(self, user_id: int = None, username: str = '', password: str = '', fName: str = '', lName: str = '', email: str = '', specialization: str = '', is_disabled: bool = False):
         """
         Initialize an MHWP object.
 
@@ -115,9 +113,9 @@ class MHWP(User):
         self.specialization = specialization
 
 ## JournalEntry class
-class JournalEntry():
+class JournalEntry:
     """A class to represent a journal entry."""
-    def __init__(self, entry_id=None, patient_id=None, text='', score=None, timestamp=None):
+    def __init__(self, entry_id: int = None, patient_id: int = None, text: str = '', timestamp: datetime = None):
         """
         Initialize a JournalEntry object.
 
@@ -130,13 +128,12 @@ class JournalEntry():
         self.entry_id = entry_id
         self.patient_id = patient_id  # foreign key to Patient
         self.text = text
-        self.score = score
         self.timestamp = timestamp
 
 ## Appointment class
 class Appointment:
     """A class to represent an appointment."""
-    def __init__(self, appointment_id=None, patient_id=None, mhwp_id=None, date=None, status=''):
+    def __init__(self, appointment_id: int = None, patient_id: int = None, mhwp_id: int = None, date: datetime = None, room_name: str = None, status: str = ''):
         """
         Initialize an Appointment object.
 
@@ -151,21 +148,22 @@ class Appointment:
         self.patient_id = patient_id  # foreign key to Patient
         self.mhwp_id = mhwp_id        # foreign key to MHWP
         self.date = date
+        self.room_name = room_name
         self.status = status
 
 ## PatientRecord class
 class PatientRecord:
-    """A class to represent a patient record."""
-    def __init__(self, record_id=None, patient_id=None, mhwp_id=None, notes='', conditions=None):
+    """A class to represent a patient record entry."""
+    def __init__(self, record_id: int = None, patient_id: int = None, mhwp_id: int = None, notes: str = '', conditions: list = None):
         """
-        Initialize a PatientRecord object.
+        Initialize a PatientRecord entry.
 
         Parameters:
-        record_id (int, optional): The unique identifier for the patient record. Can be None.
-        patient_id (int, optional): The ID of the patient associated with the record. Can be None.
-        mhwp_id (int, optional): The ID of the MHWP associated with the record. Can be None.
-        notes (str): The notes associated with the patient record.
-        conditions (list, optional): The conditions associated with the patient record.
+        record_id (int, optional): The unique identifier for the patient record entry. Can be None.
+        patient_id (int, optional): The ID of the patient associated with the record entry. Can be None.
+        mhwp_id (int, optional): The ID of the MHWP associated with the record entry. Can be None.
+        notes (str): The notes associated with the patient record entry.
+        conditions (list, optional): The conditions associated with the patient record entry.
         """
         self.record_id = record_id
         self.patient_id = patient_id  # foreign key to Patient
@@ -176,7 +174,7 @@ class PatientRecord:
 ## Allocation class
 class Allocation:
     """A class to represent an allocation."""
-    def __init__(self, allocation_id=None, admin_id=None, patient_id=None, mhwp_id=None, start_date=None, end_date=None):
+    def __init__(self, allocation_id: int = None, admin_id: int = None, patient_id: int = None, mhwp_id: int = None, start_date: datetime = None, end_date: datetime = None):
         """
         Initialize an Allocation object.
 
