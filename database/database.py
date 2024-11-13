@@ -2,93 +2,18 @@ import pandas as pd
 import pickle
 import os
 import logging
+import sys
+from datetime import datetime as date
 
+# Get the absolute path of the project root directory
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Custom exception classes
-class UserError(Exception):
-    pass
-class UserAlreadyExistsError(UserError):
-    pass
-class UserNotFoundError(UserError):
-    pass
-class InvalidUserTypeError(UserError):
-    pass
-class RecordError(Exception):
-    pass
-class RecordAlreadyExistsError(RecordError):
-    pass
-class RecordNotFoundError(RecordError):
-    pass
+# Add the project root to sys.path if it's not already there
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
-# Entities
-## Base User class
-class User:
-    def __init__(self, user_id, username, password, user_type, is_disabled=False):
-        self.user_id = user_id
-        self.username = username
-        self.password = password
-        self.type = user_type
-        self.is_disabled = is_disabled
-
-## Admin class inheriting from User
-class Admin(User):
-    def __init__(self, user_id, username, password, is_disabled=False):
-        super().__init__(user_id, username, password, 'Admin', is_disabled)
-
-## Patient class inheriting from User
-class Patient(User):
-    def __init__(self, user_id, username, password, name, email,
-                 emergency_contact_email=None, mood=None, mood_comment=None, is_disabled=False):
-        super().__init__(user_id, username, password, 'Patient', is_disabled)
-        self.name = name
-        self.email = email
-        self.emergency_contact_email = emergency_contact_email
-        self.mood = mood
-        self.mood_comment = mood_comment
-
-## MHWP class inheriting from User
-class MHWP(User):
-    def __init__(self, user_id, username, password, name, email, specialization, is_disabled=False):
-        super().__init__(user_id, username, password, 'MHWP', is_disabled)
-        self.name = name
-        self.email = email
-        self.specialization = specialization
-
-## JournalEntry class
-class JournalEntry:
-    def __init__(self, entry_id, patient_id, text, timestamp):
-        self.entry_id = entry_id
-        self.patient_id = patient_id  # foreign key to Patient
-        self.text = text
-        self.timestamp = timestamp
-
-## Appointment class
-class Appointment:
-    def __init__(self, appointment_id, patient_id, mhwp_id, date, status):
-        self.appointment_id = appointment_id
-        self.patient_id = patient_id  # foreign key to Patient
-        self.mhwp_id = mhwp_id        # foreign key to MHWP
-        self.date = date
-        self.status = status
-
-## PatientRecord class
-class PatientRecord:
-    def __init__(self, record_id, patient_id, mhwp_id, notes, conditions):
-        self.record_id = record_id
-        self.patient_id = patient_id  # foreign key to Patient
-        self.mhwp_id = mhwp_id        # foreign key to MHWP
-        self.notes = notes
-        self.conditions = conditions
-
-## Allocation class
-class Allocation:
-    def __init__(self, allocation_id, admin_id, patient_id, mhwp_id, start_date, end_date):
-        self.allocation_id = allocation_id
-        self.admin_id = admin_id      # foreign key to Admin
-        self.patient_id = patient_id  # foreign key to Patient
-        self.mhwp_id = mhwp_id        # foreign key to MHWP
-        self.start_date = start_date
-        self.end_date = end_date
+from entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation
+from dataStructs import Row, Relation, RowList
 
 ## Database class
 class Database:
@@ -101,16 +26,49 @@ class Database:
     data_file : str
         The file path for storing the database.
     logger : logging.Logger
+        The logger for logging database operations.
     verbose : bool
         A flag to enable debug logging.
 
     Methods
     -------
     close():
-        Saves the database state and closes database. 
+        Saves the database state and closes the database.
+    initRelations():
+        Initializes the relations (tables) in the database.
+    initDict():
+        Initializes the dictionary mapping entity names to their respective relations.
+    __load_database():
+        Loads the database from a file.
+    __save_database():
+        Saves the current state of the database to a file.
+    __str__():
+        Returns a string representation of the database.
+    printAll():
+        Prints all the data in the database.
+    insert(entity, row, rowList):
+        Inserts a row or a list of rows into the specified entity's relation.
+    getId(entity, id):
+        Retrieves rows from the specified entity's relation where the primary key matches the given id.
+    getRelation(entity):
+        Returns the relation object for the specified entity.
+    insert_admin(admin):
+        Inserts an admin user into the Users relation.
+    insert_patient(patient):
+        Inserts a patient user into the Users relation.
+    insert_mhwp(mhwp):
+        Inserts an MHWP user into the Users relation.
+    insert_allocation(allocation):
+        Inserts an allocation into the Allocations relation.
+    insert_journal_entry(journal_entry):
+        Inserts a journal entry into the JournalEntries relation.
+    insert_patient_record(patient_record):
+        Inserts a patient record into the PatientRecords relation.
+    insert_appointment(appointment):
+        Inserts an appointment into the Appointments relation.
     """
 
-    def __init__(self, data_file:str='database.pkl', logger: logging.Logger = None, verbose: bool = False):
+    def __init__(self, data_file:str='database.pkl', logger: logging.Logger = None, verbose: bool = False, overwrite : bool = False):
         """
         Constructs all the necessary attributes for the Database object.
 
@@ -122,6 +80,8 @@ class Database:
             The logger for logging database operations (default is None, which creates a new logger).
         verbose : bool, optional
             A flag to enable debug logging (default is False).
+        overwrite : bool, optional
+            A flag to determine whether to overwrite the existing database file (default is False).
         """
         if logger is None:
             logger = logging.getLogger(__name__)
@@ -139,70 +99,103 @@ class Database:
         self.logger.info("Initializing database...")
 
         self.data_file = data_file
-        if os.path.exists(self.data_file):
+        if os.path.exists(self.data_file) and not overwrite:
             self.logger.info(f"Found database file {data_file}, loading from file...")
             self.__load_database()
             self.logger.info("Success loading database")
+        elif os.path.exists(self.data_file) and overwrite:
+            self.logger.info(f"Overwriting existing database file {data_file}...")
+            self.initRelations()
+            self.logger.info("Successfully initialized new database with overwriting.")
         else:
             # Initialize tables as DataFrames
             self.logger.info(f"Found no database file {data_file}, initializing new database...")
-            self.users = pd.DataFrame(columns=['user_id', 'username', 'password', 'type', 'is_disabled'])
-            self.admins = pd.DataFrame(columns=['user_id'])
-            self.patients = pd.DataFrame(columns=[
-                'user_id', 'name', 'email', 'emergency_contact_email', 'mood', 'mood_comment'
-            ])
-            self.mhwps = pd.DataFrame(columns=['user_id', 'name', 'email', 'specialization'])
-            self.journal_entries = pd.DataFrame(columns=['entry_id', 'patient_id', 'text', 'timestamp'])
-            self.appointments = pd.DataFrame(columns=[
-                'appointment_id', 'patient_id', 'mhwp_id', 'date', 'status'
-            ])
-            self.patient_records = pd.DataFrame(columns=[
-                'record_id', 'patient_id', 'mhwp_id', 'notes', 'conditions'
-            ])
-            self.allocations = pd.DataFrame(columns=[
-                'allocation_id', 'admin_id', 'patient_id', 'mhwp_id', 'start_date', 'end_date'
-            ])
+            self.initRelations()
         self.logger.info("Successfully initialized database.")
 
     def close(self):
+        """
+        Saves the current state of the database to a file and deletes the database object.
+        """
         self.__save_database()
         self.logger.info("Successfully saved database, exiting")
         del self
 
+    def initRelations(self):
+        """
+        Initializes the relations (tables) in the database with predefined schemas.
+        """
+        self.users = Relation('Users',
+                                  attributeLabels=['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type','emergency_contact_email', 'mood', 'mood_comment', 'specialization','is_disabled'],
+                                  relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, str, bool])
+            
+        self.journal_entries = Relation('JournalEntries',
+                                        attributeLabels=['entry_id', 'patient_id', 'text', 'score', 'timestamp'],
+                                        relationAttributeTypes= [int, int, str, int, date])
+        
+        self.appointments = Relation('Appointments',
+                                        attributeLabels=['appointment_id', 'patient_id', 'mhwp_id', 'date', 'status'],
+                                        relationAttributeTypes=[int,int,int,date,str])
+        
+        self.patient_records = Relation('PatientRecords',
+                                        attributeLabels=['record_id', 'patient_id', 'mhwp_id', 'notes', 'conditions'],
+                                        relationAttributeTypes=[int,int,int,str,list])
+        
+        self.allocations = Relation('Allocations',
+                                    attributeLabels=['allocation_id', 'admin_id', 'patient_id', 'mhwp_id', 'start_date', 'end_date'],
+                                    relationAttributeTypes=[int,int, int, int, date, date])
+        self.initDict()
+
+    def initDict(self):
+        """
+        Initializes the dictionary mapping entity names to their respective relations.
+        """
+        self.dataDict = {
+            'Users':self.users,
+            'JournalEntries':self.journal_entries,
+            'Appointments':self.appointments,
+            'PatientRecords':self.patient_records,
+            'Allocations':self.allocations
+        } 
+
     def __load_database(self):
+        """
+        Loads the database from a file, restoring the state of all relations.
+        """
         with open(self.data_file, 'rb') as f:
             data = pickle.load(f)
             self.users = data['users']
-            self.admins = data['admins']
-            self.patients = data['patients']
-            self.mhwps = data['mhwps']
             self.journal_entries = data['journal_entries']
             self.appointments = data['appointments']
             self.patient_records = data['patient_records']
             self.allocations = data['allocations']
+        self.initDict()
 
     def __save_database(self):
+        """
+        Saves the current state of the database to a file.
+        """
         with open(self.data_file, 'wb') as f:
             pickle.dump({
                 'users': self.users,
-                'admins': self.admins,
-                'patients': self.patients,
-                'mhwps': self.mhwps,
                 'journal_entries': self.journal_entries,
                 'appointments': self.appointments,
                 'patient_records': self.patient_records,
                 'allocations': self.allocations
             }, f)
 
+    def __str__(self):
+        """
+        Returns a string representation of the database, showing all relations and their data.
+        """
+        return "Users:\n"+str(self.users)+"\nJournal Entries:\n"+str(self.journal_entries)+"\nAppointments:\n"+str(self.appointments)+"\nPatient Records:\n"+str(self.patient_records)+"\nAllocations:\n"+str(self.allocations)
+
     def printAll(self):
+        """
+        Prints all the data in the database, relation by relation.
+        """
         print("Users:")
         print(self.users)
-        print("\nAdmins:")
-        print(self.admins)
-        print("\nPatients:")
-        print(self.patients)
-        print("\nMHWPs:")
-        print(self.mhwps)
         print("\nJournal Entries:")
         print(self.journal_entries)
         print("\nAppointments:")
@@ -212,256 +205,164 @@ class Database:
         print("\nAllocations:")
         print(self.allocations)
 
-    # User methods
-    def insert_user(self, user: User):
-        if user.user_id in self.users['user_id'].values:
-            raise UserAlreadyExistsError(f"User with user_id {user.user_id} already exists.")
-        new_user = {
-            'user_id': user.user_id,
-            'username': user.username,
-            'password': user.password,
-            'type': user.type,
-            'is_disabled': user.is_disabled
-        }
-        self.users = pd.concat([self.users, pd.DataFrame([new_user])], ignore_index=True)
-        idx = self.users.index[self.users['user_id'] == user.user_id]
-        if len(idx) == 0:
-            raise UserNotFoundError(f"No user with user_id {user.user_id} exists.")
-        self.users.loc[idx, 'username'] = user.username
-        self.users.loc[idx, 'password'] = user.password
-        self.users.loc[idx, 'type'] = user.type
-        self.users.loc[idx, 'is_disabled'] = user.is_disabled
+    def insert(self, entity: str, row: Row = None, rowList: RowList = None):
+        """
+        Inserts a row or a list of rows into the specified entity's relation.
 
-    def get_user(self, user_id):
-        user_row = self.users[self.users['user_id'] == user_id]
-        if user_row.empty:
-            raise UserNotFoundError(f"No user with user_id {user_id} exists.")
-        user_data = user_row.iloc[0]
-        user_type = user_data['type']
-        if user_type == 'Admin':
-            return self.get_admin(user_id)
-        elif user_type == 'Patient':
-            return self.get_patient(user_id)
-        elif user_type == 'MHWP':
-            return self.get_mhwp(user_id)
+        Parameters
+        ----------
+        entity : str
+            The name of the entity (relation) to insert data into.
+        row : Row, optional
+            A single row to insert (default is None).
+        rowList : RowList, optional
+            A list of rows to insert (default is None).
+
+        Raises
+        ------
+        KeyError
+            If the specified entity is not found in the data dictionary.
+        ValueError
+            If both row and rowList are provided.
+        """
+        if row != None and rowList == None:
+            entityData = self.dataDict.get(entity)
+            if entityData != None:
+                entityData.insertRow(row=row)
+            else:
+                raise KeyError(f"{entity} not found in data dict, available values {pd.DataFrame.apply(pd.DataFrame(self.dataDict.values()),str)}")
+        elif row == None and rowList != None:
+            self.dataDict.get(entity).insertRows(rowList)
         else:
-            return User(
-                user_id=user_data['user_id'],
-                username=user_data['username'],
-                password=user_data['password'],
-                user_type=user_data['type'],
-                is_disabled=user_data['is_disabled']
-            )
+            if row != None and rowList != None:
+                raise ValueError("Received too many inputs, expecting row OR row list")
 
-    # Admin methods
-    def insert_admin(self, admin: Admin):
-        self.insert_user(admin)
-        if admin.user_id in self.admins['user_id'].values:
-            raise UserAlreadyExistsError(f"Admin with user_id {admin.user_id} already exists.")
-        new_admin = {'user_id': admin.user_id}
-        self.admins = pd.concat([self.admins, pd.DataFrame([new_admin])], ignore_index=True)
+    def getId(self, entity: str, id):
+        """
+        Retrieves rows from the specified entity's relation where the primary key matches the given id.
 
-    def get_admin(self, user_id):
-        admin_row = self.admins[self.admins['user_id'] == user_id]
-        if admin_row.empty:
-            raise UserNotFoundError(f"No Admin with user_id {user_id} exists.")
-        user_row = self.users[self.users['user_id'] == user_id].iloc[0]
-        return Admin(
-            user_id=user_row['user_id'],
-            username=user_row['username'],
-            password=user_row['password'],
-            is_disabled=user_row['is_disabled']
-        )
+        Parameters
+        ----------
+        entity : str
+            The name of the entity (relation) to query.
+        id : int
+            The primary key value to match.
 
-    # Patient methods
-    def insert_patient(self, patient: Patient):
-        self.insert_user(patient)
-        if patient.user_id in self.patients['user_id'].values:
-            raise UserAlreadyExistsError(f"Patient with user_id {patient.user_id} already exists.")
-        new_patient = {
-            'user_id': patient.user_id,
-            'name': patient.name,
-            'email': patient.email,
-            'emergency_contact_email': patient.emergency_contact_email,
-            'mood': patient.mood,
-            'mood_comment': patient.mood_comment
-        }
-        self.patients = pd.concat([self.patients, pd.DataFrame([new_patient])], ignore_index=True)
+        Returns
+        -------
+        RowList
+            A list of rows matching the specified primary key.
 
-    def get_patient(self, user_id):
-        patient_row = self.patients[self.patients['user_id'] == user_id]
-        if patient_row.empty:
-            raise UserNotFoundError(f"No Patient with user_id {user_id} exists.")
-        user_row = self.users[self.users['user_id'] == user_id].iloc[0]
-        patient_data = patient_row.iloc[0]
-        return Patient(
-            user_id=user_row['user_id'],
-            username=user_row['username'],
-            password=user_row['password'],
-            name=patient_data['name'],
-            email=patient_data['email'],
-            emergency_contact_email=patient_data['emergency_contact_email'],
-            mood=patient_data['mood'],
-            mood_comment=patient_data['mood_comment'],
-            is_disabled=user_row['is_disabled']
-        )
+        Raises
+        ------
+        KeyError
+            If the specified entity is not found in the data dictionary.
+        """
+        entityData = self.dataDict.get(entity)
+        if entityData != None:
+            return entityData.getRowsWhereEqual(entityData.primaryKeyName,id)
+        else:
+            raise KeyError(f"{entity} not found in data dict, available values {self.dataDict.values()}")
+    
+    def getRelation(self, entity : str) -> Relation:
+        """
+        Returns the relation object for the specified entity.
 
-    # MHWP methods
-    def insert_mhwp(self, mhwp: MHWP):
-        self.insert_user(mhwp)
-        if mhwp.user_id in self.mhwps['user_id'].values:
-            raise UserAlreadyExistsError(f"MHWP with user_id {mhwp.user_id} already exists.")
-        new_mhwp = {
-            'user_id': mhwp.user_id,
-            'name': mhwp.name,
-            'email': mhwp.email,
-            'specialization': mhwp.specialization
-        }
-        self.mhwps = pd.concat([self.mhwps, pd.DataFrame([new_mhwp])], ignore_index=True)
+        Parameters
+        ----------
+        entity : str
+            The name of the entity (relation) to retrieve.
 
-    def get_mhwp(self, user_id):
-        mhwp_row = self.mhwps[self.mhwps['user_id'] == user_id]
-        if mhwp_row.empty:
-            raise UserNotFoundError(f"No MHWP with user_id {user_id} exists.")
-        user_row = self.users[self.users['user_id'] == user_id].iloc[0]
-        mhwp_data = mhwp_row.iloc[0]
-        return MHWP(
-            user_id=user_row['user_id'],
-            username=user_row['username'],
-            password=user_row['password'],
-            name=mhwp_data['name'],
-            email=mhwp_data['email'],
-            specialization=mhwp_data['specialization'],
-            is_disabled=user_row['is_disabled']
-        )
+        Returns
+        -------
+        Relation
+            The relation object corresponding to the specified entity.
 
-    # JournalEntry methods
-    def insert_journal_entry(self, journal_entry: JournalEntry):
-        if journal_entry.entry_id in self.journal_entries['entry_id'].values:
-            raise RecordAlreadyExistsError(f"JournalEntry with entry_id {journal_entry.entry_id} already exists.")
-        if journal_entry.patient_id not in self.patients['user_id'].values:
-            raise UserNotFoundError(f"No patient with user_id {journal_entry.patient_id} exists.")
-        new_entry = {
-            'entry_id': journal_entry.entry_id,
-            'patient_id': journal_entry.patient_id,
-            'text': journal_entry.text,
-            'timestamp': journal_entry.timestamp
-        }
-        self.journal_entries = pd.concat([self.journal_entries, pd.DataFrame([new_entry])], ignore_index=True)
+        Raises
+        ------
+        KeyError
+            If the specified entity is not found in the data dictionary.
+        """
+        entityData = self.dataDict.get(entity)
+        if entityData != None:
+            return entityData
+        else:
+            raise KeyError(f"{entity} not found in data dict, available values {self.dataDict.values()}")
 
-    def get_journal_entry(self, entry_id):
-        entry_row = self.journal_entries[self.journal_entries['entry_id'] == entry_id]
-        if entry_row.empty:
-            raise RecordNotFoundError(f"No JournalEntry with entry_id {entry_id} exists.")
-        entry_data = entry_row.iloc[0]
-        return JournalEntry(
-            entry_id=entry_data['entry_id'],
-            patient_id=entry_data['patient_id'],
-            text=entry_data['text'],
-            timestamp=entry_data['timestamp']
-        )
+    
+    def insert_admin(self, admin:Admin):
+        """
+        Inserts an admin user into the Users relation.
 
-    # Appointment methods
+        Parameters
+        ----------
+        admin : Admin
+            The admin object to insert.
+        """
+        self.insert("Users",Row([admin.username,None,admin.password,None,None,admin.type,None,None,None,None,admin.is_disabled]))
+    
+    def insert_patient(self,patient : Patient):
+        """
+        Inserts a patient user into the Users relation.
+
+        Parameters
+        ----------
+        patient : Patient
+            The patient object to insert.
+        """
+        self.insert("Users",Row([patient.username,patient.email,patient.password,patient.fName,patient.lName,patient.type,patient.emergency_contact_email,patient.moods,patient.mood_comments,None,patient.is_disabled]))
+    
+    def insert_mhwp(self, mhwp : MHWP):
+        """
+        Inserts an MHWP user into the Users relation.
+
+        Parameters
+        ----------
+        mhwp : MHWP
+            The MHWP object to insert.
+        """
+        self.insert("Users",Row([mhwp.username,mhwp.email,mhwp.password,mhwp.fName,mhwp.lName,mhwp.type,None,None,None,mhwp.specialization,mhwp.is_disabled]))
+    
+    def insert_allocation(self, allocation : Allocation):
+        """
+        Inserts an allocation into the Allocations relation.
+
+        Parameters
+        ----------
+        allocation : Allocation
+            The allocation object to insert.
+        """
+        self.insert("Allocations",Row([allocation.admin_id,allocation.patient_id,allocation.mhwp_id,allocation.start_date,allocation.end_date]))
+    
+    def insert_journal_entry(self, journal_entry : JournalEntry):
+        """
+        Inserts a journal entry into the JournalEntries relation.
+
+        Parameters
+        ----------
+        journal_entry : JournalEntry
+            The journal entry object to insert.
+        """
+        self.insert("JournalEntries",Row([journal_entry.patient_id,journal_entry.text,journal_entry.score,journal_entry.timestamp]))
+
+    def insert_patient_record(self, patient_record : PatientRecord):
+        """
+        Inserts a patient record into the PatientRecords relation.
+
+        Parameters
+        ----------
+        patient_record : PatientRecord
+            The patient record object to insert.
+        """
+        self.insert("PatientRecords", Row([patient_record.patient_id, patient_record.mhwp_id, patient_record.notes, patient_record.conditions]))
+
     def insert_appointment(self, appointment: Appointment):
-        if appointment.appointment_id in self.appointments['appointment_id'].values:
-            raise RecordAlreadyExistsError(f"Appointment with appointment_id {appointment.appointment_id} already exists.")
-        if appointment.patient_id not in self.patients['user_id'].values:
-            raise UserNotFoundError(f"No patient with user_id {appointment.patient_id} exists.")
-        if appointment.mhwp_id not in self.mhwps['user_id'].values:
-            raise UserNotFoundError(f"No MHWP with user_id {appointment.mhwp_id} exists.")
-        new_appointment = {
-            'appointment_id': appointment.appointment_id,
-            'patient_id': appointment.patient_id,
-            'mhwp_id': appointment.mhwp_id,
-            'date': appointment.date,
-            'status': appointment.status
-        }
-        self.appointments = pd.concat([self.appointments, pd.DataFrame([new_appointment])], ignore_index=True)
+        """
+        Inserts an appointment into the Appointments relation.
 
-    def get_appointment(self, appointment_id):
-        appointment_row = self.appointments[self.appointments['appointment_id'] == appointment_id]
-        if appointment_row.empty:
-            raise RecordNotFoundError(f"No Appointment with appointment_id {appointment_id} exists.")
-        appointment_data = appointment_row.iloc[0]
-        return Appointment(
-            appointment_id=appointment_data['appointment_id'],
-            patient_id=appointment_data['patient_id'],
-            mhwp_id=appointment_data['mhwp_id'],
-            date=appointment_data['date'],
-            status=appointment_data['status']
-        )
-
-    # PatientRecord methods
-    def insert_patient_record(self, patient_record: PatientRecord):
-        if patient_record.record_id in self.patient_records['record_id'].values:
-            raise RecordAlreadyExistsError(f"PatientRecord with record_id {patient_record.record_id} already exists.")
-        if patient_record.patient_id not in self.patients['user_id'].values:
-            raise UserNotFoundError(f"No patient with user_id {patient_record.patient_id} exists.")
-        if patient_record.mhwp_id not in self.mhwps['user_id'].values:
-            raise UserNotFoundError(f"No MHWP with user_id {patient_record.mhwp_id} exists.")
-        if patient_record.patient_id in self.patient_records['patient_id'].values:
-            raise RecordAlreadyExistsError(f"Patient with user_id {patient_record.patient_id} already has a record.")
-        new_record = {
-            'record_id': patient_record.record_id,
-            'patient_id': patient_record.patient_id,
-            'mhwp_id': patient_record.mhwp_id,
-            'notes': patient_record.notes,
-            'conditions': patient_record.conditions
-        }
-        self.patient_records = pd.concat([self.patient_records, pd.DataFrame([new_record])], ignore_index=True)
-
-    def get_patient_record(self, record_id):
-        record_row = self.patient_records[self.patient_records['record_id'] == record_id]
-        if record_row.empty:
-            raise RecordNotFoundError(f"No PatientRecord with record_id {record_id} exists.")
-        record_data = record_row.iloc[0]
-        return PatientRecord(
-            record_id=record_data['record_id'],
-            patient_id=record_data['patient_id'],
-            mhwp_id=record_data['mhwp_id'],
-            notes=record_data['notes'],
-            conditions=record_data['conditions']
-        )
-
-    # Allocation methods
-    def insert_allocation(self, allocation: Allocation):
-        if allocation.allocation_id in self.allocations['allocation_id'].values:
-            raise RecordAlreadyExistsError(f"Allocation with allocation_id {allocation.allocation_id} already exists.")
-        if allocation.admin_id not in self.admins['user_id'].values:
-            raise UserNotFoundError(f"No Admin with user_id {allocation.admin_id} exists.")
-        if allocation.patient_id not in self.patients['user_id'].values:
-            raise UserNotFoundError(f"No Patient with user_id {allocation.patient_id} exists.")
-        if allocation.mhwp_id not in self.mhwps['user_id'].values:
-            raise UserNotFoundError(f"No MHWP with user_id {allocation.mhwp_id} exists.")
-        new_allocation = {
-            'allocation_id': allocation.allocation_id,
-            'admin_id': allocation.admin_id,
-            'patient_id': allocation.patient_id,
-            'mhwp_id': allocation.mhwp_id,
-            'start_date': allocation.start_date,
-            'end_date': allocation.end_date
-        }
-        self.allocations = pd.concat([self.allocations, pd.DataFrame([new_allocation])], ignore_index=True)
-
-    def get_allocation(self, allocation_id):
-        allocation_row = self.allocations[self.allocations['allocation_id'] == allocation_id]
-        if allocation_row.empty:
-            raise RecordNotFoundError(f"No Allocation with allocation_id {allocation_id} exists.")
-        allocation_data = allocation_row.iloc[0]
-        return Allocation(
-            allocation_id=allocation_data['allocation_id'],
-            admin_id=allocation_data['admin_id'],
-            patient_id=allocation_data['patient_id'],
-            mhwp_id=allocation_data['mhwp_id'],
-            start_date=allocation_data['start_date'],
-            end_date=allocation_data['end_date']
-        )
-
-
-# def testExceptions():
-#     # Attempt to get a non-existent Patient Record (will raise an exception)
-#     try:
-#         record = db.get_patient_record(record_id=300)
-#         print(vars(record))
-#     except RecordNotFoundError as e:
-#         print(e)  # Output: No PatientRecord with record_id 300 exists.
+        Parameters
+        ----------
+        appointment : Appointment
+            The appointment object to insert.
+        """
+        self.insert("Appointments", Row([appointment.patient_id, appointment.mhwp_id, appointment.date, appointment.status]))
