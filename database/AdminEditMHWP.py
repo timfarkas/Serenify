@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import messagebox
 from database import Database
 
-
 class UserEditApp:
     def __init__(self, root, user_id):
         self.db = Database()
@@ -16,7 +15,7 @@ class UserEditApp:
         self.root.title("Edit User Information")
 
         # H1 equivalent
-        h1_label = tk.Label(self.root, text="Edit Patient Information", font=("Arial", 24, "bold"))
+        h1_label = tk.Label(self.root, text="Edit MHWP Information", font=("Arial", 24, "bold"))
         h1_label.pack()
 
         user = self.fetch_user_details(self.user_id)
@@ -63,18 +62,12 @@ class UserEditApp:
         self.emergency_email_entry.config(state='disabled')
         self.emergency_email_entry.grid(row=6, column=1)
 
-        tk.Label(user_frame, text="Mood:").grid(row=7, column=0)
-        self.mood_entry = tk.Entry(user_frame)
-        self.mood_entry.insert(0, user['mood'] if user['mood'] else '')
-        self.mood_entry.config(state='disabled')
-        self.mood_entry.grid(row=7, column=1)
-
-        tk.Label(user_frame, text="Mood Comment:").grid(row=8, column=0)
+        tk.Label(user_frame, text="Specialisation:").grid(row=9, column=0)
         self.mood_comment_entry = tk.Entry(user_frame)
-        self.mood_comment_entry.insert(0, user['mood_comment'] if user['mood_comment'] else '')
+        self.mood_comment_entry.insert(0, user['specialization'] if user['specialization'] else '')
         self.mood_comment_entry.config(state='disabled')
-        self.mood_comment_entry.grid(row=8, column=1)
-
+        self.mood_comment_entry.grid(row=9, column=1)
+        
         tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
         self.is_disabled_var = tk.BooleanVar(value=user['is_disabled'])
         self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
@@ -83,15 +76,11 @@ class UserEditApp:
 
         # Toggle Edit/Save Button
         self.toggle_button = tk.Button(self.root, text="Edit", command=self.toggle_edit_save)
-        self.toggle_button.pack(pady=0)
+        self.toggle_button.pack(pady=20)
 
         # Delete Button
-        self.delete_button = tk.Button(self.root, text="Delete Patient", command=self.delete_patient)
-        self.delete_button.pack(pady=0)
-
-        # Back Button
-        self.back_button = tk.Button(self.root, text="Back", command=self.go_back)
-        self.back_button.pack(pady=0)
+        self.delete_button = tk.Button(self.root, text="Delete MHWP", command=self.delete_MHWP)
+        self.delete_button.pack(pady=10)
 
     def fetch_user_details(self, user_id):
         user_relation = self.db.getRelation('Users')
@@ -107,8 +96,7 @@ class UserEditApp:
                 'fName': user_data[4],
                 'lName': user_data[5],
                 'emergency_contact_email': user_data[7],
-                'mood': user_data[8],
-                'mood_comment': user_data[9],
+                'specialization': user_data[10],
                 'is_disabled': user_data[11]
             }
         else:
@@ -124,8 +112,7 @@ class UserEditApp:
             self.fName_entry.config(state='normal')
             self.lName_entry.config(state='normal')
             self.emergency_email_entry.config(state='normal')
-            self.mood_entry.config(state='normal')
-            self.mood_comment_entry.config(state='normal')
+            self.specialization_entry.config(state='normal')
             self.is_disabled_check.config(state='normal')
 
             self.toggle_button.config(text="Save Changes")  
@@ -140,8 +127,7 @@ class UserEditApp:
                 'fName': self.fName_entry.get(),
                 'lName': self.lName_entry.get(),
                 'emergency_contact_email': self.emergency_email_entry.get(),
-                'mood': self.mood_entry.get(),
-                'mood_comment': self.mood_comment_entry.get(),
+                'specialization': self.specialization_entry.get(),
                 'is_disabled': self.is_disabled_var.get()
             }
 
@@ -154,8 +140,7 @@ class UserEditApp:
             self.fName_entry.config(state='disabled')
             self.lName_entry.config(state='disabled')
             self.emergency_email_entry.config(state='disabled')
-            self.mood_entry.config(state='disabled')
-            self.mood_comment_entry.config(state='disabled')
+            self.specialization_entry.config(state='disabled')
             self.is_disabled_check.config(state='disabled')
     
     def save_changes_to_db(self):
@@ -167,8 +152,7 @@ class UserEditApp:
             'fName': self.fName_entry.get(),
             'lName': self.lName_entry.get(),
             'emergency_contact_email': self.emergency_email_entry.get(),
-            'mood': self.mood_entry.get(),
-            'mood_comment': self.mood_comment_entry.get(),
+            'specialization': self.specialization_entry.get(),
             'is_disabled': self.is_disabled_var.get()
         }
         
@@ -176,23 +160,16 @@ class UserEditApp:
             if self.original_data[field] != new_value:
                 user_relation.editFieldInRow(self.user_id, field, new_value)
         
-        messagebox.showinfo("Success", "Patient information updated successfully.")
+        messagebox.showinfo("Success", "MHWP information updated successfully.")
 
-    def delete_patient(self):
+    def delete_MHWP(self):
         user_relation = self.db.getRelation('Users')
-        response = messagebox.askyesno("Confirm Deletion", "Are you sure you want to delete this patient?")
+        response = messagebox.askyesno("Confirm Deletion", "Are you sure you want to delete this MHWP?")
 
         if response:
             user_relation.dropRows(id=self.user_id)
-            messagebox.showinfo("Success", "Patient deleted successfully.")
+            messagebox.showinfo("Success", "MHWP deleted successfully.")
             self.on_close()
-
-    def go_back(self):
-        self.root.destroy()
-
-        root = tk.Tk()
-        app = PatientSelectionApp(root)
-        root.mainloop()
 
     def on_close(self):
         self.db.close()
