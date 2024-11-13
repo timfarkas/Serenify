@@ -185,3 +185,4 @@ class UserEditApp:
     def on_close(self):
         self.db.close()
         self.root.destroy()
+
