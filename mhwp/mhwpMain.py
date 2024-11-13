@@ -45,11 +45,11 @@ see_request_button4.pack()
 dashboard_button = tk.Button(root, text="Patient dashboard") 
 dashboard_button.pack()
 
-logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
-logout_button.pack()
+# logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
+# logout_button.pack()
 
-    def exitUser(self):
-        pass
+    # def exitUser(self):
+    #     pass
         ######### Inputs #########
         # username = self.username_entry.get()
         # password = self.password_entry.get()
