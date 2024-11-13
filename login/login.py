@@ -5,7 +5,7 @@ class LoginPage:
     def __init__(self, root):
         self.root = root
         self.root.title("Login")
-        self.root.geometry("400x300")
+        self.root.geometry("400x400")
 
         # H1 equivalent
         h1_label = tk.Label(root, text="Signing in.", font=("Arial", 24, "bold"))
@@ -35,6 +35,10 @@ class LoginPage:
         # Login button
         self.login_button = tk.Button(root, text="Login", command=self.handle_login)
         self.login_button.pack()
+
+        # Reset password button
+        self.reset_button = tk.Button(root, text="Forgotten your password?", command=self.passwordResetPage)
+        self.reset_button.pack()
 
     def handle_login(self):
         # Retrieve inputs
@@ -76,8 +80,8 @@ class LoginPage:
         subprocess.Popen(["python3", "patient/patientNew.py"])
         self.root.destroy()
 
-    def newPatientPage(self):
-        subprocess.Popen(["python3", "patient/patientNew.py"])
+    def passwordResetPage(self):
+        subprocess.Popen(["python3", "login/resetPassword.py"])
         self.root.destroy()
 
 # Run the application
