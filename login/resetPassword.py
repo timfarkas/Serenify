@@ -24,7 +24,7 @@ class ResetPage:
         self.reset_button.pack()
 
         # Login button
-        self.login_button = tk.Button(root, text="Return to login page", command=self.returnToLogin)
+        self.login_button = tk.Button(root, text="Return to login", command=self.returnToLogin)
         self.login_button.pack()
     
     def validateEmail(self):
@@ -40,7 +40,7 @@ class ResetPage:
         return email == 'example123@gmail.com' ####### Hard-coded currently - Will use database 
 
     def returnToLogin(self):
-        subprocess.Popen(["python3", "login.py"])
+        subprocess.Popen(["python3", "login/login.py"])
         self.root.destroy()
     
     # Entry function to open ResetPage
