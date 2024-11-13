@@ -50,8 +50,11 @@ def open_patient_window():
     age_entry.grid(row=6, column=1)
 
     # Add a button to the patient info window
-    button = tk.Button(patient_root, text="Submit", command=patient_root.destroy)
-    button.pack()
+    button = tk.Button(patient_root, text="Complete", command=patient_root.destroy)
+    button.pack() # This needs to log the new info to the 
 
-    button = tk.Button(patient_root, text="Submit", command=patient_root.destroy)
-    button.pack()
+
+if __name__ == "__main__":
+    root = tk.Tk()  # Creates a root window if running standalone
+    open_patient_window()  # Opens the new patient submission form
+    root.mainloop() 
