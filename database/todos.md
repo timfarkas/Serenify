@@ -7,9 +7,11 @@
     - [X] Printing out all of database (for testing purposes) 
 
 - [ ] Advanced DB interactions (that support chaining)
-    - [ ] Search entries by attribute
-    - [ ] Iterate through entries
+    - [X] Search entries by attribute
+    - [ ] Delete entries based on id or list of ids
     - [ ] Edit entries 
+    - Other ideas
+        - [ ] Iterate through entries
 
 - [ ] Advanced integrity checks
     - [ ] User-specific
