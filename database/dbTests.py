@@ -33,7 +33,7 @@ class TestRow(unittest.TestCase):
         # Test mismatched lengths
         with self.assertRaises(IndexError):
             row = Row([1,2], ['a','b','c'])
-            
+    
     def test_row_str(self):
         values = [1, 2, 3]
         labels = ['a', 'b', 'c']
@@ -45,6 +45,25 @@ class TestRow(unittest.TestCase):
         row = Row(values)
         expected_str = "Row:\n Labels: None\n Values:[1, 2, 3]"
         self.assertEqual(row.__str__(), expected_str)
+    
+    def test_get_field(self):
+        # Test label-based field lookup
+        values = [10, 20, 30]
+        labels = ['x', 'y', 'z']
+        row = Row(values, labels)
+        
+        self.assertEqual(row.getField('x'), 10)
+        self.assertEqual(row.getField('y'), 20)
+        self.assertEqual(row.getField('z'), 30)
+        
+        # Test field lookup with non-existent label
+        with self.assertRaises(ValueError):
+            row.getField('a')
+        
+        # Test field lookup when labels are None
+        row_no_labels = Row(values)
+        with self.assertRaises(ValueError):
+            row_no_labels.getField('x')
 
 class TestRowList(unittest.TestCase):
     def test_rowlist_initialization(self):
@@ -58,6 +77,10 @@ class TestRowList(unittest.TestCase):
         self.assertEqual(rowlist[0], row1)
         self.assertEqual(rowlist[1], row2)
         
+        # Test if single rows also have labels
+        self.assertEqual(row1.labels, labels)
+        self.assertEqual(row2.labels, labels)
+        
         # Test initialization without labels
         row1 = Row([1, 2, 3])
         row2 = Row([4, 5, 6])
@@ -68,6 +91,12 @@ class TestRowList(unittest.TestCase):
         # Test initialization with non-Row object
         with self.assertRaises(TypeError):
             rowlist = RowList([row1, [7,8,9]])
+        
+        # Test initialization with mismatched row labels
+        with self.assertRaises(ValueError):
+            row1 = Row([1, 2, 3], ['a', 'b', 'c'])
+            row2 = Row([4, 5, 6], ['x', 'y', 'z'])
+            rowlist = RowList([row1, row2], labels)
         
 class TestRelation(unittest.TestCase):
     def test_relation_initialization(self):
@@ -109,12 +138,20 @@ class TestRelation(unittest.TestCase):
         self.assertEqual(relation.data.iloc[0]['name'], 'Alice')
         self.assertEqual(relation.data.iloc[0]['age'], 30)
         
+        # Test if row attribute labels match relation attribute labels
+        row_labels = relation.data.columns.tolist()
+        self.assertEqual(row_labels, attributeLabels)
+        
         # Insert another row
         relation.insertRow(attributeList=['Bob', 25])
         self.assertEqual(len(relation.data), 2)
         self.assertEqual(relation.data.iloc[1]['id'], 2)
         self.assertEqual(relation.data.iloc[1]['name'], 'Bob')
         self.assertEqual(relation.data.iloc[1]['age'], 25)
+        
+        # Test if row attribute labels match relation attribute labels
+        row_labels = relation.data.columns.tolist()
+        self.assertEqual(row_labels, attributeLabels)
         
         # Insert row with mismatched attribute list length
         with self.assertRaises(ValueError):
@@ -142,6 +179,9 @@ class TestRelation(unittest.TestCase):
         max_row = relation.getAttributeMaxRow('age')
         self.assertEqual(max_row.values, [3, 'Charlie', 35])
         
+        # Test if row attribute labels match relation attribute labels
+        self.assertEqual(max_row.labels, attributeLabels)
+        
         # Test with empty data
         empty_relation = Relation(relationName, attributeLabels, attributeTypes)
         self.assertIsNone(empty_relation.getAttributeMaxRow('age'))
@@ -163,6 +203,9 @@ class TestRelation(unittest.TestCase):
         min_row = relation.getAttributeMinRow('age')
         self.assertEqual(min_row.values, [2, 'Bob', 25])
         
+        # Test if row attribute labels match relation attribute labels
+        self.assertEqual(min_row.labels, attributeLabels)
+        
         # Test with empty data
         empty_relation = Relation(relationName, attributeLabels, attributeTypes)
         self.assertIsNone(empty_relation.getAttributeMinRow('age'))
@@ -183,6 +226,10 @@ class TestRelation(unittest.TestCase):
         self.assertEqual(len(all_rows), 2)
         self.assertEqual(all_rows[0].values, [1, 'Alice', 30])
         self.assertEqual(all_rows[1].values, [2, 'Bob', 25])
+        
+        # Test if row attribute labels match relation attribute labels
+        for row in all_rows:
+            self.assertEqual(row.labels, attributeLabels)
     
     def test_get_all_row_ids(self):
         relationName = "TestRelation"
@@ -208,6 +255,10 @@ class TestRelation(unittest.TestCase):
         self.assertEqual(len(rows), 2)
         self.assertEqual(rows[0].values, [1, 'Alice', 30])
         self.assertEqual(rows[1].values, [3, 'Alice', 35])
+        
+        # Test if row attribute labels match relation attribute labels
+        for row in rows:
+            self.assertEqual(row.labels, attributeLabels)
         
         # Test with non-existing attribute
         with self.assertRaises(KeyError):
@@ -624,7 +675,14 @@ class TestDatabase(unittest.TestCase):
             self.db.getRelation('InvalidEntity')
 
     def test_insert_row_and_rowlist(self):
-        row = Row([1, 'testuser', 'test@example.com', 'password', 'Test', 'User', 'patient', None, None, None, None, False])
+        row = Row([None, 
+                   'testuser', 
+                   'test@example.com', 
+                   'password', 
+                   'Test', 
+                   'User', 
+                   'patient', 
+                   None, None, None, None, False])
         rowList = RowList([row])
         with self.assertRaises(ValueError):
             self.db.insert('User', row=row, rowList=rowList)
