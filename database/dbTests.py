@@ -3,9 +3,9 @@ import logging
 import os
 import shutil
 from datetime import datetime
-from dataStructs import Row, RowList, Relation 
-from entities import Admin, Patient, MHWP, JournalEntry, PatientRecord, Appointment, Allocation
-from database import Database  
+from .dataStructs import Row, RowList, Relation 
+from .entities import Admin, Patient, MHWP, JournalEntry, PatientRecord, Appointment, Allocation
+from .database import Database  
 
 '''
 Disclaimer:
@@ -227,15 +227,15 @@ class TestRelation(unittest.TestCase):
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Alice', 35])
         
-        ids = relation.getIdsWhereEqual('name', 'Alice')
+        ids = relation.getIDsWhereEqual('name', 'Alice')
         self.assertEqual(ids, [1, 3])
         
         # Test with non-existing attribute
         with self.assertRaises(KeyError):
-            relation.getIdsWhereEqual('salary', 1000)
+            relation.getIDsWhereEqual('salary', 1000)
         
         # Test with empty result
-        ids = relation.getIdsWhereEqual('name', 'Eve')
+        ids = relation.getIDsWhereEqual('name', 'Eve')
         self.assertEqual(ids, [])
     
     def test_get_where_equal(self):
@@ -285,11 +285,11 @@ class TestRelation(unittest.TestCase):
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
         
-        ids = relation.getIdsWhereLarger('age', 30)
+        ids = relation.getIDsWhereLarger('age', 30)
         self.assertEqual(ids, [3])
         
         # Test with empty result
-        ids = relation.getIdsWhereLarger('age', 40)
+        ids = relation.getIDsWhereLarger('age', 40)
         self.assertEqual(ids, [])
     
     def test_get_where_larger(self):
@@ -338,11 +338,11 @@ class TestRelation(unittest.TestCase):
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
         
-        ids = relation.getIdsWhereSmaller('age', 30)
+        ids = relation.getIDsWhereSmaller('age', 30)
         self.assertEqual(ids, [2])
         
         # Test with empty result
-        ids = relation.getIdsWhereSmaller('age', 20)
+        ids = relation.getIDsWhereSmaller('age', 20)
         self.assertEqual(ids, [])
     def test_edit_row(self):
         relationName = "TestRelation"
@@ -480,10 +480,10 @@ class TestDatabase(unittest.TestCase):
     def test_insert_admin(self):
         admin = Admin(username='admin1', password='password123')
         self.db.insert_admin(admin)
-        users = self.db.getRelation('Users').data
-        self.assertEqual(len(users), 1)
-        self.assertEqual(users.iloc[0]['username'], 'admin1')
-        self.assertEqual(users.iloc[0]['type'], 'Admin')
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 1)
+        self.assertEqual(user.iloc[0]['username'], 'admin1')
+        self.assertEqual(user.iloc[0]['type'], 'Admin')
 
     def test_insert_patient(self):
         patient = Patient(
@@ -493,16 +493,14 @@ class TestDatabase(unittest.TestCase):
             fName='John',
             lName='Doe',
             emergency_contact_email='contact@example.com',
-            moods='Happy',
-            mood_comments='Feeling good',
             is_disabled=False
         )
         self.db.insert_patient(patient)
-        users = self.db.getRelation('Users').data
-        self.assertEqual(len(users), 1)
-        self.assertEqual(users.iloc[0]['username'], 'patient1')
-        self.assertEqual(users.iloc[0]['type'], 'Patient')
-        self.assertEqual(users.iloc[0]['email'], 'patient1@example.com')
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 1)
+        self.assertEqual(user.iloc[0]['username'], 'patient1')
+        self.assertEqual(user.iloc[0]['type'], 'Patient')
+        self.assertEqual(user.iloc[0]['email'], 'patient1@example.com')
 
     def test_insert_mhwp(self):
         mhwp = MHWP(
@@ -515,33 +513,35 @@ class TestDatabase(unittest.TestCase):
             is_disabled=False
         )
         self.db.insert_mhwp(mhwp)
-        users = self.db.getRelation('Users').data
-        self.assertEqual(len(users), 1)
-        self.assertEqual(users.iloc[0]['username'], 'mhwp1')
-        self.assertEqual(users.iloc[0]['type'], 'MHWP')
-        self.assertEqual(users.iloc[0]['specialization'], 'Counseling')
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 1)
+        self.assertEqual(user.iloc[0]['username'], 'mhwp1')
+        self.assertEqual(user.iloc[0]['type'], 'MHWP')
+        self.assertEqual(user.iloc[0]['specialization'], 'Counseling')
 
     def test_insert_journal_entry(self):
         journal_entry = JournalEntry(patient_id=1, text='Today was a good day.')
         self.db.insert_journal_entry(journal_entry)
-        entries = self.db.getRelation('JournalEntries').data
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries.iloc[0]['patient_id'], 1)
-        self.assertEqual(entries.iloc[0]['text'], 'Today was a good day.')
+        entry = self.db.getRelation('JournalEntry').data
+        self.assertEqual(len(entry), 1)
+        self.assertEqual(entry.iloc[0]['patient_id'], 1)
+        self.assertEqual(entry.iloc[0]['text'], 'Today was a good day.')
 
     def test_insert_appointment(self):
         appointment = Appointment(
             patient_id=1,
             mhwp_id=2,
             date=datetime(2023, 1, 1, 10, 0),
-            status='Scheduled'
+            status='Scheduled',
+            room_name='Room 101'
         )
         self.db.insert_appointment(appointment)
-        appointments = self.db.getRelation('Appointments').data
-        self.assertEqual(len(appointments), 1)
-        self.assertEqual(appointments.iloc[0]['patient_id'], 1)
-        self.assertEqual(appointments.iloc[0]['mhwp_id'], 2)
-        self.assertEqual(appointments.iloc[0]['status'], 'Scheduled')
+        appointment_data = self.db.getRelation('Appointment').data
+        self.assertEqual(len(appointment_data), 1)
+        self.assertEqual(appointment_data.iloc[0]['patient_id'], 1)
+        self.assertEqual(appointment_data.iloc[0]['mhwp_id'], 2)
+        self.assertEqual(appointment_data.iloc[0]['status'], 'Scheduled')
+        self.assertEqual(appointment_data.iloc[0]['room_name'], 'Room 101')
 
     def test_insert_patient_record(self):
         patient_record = PatientRecord(
@@ -551,11 +551,11 @@ class TestDatabase(unittest.TestCase):
             conditions=['Anxiety', 'Depression']
         )
         self.db.insert_patient_record(patient_record)
-        records = self.db.getRelation('PatientRecords').data
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records.iloc[0]['patient_id'], 1)
-        self.assertEqual(records.iloc[0]['notes'], 'Patient is recovering well.')
-        self.assertEqual(records.iloc[0]['conditions'], ['Anxiety', 'Depression'])
+        record = self.db.getRelation('PatientRecord').data
+        self.assertEqual(len(record), 1)
+        self.assertEqual(record.iloc[0]['patient_id'], 1)
+        self.assertEqual(record.iloc[0]['notes'], 'Patient is recovering well.')
+        self.assertEqual(record.iloc[0]['conditions'], ['Anxiety', 'Depression'])
 
     def test_insert_allocation(self):
         allocation = Allocation(
@@ -566,11 +566,11 @@ class TestDatabase(unittest.TestCase):
             end_date=datetime(2023, 12, 31)
         )
         self.db.insert_allocation(allocation)
-        allocations = self.db.getRelation('Allocations').data
-        self.assertEqual(len(allocations), 1)
-        self.assertEqual(allocations.iloc[0]['admin_id'], 1)
-        self.assertEqual(allocations.iloc[0]['patient_id'], 2)
-        self.assertEqual(allocations.iloc[0]['mhwp_id'], 3)
+        allocation_data = self.db.getRelation('Allocation').data
+        self.assertEqual(len(allocation_data), 1)
+        self.assertEqual(allocation_data.iloc[0]['admin_id'], 1)
+        self.assertEqual(allocation_data.iloc[0]['patient_id'], 2)
+        self.assertEqual(allocation_data.iloc[0]['mhwp_id'], 3)
 
     def test_close_and_load_database(self):
         # Insert some data
@@ -580,9 +580,9 @@ class TestDatabase(unittest.TestCase):
         self.db.close()
         # Reopen the database
         self.db = Database(data_file=self.test_db_file, logger=self.logger, verbose=False)
-        users = self.db.getRelation('Users').data
-        self.assertEqual(len(users), 1)
-        self.assertEqual(users.iloc[0]['username'], 'admin1')
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 1)
+        self.assertEqual(user.iloc[0]['username'], 'admin1')
 
     def test_print_all(self):
         # Insert some data
@@ -596,20 +596,20 @@ class TestDatabase(unittest.TestCase):
         self.db.printAll()
         sys.stdout = sys.__stdout__
         output = captured_output.getvalue()
-        self.assertIn('Users:', output)
+        self.assertIn('User:', output)
         self.assertIn('admin1', output)
 
     def test_get_id(self):
         admin = Admin(username='admin1', password='password123')
         self.db.insert_admin(admin)
-        result = self.db.getId('Users', 1)
+        result = self.db.getId('User', 1)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].values[1], 'admin1')  # username is at index 1
 
     def test_get_relation(self):
-        users_relation = self.db.getRelation('Users')
-        self.assertIsInstance(users_relation, Relation)
-        self.assertEqual(users_relation.name, 'Users')
+        user_relation = self.db.getRelation('User')
+        self.assertIsInstance(user_relation, Relation)
+        self.assertEqual(user_relation.name, 'User')
 
     def test_insert_with_invalid_entity(self):
         with self.assertRaises(KeyError):
@@ -627,7 +627,7 @@ class TestDatabase(unittest.TestCase):
         row = Row([1, 'testuser', 'test@example.com', 'password', 'Test', 'User', 'patient', None, None, None, None, False])
         rowList = RowList([row])
         with self.assertRaises(ValueError):
-            self.db.insert('Users', row=row, rowList=rowList)
+            self.db.insert('User', row=row, rowList=rowList)
 
     def test_overwrite_database(self):
         # Insert some data
@@ -636,8 +636,8 @@ class TestDatabase(unittest.TestCase):
         self.db.close()
         # Reopen the database with overwrite=True
         self.db = Database(data_file=self.test_db_file, logger=self.logger, verbose=False, overwrite=True)
-        users = self.db.getRelation('Users').data
-        self.assertEqual(len(users), 0)
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 0)
 
     def test_auto_increment_primary_key(self):
         # Insert multiple admins
@@ -645,32 +645,32 @@ class TestDatabase(unittest.TestCase):
         admin2 = Admin(username='admin2', password='password123')
         self.db.insert_admin(admin1)
         self.db.insert_admin(admin2)
-        users = self.db.getRelation('Users').data
-        self.assertEqual(len(users), 2)
-        self.assertEqual(users.iloc[0]['user_id'], 1)
-        self.assertEqual(users.iloc[1]['user_id'], 2)
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 2)
+        self.assertEqual(user.iloc[0]['user_id'], 1)
+        self.assertEqual(user.iloc[1]['user_id'], 2)
 
     def test_insert_row_list(self):
         # Insert a list of rows without the primary key
-        row1 = Row(['user1', 'user1@example.com', 'password', 'First1', 'Last1', 'patient', None, None, None, None, False])
-        row2 = Row(['user2', 'user2@example.com', 'password', 'First2', 'Last2', 'patient', None, None, None, None, False])
+        row1 = Row(['user1', 'user1@example.com', 'password', 'First1', 'Last1', 'patient', None, None, False])
+        row2 = Row(['user2', 'user2@example.com', 'password', 'First2', 'Last2', 'patient', None, None, False])
         rowList = RowList([row1, row2])
-        self.db.insert('Users', rowList=rowList)
-        users = self.db.getRelation('Users').data
-        self.assertEqual(len(users), 2)
-        self.assertEqual(users.iloc[0]['username'], 'user1')
-        self.assertEqual(users.iloc[1]['username'], 'user2')
+        self.db.insert('User', rowList=rowList)
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 2)
+        self.assertEqual(user.iloc[0]['username'], 'user1')
+        self.assertEqual(user.iloc[1]['username'], 'user2')
 
     def test_insert_invalid_row(self):
         # Insert a row with missing fields
         row = Row([1, 'user1'])  # Missing required fields
         with self.assertRaises(ValueError):
-            self.db.insert('Users', row=row)
+            self.db.insert('User', row=row)
 
     def test_insert_invalid_row_type(self):
         # Insert an invalid row type
         with self.assertRaises(TypeError):
-            self.db.insert('Users', row=[1, 'user1'])  # Should be a Row object
+            self.db.insert('User', row=[1, 'user1'])  # Should be a Row object
 
     def test_data_persistence(self):
         # Insert data and close the database
@@ -681,17 +681,15 @@ class TestDatabase(unittest.TestCase):
             fName='John',
             lName='Doe',
             emergency_contact_email='contact@example.com',
-            moods='Happy',
-            mood_comments='Feeling good',
             is_disabled=False
         )
         self.db.insert_patient(patient)
         self.db.close()
         # Reopen the database
         self.db = Database(data_file=self.test_db_file, logger=self.logger, verbose=False)
-        users = self.db.getRelation('Users').data
-        self.assertEqual(len(users), 1)
-        self.assertEqual(users.iloc[0]['username'], 'patient1')
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 1)
+        self.assertEqual(user.iloc[0]['username'], 'patient1')
 
 if __name__ == '__main__':
     unittest.main()

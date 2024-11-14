@@ -8,8 +8,9 @@
 
 - [ ] Advanced DB interactions (that support chaining)
     - [X] Search entries by attribute
-    - [ ] Delete entries based on id or list of ids
-    - [ ] Edit entries 
+    - [X] Delete entries based on id or list of ids
+    - [X] Edit entries 
+    - [ ] Add print() to relations
     - Other ideas
         - [ ] Iterate through entries
 
