@@ -38,6 +38,18 @@ class Row(list):
         return indentStr+"Row:\n"+indentStr+" Labels: "+str(self.labels)+"\n"+indentStr+" Values:"+str(self.values) if labelled else indentStr+str(self.values)
 
     def getField(self, attributeLabel):
+        """
+        Retrieve the value associated with a given attribute label.
+
+        Parameters:
+        attributeLabel (str): The label of the attribute to retrieve the value for.
+
+        Returns:
+        The value corresponding to the provided attribute label.
+
+        Raises:
+        ValueError: If the labels are None or the attribute label is not found.
+        """
         if self.labels is not None and attributeLabel in self.labels:
             return self.values[self.labels.index(attributeLabel)]
         elif self.labels is None:   
