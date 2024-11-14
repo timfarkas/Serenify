@@ -197,13 +197,16 @@ class Patient:
         # Edit information
         subprocess.Popen(["python3", "patient/editInfo.py"])
 
-    # def exitUser(self):
-    #       Logging out action
-    #     pass
-    #     ######### Inputs #########
-    #     # username = self.username_entry.get()
-    #     # password = self.password_entry.get()
-    #     # role = self.user_role.get()
+
+# logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
+# logout_button.pack()
+
+#     def exitUser(self):
+#         pass
+        ######### Inputs #########
+        # username = self.username_entry.get()
+        # password = self.password_entry.get()
+        # role = self.user_role.get()
 
 # Run the application
 if __name__ == "__main__":
