@@ -11,6 +11,7 @@
     - [X] Delete entries based on id or list of ids
     - [X] Edit entries 
     - [ ] Add print() to relations
+    - [ ] Access field of Row object based on attribute
     - Other ideas
         - [ ] Iterate through entries
 

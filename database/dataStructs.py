@@ -37,6 +37,26 @@ class Row(list):
         indentStr = "   "*indent
         return indentStr+"Row:\n"+indentStr+" Labels: "+str(self.labels)+"\n"+indentStr+" Values:"+str(self.values) if labelled else indentStr+str(self.values)
 
+    def getField(self, attributeLabel):
+        """
+        Retrieve the value associated with a given attribute label.
+
+        Parameters:
+        attributeLabel (str): The label of the attribute to retrieve the value for.
+
+        Returns:
+        The value corresponding to the provided attribute label.
+
+        Raises:
+        ValueError: If the labels are None or the attribute label is not found.
+        """
+        if self.labels is not None and attributeLabel in self.labels:
+            return self.values[self.labels.index(attributeLabel)]
+        elif self.labels is None:   
+            raise ValueError(f"Row labels are None, can't do label-based value lookup.")
+        else:
+            raise ValueError(f"Field {attributeLabel} not found among row fields ({self.labels})")
+
 class RowList(list):
     """
     A class to represent a list of Row objects.
@@ -59,6 +79,8 @@ class RowList(list):
                 raise TypeError(f"Expected Row but received {type(row)}. RowList must be initialized with a list of Row objects.")
             if self.labelled and len(row) != len(labels):
                 raise IndexError(f"Length of values ({len(row)}) must be equal to length of labels ({len(labels)})")
+            if self.labelled and row.labels != labels:
+                raise ValueError(f"Labels of row ({row}) must be equal to labels of RowList ({labels})")
 
     def __str__(self):
         """
@@ -562,6 +584,6 @@ class Relation():
         rl = RowList([],labels=labels)
         for id in df.index:
             series = df.loc[id]
-            row = Relation._rowFromSeries(series)
+            row = Relation._rowFromSeries(series=series,labels=labels)
             rl.append(row)
         return rl
