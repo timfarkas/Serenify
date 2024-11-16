@@ -1,10 +1,12 @@
 import sys
 import os
 import datetime
-from .database import Database
-from .entities import UserError, RecordError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
+from database import Database
+from entities import UserError, RecordError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment, MoodEntry,ChatContent
 
-from .initDBwithDummyData import initDummyDatabase
+from initDBwithDummyData import initDummyDatabase
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#
 
 ##### DB INIT FOR TESTING
 ### Initialize the database with dummy data and save it

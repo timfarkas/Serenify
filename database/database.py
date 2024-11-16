@@ -12,8 +12,8 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation
-from .dataStructs import Row, Relation, RowList
+from entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent
+from dataStructs import Row, Relation, RowList
 
 ## Database class
 class Database:
@@ -144,6 +144,25 @@ class Database:
         self.allocation = Relation('Allocation',
                                     attributeLabels=['allocation_id', 'admin_id', 'patient_id', 'mhwp_id', 'start_date', 'end_date'],
                                     relationAttributeTypes=[int,int, int, int, date, date])
+
+        """New entities created for new features."""
+        self.mood_entry = Relation('MoodEntry',
+                                      attributeLabels=['moodentry_id', 'patient_id','moodscore', 'comment', 'timestamp'],
+                                      relationAttributeTypes=[int, int, int ,str, date])
+
+        self.review_entry = Relation('MHWPReview',
+                                   attributeLabels=['MHWP_review_id', 'patient_id','mhwp_id','reviewscore', 'reviewcomment', 'timestamp'],
+                                   relationAttributeTypes=[int, int, int, int, str, date])
+        #
+        # self.chatroom = Relation('ChatRoom',
+        #                            attributeLabels=['Room_id', 'patient_id', 'mhwp_id'],
+        #                            relationAttributeTypes=[int, int, int, bool, bool, date])
+
+        self.chatcontent = Relation('ChatContent',
+                                 attributeLabels=['chatcontent_id','allocation_id', 'user_id', 'text',
+                                                  'timestamp'],
+                                 relationAttributeTypes=[int,int, int, str, date])
+
         self.initDict()
 
     def initDict(self):
@@ -155,7 +174,11 @@ class Database:
             'JournalEntry':self.journal_entry,
             'Appointment':self.appointment,
             'PatientRecord':self.patient_record,
-            'Allocation':self.allocation
+            'Allocation':self.allocation,
+            'MoodEntry':self.mood_entry,
+            'MHWPReview':self.review_entry,
+            # 'ChatRoom':self.chatroom,
+            'ChatContent':self.chatcontent,
         } 
 
     def __load_database(self):
@@ -170,6 +193,10 @@ class Database:
             self.appointment = data['appointment']
             self.patient_record = data['patient_record']
             self.allocation = data['allocation']
+            self.mood_entry = data['mood_entry']
+            self.review_entry = data['review_entry']
+            # self.chatroom = data['chatroom']
+            self.chatcontent = data['chatcontent']
         self.initDict()
 
     def __save_database(self):
@@ -182,14 +209,18 @@ class Database:
                 'journal_entry': self.journal_entry,
                 'appointment': self.appointment,
                 'patient_record': self.patient_record,
-                'allocation': self.allocation
+                'allocation': self.allocation,
+                'mood_entry': self.mood_entry,
+                'review_entry': self.review_entry,
+                # 'chatroom': self.chatroom,
+                'chatcontent': self.chatcontent,
             }, f)
 
     def __str__(self):
         """
         Returns a string representation of the database, showing all relations and their data.
         """
-        return "User:\n"+str(self.user)+"\nJournal Entry:\n"+str(self.journal_entry)+"\nAppointment:\n"+str(self.appointment)+"\nPatient Record:\n"+str(self.patient_record)+"\nAllocation:\n"+str(self.allocation)
+        return "User:\n"+str(self.user)+"\nJournal Entry:\n"+str(self.journal_entry)+"\nAppointment:\n"+str(self.appointment)+"\nPatient Record:\n"+str(self.patient_record)+"\nAllocation:\n"+str(self.allocation)+"\nMood Entry\n"+str(self.mood_entry)+"\nChat Content\n"+str(self.chatcontent)
 
     def printAll(self):
         """
@@ -205,6 +236,14 @@ class Database:
         print(self.patient_record)
         print("\nAllocation:")
         print(self.allocation)
+        print("\nMood Entry:")
+        print(self.mood_entry)
+        print("\nReview Entry:")
+        print(self.review_entry)
+        # print("\nChat Room:")
+        # print(self.chatroom)
+        print("\nChat Content:")
+        print(self.chatcontent)
 
     def insert(self, entity: str, row: Row = None, rowList: RowList = None):
         """
@@ -368,3 +407,21 @@ class Database:
         """
         
         self.insert("Appointment", Row([appointment.patient_id, appointment.mhwp_id, appointment.date, appointment.room_name, appointment.status]))
+    def insert_mood_entry(self, mood_entry : MoodEntry):
+            """
+            Inserts a journal entry into the JournalEntry relation.
+
+            Parameters
+            ----------
+            journal_entry : JournalEntry
+                The journal entry object to insert.
+            """
+            self.insert("MoodEntry",Row([mood_entry.patient_id,mood_entry.moodscore,mood_entry.comment,mood_entry.timestamp]))
+
+    def insert_review_entry(self, review_entry : MHWPReview):
+            self.insert("MHWPReview",Row([review_entry.patient_id,review_entry.mhwp_id,review_entry.reviewscore,review_entry.reviewcomment,review_entry.timestamp]))
+
+    # def insert_chatroom(self, chatroom : ChatRoom):
+    #         self.insert("ChatContent",Row([chatroom.patient_id,chatroom.mhwp_id]))
+    def insert_chatcontent(self, chatcontent : ChatContent):
+            self.insert("ChatContent",Row([chatcontent.allocation_id,chatcontent.user_id,chatcontent.text,chatcontent.timestamp]))

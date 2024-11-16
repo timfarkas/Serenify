@@ -192,3 +192,40 @@ class Allocation:
         self.mhwp_id = mhwp_id        # foreign key to MHWP
         self.start_date = start_date
         self.end_date = end_date
+
+"""New entities created for new features."""
+class MoodEntry:
+
+    def __init__(self,moodentry_id: int = None, patient_id: int = None, moodscore:int=None,comment: str = '', timestamp: datetime = None):
+        self.moodentry_id= moodentry_id
+        self.moodscore = moodscore
+        self.patient_id = patient_id  # foreign key to Patient
+        self.comment = comment
+        self.timestamp = timestamp
+
+class MHWPReview:
+    def __init__(self,MHWP_review_id: int = None, patient_id: int = None,mhwp_id: int = None, reviewscore:int=None,reviewcomment: str = '', timestamp: datetime = None):
+
+        self.MHWP_review_id=MHWP_review_id
+        self.patient_id = patient_id
+        self.mhwp_id= mhwp_id  # foreign key to Patient
+        self.reviewscore = reviewscore
+        self.reviewcomment = reviewcomment
+        self.timestamp = timestamp
+
+# class ChatRoom:
+#     def __init__(self,room_id: int = None, patient_id: int = None, mhwp_id: int = None):
+#
+#         self.room_id=room_id
+#         self.patient_id = patient_id
+#         self.mhwp_id= mhwp_id
+
+
+class ChatContent:
+    def __init__(self,chatcontent_id:int=None, allocation_id: int = None, user_id: int = None, text: str = '', timestamp: datetime = None):
+        self.chatcontent_id = chatcontent_id
+        self.allocation_id = allocation_id
+        self.user_id = user_id
+        self.text = text
+        self.timestamp = timestamp
+
