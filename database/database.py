@@ -128,8 +128,8 @@ class Database:
         Initializes the relations (tables) in the database with predefined schemas.
         """
         self.user = Relation('User',
-                            attributeLabels=['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'specialization', 'is_disabled'],
-                            relationAttributeTypes=[int, str, str, str, str, str, str, str, str, bool])
+                            attributeLabels=['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled'],
+                            relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, bool])
                     
         self.journal_entry = Relation('JournalEntry',
                                         attributeLabels=['entry_id', 'patient_id', 'text', 'timestamp'],
@@ -349,7 +349,7 @@ class Database:
         admin : Admin
             The admin object to insert.
         """
-        self.insert("User",Row([admin.username,None,admin.password,None,None,admin.type,None,None,admin.is_disabled]))
+        self.insert("User",Row([admin.username,None,admin.password,None,None,admin.type,None,None,None,admin.is_disabled]))
     
     @ensure_open
     def insert_patient(self,patient : Patient):
@@ -361,7 +361,7 @@ class Database:
         patient : Patient
             The patient object to insert.
         """
-        self.insert("User",Row([patient.username,patient.email,patient.password,patient.fName,patient.lName,patient.type,patient.emergency_contact_email,None,patient.is_disabled]))
+        self.insert("User",Row([patient.username,patient.email,patient.password,patient.fName,patient.lName,patient.type,patient.emergency_contact_email,patient.emergency_contact_name,None,patient.is_disabled]))
     
     @ensure_open
     def insert_mhwp(self, mhwp : MHWP):
@@ -373,7 +373,7 @@ class Database:
         mhwp : MHWP
             The MHWP object to insert.
         """
-        self.insert("User",Row([mhwp.username,mhwp.email,mhwp.password,mhwp.fName,mhwp.lName,mhwp.type,None,mhwp.specialization,mhwp.is_disabled]))
+        self.insert("User",Row([mhwp.username,mhwp.email,mhwp.password,mhwp.fName,mhwp.lName,mhwp.type,None,None,mhwp.specialization,mhwp.is_disabled]))
     
     @ensure_open
     def insert_allocation(self, allocation : Allocation):

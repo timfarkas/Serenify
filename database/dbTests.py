@@ -559,6 +559,7 @@ class TestDatabase(unittest.TestCase):
             fName='John',
             lName='Doe',
             emergency_contact_email='contact@example.com',
+            emergency_contact_name='Jane Doe',
             is_disabled=False
         )
         self.db.insert_patient(patient)
@@ -725,8 +726,8 @@ class TestDatabase(unittest.TestCase):
 
     def test_insert_row_list(self):
         # Insert a list of rows without the primary key
-        row1 = Row(['user1', 'user1@example.com', 'password', 'First1', 'Last1', 'patient', None, None, False])
-        row2 = Row(['user2', 'user2@example.com', 'password', 'First2', 'Last2', 'patient', None, None, False])
+        row1 = Row(['user1', 'user1@example.com', 'password', 'First1', 'Last1', 'patient', None, None, None, False])
+        row2 = Row(['user2', 'user2@example.com', 'password', 'First2', 'Last2', 'patient', None, None, None, False])
         rowList = RowList([row1, row2])
         self.db.insert('User', rowList=rowList)
         user = self.db.getRelation('User').data

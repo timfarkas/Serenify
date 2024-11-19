@@ -69,7 +69,9 @@ class Admin(User):
 class Patient(User):
     """A class to represent a patient user."""
     def __init__(self, user_id: int = None, username: str = '', password: str = '', fName: str = '', lName: str = '', email: str = '',
-                 emergency_contact_email: str = None, is_disabled: bool = False):
+                emergency_contact_name : str = None,
+                emergency_contact_email: str = None, 
+                is_disabled: bool = False):
         """
         Initialize a Patient object.
 
@@ -88,6 +90,7 @@ class Patient(User):
         self.lName = lName
         self.email = email
         self.emergency_contact_email = emergency_contact_email
+        self.emergency_contact_name = emergency_contact_name
         
 ## MHWP class inheriting from User
 class MHWP(User):
@@ -195,11 +198,10 @@ class Allocation:
 
 """New entities created for new features."""
 class MoodEntry:
-
     def __init__(self,moodentry_id: int = None, patient_id: int = None, moodscore:int=None,comment: str = '', timestamp: datetime = None):
         self.moodentry_id= moodentry_id
-        self.moodscore = moodscore
         self.patient_id = patient_id  # foreign key to Patient
+        self.moodscore = moodscore
         self.comment = comment
         self.timestamp = timestamp
 
