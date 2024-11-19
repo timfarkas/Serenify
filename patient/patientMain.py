@@ -10,37 +10,17 @@ from database import Database
 from entities import Patient, JournalEntry, MoodEntry
 from datetime import datetime
 import pandas as pd
+#import initDBwithDummyData ??????????
+### Initialize the database with dummy data and save it
+# db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
+# initDummyDatabase(db)
+# db.close()
 
-
-#TO DO
-#mood --> color coded
-#link the button to appointments page
+#TO DO:
+#SESSIONS
 #functioning logout (have a session after logging in)
 #see mood display
-#errors?
-
-####Dont need it########
-# def open_patient_new():
-#     root.destroy()  # Close the login window
-#     patientNew.open_patient_window()  # Open patient window
-
-##### Will need it later #####
-# def search():
-#     query = search_entry.get()  # Get the search query from the entry
-#     if query:
-#         # For demonstration, we'll just show a message box with the search term
-#         tk.messagebox.showinfo("Search", f"You searched for: {query}")
-#     else:
-#         tk.messagebox.showwarning("Warning", "Please enter a search term.")
-
-######### Likely needed for the search bar to function: ###########
-# def open_link():
-#     print("Link clicked!")  # Replace this with opening a web link if desired
-
-# link = tk.Label(root, text="Click here", fg="blue", cursor="hand2")
-# link.bind("<Button-1>", lambda e: open_link())
-# link.pack()
-
+#error checks?
 
 #as sessions etc dont work yet -- for now current user_id will be hardcoded
 #that needs to be resolved and automater though
@@ -64,12 +44,12 @@ class Patient:
         self.radio_var = tk.IntVar()
         self.radio_var.set("")  # Default to no selection
 
-        self.radio1 = tk.Radiobutton(root, text="Amazing", variable=self.radio_var, value="6")
-        self.radio2 = tk.Radiobutton(root, text="Great", variable=self.radio_var, value="5")
-        self.radio3 = tk.Radiobutton(root, text="Good", variable=self.radio_var, value="4")
-        self.radio4 = tk.Radiobutton(root, text="Okay", variable=self.radio_var, value="3")
-        self.radio5 = tk.Radiobutton(root, text="Could be better", variable=self.radio_var, value="2")
-        self.radio6 = tk.Radiobutton(root, text="Terrible", variable=self.radio_var, value="1")
+        self.radio1 = tk.Radiobutton(root, text="Amazing", variable=self.radio_var, value="6", fg="black")
+        self.radio2 = tk.Radiobutton(root, text="Great", variable=self.radio_var, value="5", fg="black")
+        self.radio3 = tk.Radiobutton(root, text="Good", variable=self.radio_var, value="4", fg="black")
+        self.radio4 = tk.Radiobutton(root, text="Okay", variable=self.radio_var, value="3", fg="black")
+        self.radio5 = tk.Radiobutton(root, text="Could be better", variable=self.radio_var, value="2", fg="black")
+        self.radio6 = tk.Radiobutton(root, text="Terrible", variable=self.radio_var, value="1", fg="black")
 
         # Grid the radio buttons
         self.radio1.grid(row=2, column=0)
@@ -125,17 +105,39 @@ class Patient:
         self.view_entries_button.grid(row=3, column=1, pady=5)
 
         # Buttons
-        self.exercises = tk.Button(root, text="Exercises", command = self.exercises)
+        self.exercises_page = tk.Button(root, text="Exercises", command = self.exercises)
         self.edit_into = tk.Button(root, text="Edit personal info", command = self.edit_information)
-        #####Link the button to appointments#########
-        self.appointments = tk.Button(root, text="Book/Cancel appointment")
-        self.exercises.grid(row=7, column=0, columnspan = 6, pady=5)
+        self.appointments = tk.Button(root, text="Book an appointment", command = self.book)
+        self.cancel_appointement = tk.Button(root, text="Cancel your appointment", command = self.cancel) ####RESCHEDULE????
+        self.exercises_page.grid(row=7, column=0, columnspan = 6, pady=5)
         self.edit_into.grid(row=8, column=0, columnspan = 6, pady=5)
         self.appointments.grid(row=9, column=0, columnspan=6, pady=5)
+        self.cancel_appointement.grid(row=10, column=0, columnspan = 6, pady=5)
 
         ######Link to logging out action when connected to database#######
         self.logout_button = tk.Button(root, text="Logout")  # command=self.exitUser
-        self.logout_button.grid(row=10, column=0, columnspan = 6, pady=5)
+        self.logout_button.grid(row=11, column=0, columnspan = 6, pady=5)
+
+        self.apply_initial_colors()
+
+    def apply_initial_colors(self):
+        # Define color mapping based on mood values
+        color_mapping = {
+            6: "#66FF66",  # Amazing (Green)
+            5: "#99FF33",  # Great (Light Green)
+            4: "#FFFF66",  # Good (Yellow)
+            3: "#FFCC33",  # Okay (Orange)
+            2: "#FF6666",  # Could be better (Light Red)
+            1: "#FF3333",  # Terrible (Red)
+        }
+
+        # Apply color to all radio buttons initially
+        self.radio1.config(bg=color_mapping[6])
+        self.radio2.config(bg=color_mapping[5])
+        self.radio3.config(bg=color_mapping[4])
+        self.radio4.config(bg=color_mapping[3])
+        self.radio5.config(bg=color_mapping[2])
+        self.radio6.config(bg=color_mapping[1])
 
     def submit_mood(self):
         # Get the selected mood
@@ -246,10 +248,22 @@ class Patient:
     def edit_information(self):
         # Edit information
         subprocess.Popen(["python3", "patient/editInfo.py"])
+        self.root.destroy()
 
     def exercises(self):
         # Edit information
         subprocess.Popen(["python3", "patient/exercises.py"])
+        self.root.destroy()
+
+    def book(self):
+        # Book an appointement
+        subprocess.Popen(["python3", "patient/booking.py"])
+        self.root.destroy()
+
+    def cancel(self):
+        # Cancel appointement 
+        subprocess.Popen(["python3", "patient/cancel.py"])
+        self.root.destroy()
 
 
 # logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
