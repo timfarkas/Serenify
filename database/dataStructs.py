@@ -498,10 +498,17 @@ class Relation():
                 raise KeyError(f"Invalid primary key. Key {attributes[0]} is a duplicate of primary key of row {i}.")
 
         if not autoIncrementPrimaryKey:
-            self.data = pd.concat([self.data, pd.DataFrame([attributes],columns=self.attributeLabels)],ignore_index=True)
+            if self.data.empty:
+                self.data = pd.DataFrame([attributes], columns=self.attributeLabels)
+            else:
+                self.data = pd.concat([self.data, pd.DataFrame([attributes], columns=self.attributeLabels)], ignore_index=True)
         else:
             key = self._generateIncrementedPrimaryKey()
-            self.data = pd.concat([self.data, pd.DataFrame([[key]+attributes],columns=self.attributeLabels)],ignore_index=True)
+            new_row = pd.DataFrame([[key] + attributes], columns=self.attributeLabels)
+            if self.data.empty:
+                self.data = new_row
+            else:
+                self.data = pd.concat([self.data, new_row], ignore_index=True)
     
     def insertRows(self, rows:RowList):
         """

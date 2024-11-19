@@ -528,6 +528,21 @@ class TestDatabase(unittest.TestCase):
             os.remove(self.test_db_file)
         del self.db
 
+    def test_ensure_open_decorator(self):
+        # Test that the @ensure_open decorator ensures the database is open before operations
+        self.db.close()  # Manually close the database
+        with self.assertRaises(Exception):  # Expect an error if the database is closed
+            self.db.insert_admin(Admin(username='admin2', password='password456'))
+        
+        # Reopen the database and perform an operation to ensure it works when open
+        self.db = Database(data_file=self.test_db_file, logger=self.logger, verbose=False, overwrite=False)
+        admin = Admin(username='admin2', password='password456')
+        self.db.insert_admin(admin)
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 1)
+        self.assertEqual(user.iloc[0]['username'], 'admin2')
+        self.assertEqual(user.iloc[0]['type'], 'Admin')
+
     def test_insert_admin(self):
         admin = Admin(username='admin1', password='password123')
         self.db.insert_admin(admin)
