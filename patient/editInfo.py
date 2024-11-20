@@ -7,7 +7,7 @@ sys.path.append(project_root)
 from database import Database
 import pandas as pd
 import subprocess
-#import initDBwithDummyData ??????????
+#from database.initDBwithDummyData import initDummyDatabase
 ### Initialize the database with dummy data and save it
 # db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
 # initDummyDatabase(db)
@@ -82,6 +82,7 @@ class EditInfo:
         self.update_button = tk.Button(self.root, text="Update Information", command=self.update_info)
         self.update_button.grid(row=10, column=0, columnspan=2, pady=20)
 
+        #Back button
         self.back_button = tk.Button(root, text="Back to the main page", command=self.backButton)
         self.back_button.grid(row=11, column=0, columnspan=2, pady=20)
     

@@ -1,16 +1,15 @@
-#import patientNew  # Dont think ill need it here at all
 import sys
 import os
 import tkinter as tk
 from tkinter import messagebox
 import subprocess # This allows us to open other files
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-sys.path.append(project_root)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
-from entities import Patient, JournalEntry, MoodEntry
+from database.entities import Patient, JournalEntry, MoodEntry
+from database.initDBwithDummyData import initDummyDatabase
 from datetime import datetime
 import pandas as pd
-#import initDBwithDummyData ??????????
+
 ### Initialize the database with dummy data and save it
 # db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
 # initDummyDatabase(db)
@@ -123,12 +122,12 @@ class Patient:
     def apply_initial_colors(self):
         # Define color mapping based on mood values
         color_mapping = {
-            6: "#66FF66",  # Amazing (Green)
-            5: "#99FF33",  # Great (Light Green)
-            4: "#FFFF66",  # Good (Yellow)
-            3: "#FFCC33",  # Okay (Orange)
-            2: "#FF6666",  # Could be better (Light Red)
-            1: "#FF3333",  # Terrible (Red)
+            6: "green",  # Amazing (Green)
+            5: "light green",  # Great (Light Green)
+            4: "yellow",  # Good (Yellow)
+            3: "orange",  # Okay (Orange)
+            2: "brown",  # Could be better (Light Red)
+            1: "red",  # Terrible (Red)
         }
 
         # Apply color to all radio buttons initially
