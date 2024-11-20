@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 ## Database backend types representing rows, lists of rows, and relations
 class Row(list):
     """
@@ -498,10 +498,17 @@ class Relation():
                 raise KeyError(f"Invalid primary key. Key {attributes[0]} is a duplicate of primary key of row {i}.")
 
         if not autoIncrementPrimaryKey:
-            self.data = pd.concat([self.data, pd.DataFrame([attributes],columns=self.attributeLabels)],ignore_index=True)
+            if self.data.empty:
+                self.data = pd.DataFrame([attributes], columns=self.attributeLabels)
+            else:
+                self.data = pd.concat([self.data, pd.DataFrame([attributes], columns=self.attributeLabels)], ignore_index=True)
         else:
             key = self._generateIncrementedPrimaryKey()
-            self.data = pd.concat([self.data, pd.DataFrame([[key]+attributes],columns=self.attributeLabels)],ignore_index=True)
+            new_row = pd.DataFrame([[key] + attributes], columns=self.attributeLabels)
+            if self.data.empty:
+                self.data = new_row
+            else:
+                self.data = pd.concat([self.data, new_row], ignore_index=True)
     
     def insertRows(self, rows:RowList):
         """
@@ -567,7 +574,18 @@ class Relation():
         Returns:
         Row: The converted Row object.
         """
-        return Row(series.values.tolist(),labels=labels)
+
+        #### convert pandas or numpy data types to native python types
+        converted_values = []
+        for value in series.values.tolist():
+            if isinstance(value, (pd.Int64Dtype, pd.UInt64Dtype, np.int64, np.uint64,np.int32,np.uint32)):
+                converted_values.append(int(value))
+            elif isinstance(value, (pd.Float64Dtype, pd.Float32Dtype)):
+                converted_values.append(float(value))
+            else:
+                converted_values.append(value)
+        
+        return Row(converted_values, labels=labels)
 
     @staticmethod
     def _rowListFromDataFrame(df : pd.DataFrame, labels : list = None) -> RowList:
