@@ -4,16 +4,8 @@ import os
 import logging
 import sys
 from datetime import datetime as date
-
-# Get the absolute path of the project root directory
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Add the project root to sys.path if it's not already there
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
-from entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent
-from dataStructs import Row, Relation, RowList
+from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent
+from .dataStructs import Row, Relation, RowList
 
 ## Database class
 class Database:
@@ -83,51 +75,61 @@ class Database:
         overwrite : bool, optional
             A flag to determine whether to overwrite the existing database file (default is False).
         """
-        if logger is None:
-            logger = logging.getLogger(__name__)
-            logger.setLevel(logging.INFO)
+        self._is_closed = False
+        self.logger = logger if logger is not None else logging.getLogger(__name__)
+        if not self.logger.hasHandlers():
+            self.logger.setLevel(logging.INFO)
             handler = logging.StreamHandler()
             handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-            logger.addHandler(handler)
-            self.logger = logger
-        else:
-            self.logger = logger
+            self.logger.addHandler(handler)
 
         if verbose:
             self.logger.setLevel(logging.DEBUG)
         
         self.logger.info("Initializing database...")
 
-        self.data_file = data_file
+        self.app_directory = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+
+        self.data_file = os.path.join(self.app_directory, data_file)
         if os.path.exists(self.data_file) and not overwrite:
-            self.logger.info(f"Found database file {data_file}, loading from file...")
+            self.logger.info(f"Found database file {self.data_file}, loading from file...")
             self.__load_database()
             self.logger.info("Success loading database")
         elif os.path.exists(self.data_file) and overwrite:
-            self.logger.info(f"Overwriting existing database file {data_file}...")
+            self.logger.info(f"Overwriting existing database file {self.data_file}...")
             self.initRelations()
             self.logger.info("Successfully initialized new database with overwriting.")
         else:
             # Initialize tables as DataFrames
-            self.logger.info(f"Found no database file {data_file}, initializing new database...")
+            self.logger.info(f"Found no database file {self.data_file}, initializing new database...")
             self.initRelations()
         self.logger.info("Successfully initialized database.")
 
+    def ensure_open(func):
+        def wrapper(self, *args, **kwargs):
+            if self._is_closed:
+                raise RuntimeError("Database has been closed")
+            return func(self, *args, **kwargs)
+        return wrapper
+
+    @ensure_open
     def close(self):
         """
         Saves the current state of the database to a file and deletes the database object.
         """
         self.__save_database()
         self.logger.info("Successfully saved database, exiting")
-        del self
+        self.__dict__.clear()
+        self._is_closed = True
 
+    @ensure_open
     def initRelations(self):
         """
         Initializes the relations (tables) in the database with predefined schemas.
         """
         self.user = Relation('User',
-                            attributeLabels=['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'specialization', 'is_disabled'],
-                            relationAttributeTypes=[int, str, str, str, str, str, str, str, str, bool])
+                            attributeLabels=['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled'],
+                            relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, bool])
                     
         self.journal_entry = Relation('JournalEntry',
                                         attributeLabels=['entry_id', 'patient_id', 'text', 'timestamp'],
@@ -165,6 +167,7 @@ class Database:
 
         self.initDict()
 
+    @ensure_open
     def initDict(self):
         """
         Initializes the dictionary mapping entity names to their respective relations.
@@ -181,6 +184,7 @@ class Database:
             'ChatContent':self.chatcontent,
         } 
 
+    @ensure_open
     def __load_database(self):
         """
         Loads the database from a file, restoring the state of all relations.
@@ -199,6 +203,7 @@ class Database:
             self.chatcontent = data['chatcontent']
         self.initDict()
 
+    @ensure_open
     def __save_database(self):
         """
         Saves the current state of the database to a file.
@@ -216,12 +221,14 @@ class Database:
                 'chatcontent': self.chatcontent,
             }, f)
 
+    @ensure_open
     def __str__(self):
         """
         Returns a string representation of the database, showing all relations and their data.
         """
         return "User:\n"+str(self.user)+"\nJournal Entry:\n"+str(self.journal_entry)+"\nAppointment:\n"+str(self.appointment)+"\nPatient Record:\n"+str(self.patient_record)+"\nAllocation:\n"+str(self.allocation)+"\nMood Entry\n"+str(self.mood_entry)+"\nChat Content\n"+str(self.chatcontent)
 
+    @ensure_open
     def printAll(self):
         """
         Prints all the data in the database, relation by relation.
@@ -245,6 +252,7 @@ class Database:
         print("\nChat Content:")
         print(self.chatcontent)
 
+    @ensure_open
     def insert(self, entity: str, row: Row = None, rowList: RowList = None):
         """
         Inserts a row or a list of rows into the specified entity's relation.
@@ -277,6 +285,7 @@ class Database:
             if row != None and rowList != None:
                 raise ValueError("Received too many inputs, expecting row OR row list")
 
+    @ensure_open
     def getId(self, entity: str, id):
         """
         Retrieves rows from the specified entity's relation where the primary key matches the given id.
@@ -304,6 +313,7 @@ class Database:
         else:
             raise KeyError(f"{entity} not found in data dict, available values {self.dataDict.values()}")
     
+    @ensure_open
     def getRelation(self, entity : str) -> Relation:
         """
         Returns the relation object for the specified entity.
@@ -329,7 +339,7 @@ class Database:
         else:
             raise KeyError(f"{entity} not found in data dict, available values {self.dataDict.values()}")
 
-    
+    @ensure_open
     def insert_admin(self, admin:Admin):
         """
         Inserts an admin user into the User relation.
@@ -339,8 +349,9 @@ class Database:
         admin : Admin
             The admin object to insert.
         """
-        self.insert("User",Row([admin.username,None,admin.password,None,None,admin.type,None,None,admin.is_disabled]))
+        self.insert("User",Row([admin.username,None,admin.password,None,None,admin.type,None,None,None,admin.is_disabled]))
     
+    @ensure_open
     def insert_patient(self,patient : Patient):
         """
         Inserts a patient user into the User relation.
@@ -350,8 +361,9 @@ class Database:
         patient : Patient
             The patient object to insert.
         """
-        self.insert("User",Row([patient.username,patient.email,patient.password,patient.fName,patient.lName,patient.type,patient.emergency_contact_email,None,patient.is_disabled]))
+        self.insert("User",Row([patient.username,patient.email,patient.password,patient.fName,patient.lName,patient.type,patient.emergency_contact_email,patient.emergency_contact_name,None,patient.is_disabled]))
     
+    @ensure_open
     def insert_mhwp(self, mhwp : MHWP):
         """
         Inserts an MHWP user into the User relation.
@@ -361,8 +373,9 @@ class Database:
         mhwp : MHWP
             The MHWP object to insert.
         """
-        self.insert("User",Row([mhwp.username,mhwp.email,mhwp.password,mhwp.fName,mhwp.lName,mhwp.type,None,mhwp.specialization,mhwp.is_disabled]))
+        self.insert("User",Row([mhwp.username,mhwp.email,mhwp.password,mhwp.fName,mhwp.lName,mhwp.type,None,None,mhwp.specialization,mhwp.is_disabled]))
     
+    @ensure_open
     def insert_allocation(self, allocation : Allocation):
         """
         Inserts an allocation into the Allocation relation.
@@ -374,6 +387,7 @@ class Database:
         """
         self.insert("Allocation",Row([allocation.admin_id,allocation.patient_id,allocation.mhwp_id,allocation.start_date,allocation.end_date]))
     
+    @ensure_open
     def insert_journal_entry(self, journal_entry : JournalEntry):
         """
         Inserts a journal entry into the JournalEntry relation.
@@ -385,6 +399,7 @@ class Database:
         """
         self.insert("JournalEntry",Row([journal_entry.patient_id,journal_entry.text,journal_entry.timestamp]))
 
+    @ensure_open
     def insert_patient_record(self, patient_record : PatientRecord):
         """
         Inserts a patient record into the PatientRecord relation.
@@ -396,6 +411,7 @@ class Database:
         """
         self.insert("PatientRecord", Row([patient_record.patient_id, patient_record.mhwp_id, patient_record.notes, patient_record.conditions]))
 
+    @ensure_open
     def insert_appointment(self, appointment: Appointment):
         """
         Inserts an appointment into the Appointment relation.
@@ -407,6 +423,8 @@ class Database:
         """
         
         self.insert("Appointment", Row([appointment.patient_id, appointment.mhwp_id, appointment.date, appointment.room_name, appointment.status]))
+    
+    @ensure_open
     def insert_mood_entry(self, mood_entry : MoodEntry):
             """
             Inserts a journal entry into the JournalEntry relation.
@@ -418,10 +436,12 @@ class Database:
             """
             self.insert("MoodEntry",Row([mood_entry.patient_id,mood_entry.moodscore,mood_entry.comment,mood_entry.timestamp]))
 
+    @ensure_open
     def insert_review_entry(self, review_entry : MHWPReview):
             self.insert("MHWPReview",Row([review_entry.patient_id,review_entry.mhwp_id,review_entry.reviewscore,review_entry.reviewcomment,review_entry.timestamp]))
 
     # def insert_chatroom(self, chatroom : ChatRoom):
     #         self.insert("ChatContent",Row([chatroom.patient_id,chatroom.mhwp_id]))
+    @ensure_open
     def insert_chatcontent(self, chatcontent : ChatContent):
             self.insert("ChatContent",Row([chatcontent.allocation_id,chatcontent.user_id,chatcontent.text,chatcontent.timestamp]))

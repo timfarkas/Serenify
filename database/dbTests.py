@@ -528,6 +528,21 @@ class TestDatabase(unittest.TestCase):
             os.remove(self.test_db_file)
         del self.db
 
+    def test_ensure_open_decorator(self):
+        # Test that the @ensure_open decorator ensures the database is open before operations
+        self.db.close()  # Manually close the database
+        with self.assertRaises(Exception):  # Expect an error if the database is closed
+            self.db.insert_admin(Admin(username='admin2', password='password456'))
+        
+        # Reopen the database and perform an operation to ensure it works when open
+        self.db = Database(data_file=self.test_db_file, logger=self.logger, verbose=False, overwrite=False)
+        admin = Admin(username='admin2', password='password456')
+        self.db.insert_admin(admin)
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 1)
+        self.assertEqual(user.iloc[0]['username'], 'admin2')
+        self.assertEqual(user.iloc[0]['type'], 'Admin')
+
     def test_insert_admin(self):
         admin = Admin(username='admin1', password='password123')
         self.db.insert_admin(admin)
@@ -544,6 +559,7 @@ class TestDatabase(unittest.TestCase):
             fName='John',
             lName='Doe',
             emergency_contact_email='contact@example.com',
+            emergency_contact_name='Jane Doe',
             is_disabled=False
         )
         self.db.insert_patient(patient)
@@ -710,8 +726,8 @@ class TestDatabase(unittest.TestCase):
 
     def test_insert_row_list(self):
         # Insert a list of rows without the primary key
-        row1 = Row(['user1', 'user1@example.com', 'password', 'First1', 'Last1', 'patient', None, None, False])
-        row2 = Row(['user2', 'user2@example.com', 'password', 'First2', 'Last2', 'patient', None, None, False])
+        row1 = Row(['user1', 'user1@example.com', 'password', 'First1', 'Last1', 'patient', None, None, None, False])
+        row2 = Row(['user2', 'user2@example.com', 'password', 'First2', 'Last2', 'patient', None, None, None, False])
         rowList = RowList([row1, row2])
         self.db.insert('User', rowList=rowList)
         user = self.db.getRelation('User').data
