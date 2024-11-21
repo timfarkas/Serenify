@@ -126,8 +126,8 @@ class Patient:
             5: "light green",  # Great (Light Green)
             4: "yellow",  # Good (Yellow)
             3: "orange",  # Okay (Orange)
-            2: "brown",  # Could be better (Light Red)
-            1: "red",  # Terrible (Red)
+            2: "red",  # Could be better (Red)
+            1: "dark red",  # Terrible (Dark Red)
         }
 
         # Apply color to all radio buttons initially
