@@ -128,7 +128,17 @@ class Database:
         Initializes the relations (tables) in the database with predefined schemas.
         """
         self.user = Relation('User',
-                            attributeLabels=['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled'],
+                            attributeLabels=['user_id', #0
+                                             'username', #1
+                                             'email', #2
+                                             'password',#3 
+                                             'fName', #4
+                                             'lName', #5
+                                             'type', #6
+                                             'emergency_contact_email', #7
+                                             'emergency_contact_name', #8
+                                             'specialization', #9
+                                             'is_disabled'],#10
                             relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, bool])
                     
         self.journal_entry = Relation('JournalEntry',
@@ -180,7 +190,6 @@ class Database:
             'Allocation':self.allocation,
             'MoodEntry':self.mood_entry,
             'MHWPReview':self.review_entry,
-            # 'ChatRoom':self.chatroom,
             'ChatContent':self.chatcontent,
         } 
 
@@ -275,14 +284,14 @@ class Database:
         """
         if row != None and rowList == None:
             entityData = self.dataDict.get(entity)
-            if entityData != None:
+            if entityData is not None:
                 entityData.insertRow(row=row)
             else:
                 raise KeyError(f"{entity} not found in data dict, available values {pd.DataFrame.apply(pd.DataFrame(self.dataDict.values()),str)}")
-        elif row == None and rowList != None:
+        elif row == None and rowList is not None:
             self.dataDict.get(entity).insertRows(rowList)
         else:
-            if row != None and rowList != None:
+            if row != None and rowList is not None:
                 raise ValueError("Received too many inputs, expecting row OR row list")
 
     @ensure_open

@@ -1,6 +1,21 @@
 from datetime import datetime
 import re 
 
+__all__ = [
+    'InvalidDataError',
+    'User',
+    'Admin',
+    'Patient',
+    'MHWP',
+    'PatientRecord',
+    'Allocation',
+    'JournalEntry',
+    'Appointment',
+    'MoodEntry',
+    'MHWPReview',
+    'ChatContent',
+]
+
 class InvalidDataError(ValueError):
     """Exception raised for errors in the input data."""
     def __init__(self, message: str):
@@ -56,7 +71,11 @@ class User:
       
 class Admin(User):
     """A class to represent an admin user."""
-    def __init__(self, user_id: int = None, username: str = '', password: str = '', is_disabled: bool = False):
+    def __init__(self, 
+                user_id: int = None, 
+                username: str = '', 
+                password: str = '', 
+                is_disabled: bool = False):
         """
         Initialize an Admin object.
 
@@ -81,12 +100,12 @@ class Patient(User):
     def __init__(self, 
                 user_id: int = None, 
                 username: str = '', 
+                email: str = '',
                 password: str = '', 
                 fName: str = '', 
                 lName: str = '', 
-                email: str = '',
-                emergency_contact_name : str = None,
-                emergency_contact_email: str = None, 
+                emergency_contact_email: str = None,
+                emergency_contact_name : str = None, 
                 is_disabled: bool = False):
         """
         Initialize a Patient object.
@@ -120,21 +139,21 @@ class Patient(User):
             raise InvalidDataError("Data validity check failed.")
 
     @staticmethod
-    def checkValidDataStatic(user_id, username, password, type, fName, lName, email, emergency_contact_name, emergency_contact_email, is_disabled):
+    def checkValidDataStatic(user_id, username, email, password, fName, lName, type, emergency_contact_email, emergency_contact_name, is_disabled):
         # Check user-specific data
         User.checkValidDataStatic(user_id, username, password, type, is_disabled)
 
         # Check fName
         if not fName or not re.match(r'^[a-zA-Z]{1,50}$', fName):
-            raise InvalidDataError("First name must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
+            raise InvalidDataError(f"First name ({fName}) must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
 
         # Check lName
         if not lName or not re.match(r'^[a-zA-Z]{1,50}$', lName):
-            raise InvalidDataError("Last name must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
+            raise InvalidDataError(f"Last name ({lName}) must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
 
         # Check email
         if not email or not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
-            raise InvalidDataError("Email must be non-empty and follow a valid email format.")
+            raise InvalidDataError(f"Email ({email}) must be non-empty and follow a valid email format.")
 
         # Check emergency_contact_email
         if emergency_contact_email and not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', emergency_contact_email):
@@ -147,11 +166,19 @@ class Patient(User):
         return True
     
     def checkValidData(self):
-        return Patient.checkValidDataStatic(self.user_id, self.username, self.password, self.type, self.fName, self.lName, self.email, self.emergency_contact_name, self.emergency_contact_email, self.is_disabled)
+        return Patient.checkValidDataStatic(self.user_id, self.username, self.email, self.password, self.fName, self.lName, self.type, self.emergency_contact_email, self.emergency_contact_name, self.is_disabled)
         
 class MHWP(User):
     """A class to represent a mental health worker professional (MHWP) user."""
-    def __init__(self, user_id: int = None, username: str = '', password: str = '', fName: str = '', lName: str = '', email: str = '', specialization: str = '', is_disabled: bool = False):
+    def __init__(self, 
+                 user_id: int = None, 
+                 username: str = '', 
+                 email: str = '', 
+                 password: str = '', 
+                 fName: str = '', 
+                 lName: str = '', 
+                 specialization: str = '', 
+                 is_disabled: bool = False):
         """
         Initialize an MHWP object.
 
@@ -182,17 +209,17 @@ class MHWP(User):
             raise InvalidDataError("Data validity check failed.")
     
     @staticmethod
-    def checkValidDataStatic(user_id, username, password, type, fName, lName, email, specialization, is_disabled):
+    def checkValidDataStatic(user_id, username, email, password, fName, lName, type, specialization, is_disabled):
         # Check user-specific data
         User.checkValidDataStatic(user_id, username, password, type, is_disabled)
 
         # Check fName
         if not fName or not re.match(r'^[a-zA-Z]{1,50}$', fName):
-            raise InvalidDataError("First name must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
+            raise InvalidDataError(f"First name ({fName}) must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
 
         # Check lName
         if not lName or not re.match(r'^[a-zA-Z]{1,50}$', lName):
-            raise InvalidDataError("Last name must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
+            raise InvalidDataError(f"Last name {lName} must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
 
         # Check email
         if not email or not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
@@ -205,7 +232,7 @@ class MHWP(User):
         return True
 
     def checkValidData(self):
-        return MHWP.checkValidDataStatic(self.user_id, self.username, self.password, self.type, self.fName, self.lName, self.email, self.specialization, self.is_disabled)
+        return MHWP.checkValidDataStatic(self.user_id, self.username, self.email, self.password, self.fName, self.lName,self.type, self.specialization, self.is_disabled)
 
 
 class JournalEntry:

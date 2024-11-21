@@ -238,7 +238,6 @@ def initDummyDatabase(db: Database):
         db.close()
 
 
-
     except (UserError, RecordError) as e:
         print(f"An error occurred: {e}")
 

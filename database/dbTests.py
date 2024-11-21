@@ -104,7 +104,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         self.assertEqual(relation.name, relationName)
         self.assertEqual(relation.attributeLabels, attributeLabels)
         self.assertEqual(relation.types, attributeTypes)
@@ -114,22 +114,22 @@ class TestRelation(unittest.TestCase):
         self.assertEqual(len(relation.data), 0)
         
         # Test type checking when attributeTypes is None
-        relation = Relation(relationName, attributeLabels)
+        relation = Relation(relationName, attributeLabels,validityChecking=False)
         self.assertFalse(relation.typeChecking)
         
         # Test error when lengths of labels and types do not match
         with self.assertRaises(ValueError):
-            relation = Relation(relationName, attributeLabels, [int, str])
+            relation = Relation(relationName, attributeLabels, [int, str],validityChecking=False)
         
         # Test error when autoIncrementPrimaryKey is True but primaryKeyType is not int
         with self.assertRaises(ValueError):
-            relation = Relation(relationName, attributeLabels, [str, str, int])
+            relation = Relation(relationName, attributeLabels, [str, str, int],validityChecking=False)
     
     def test_insert_row(self):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         
         # Insert a row without specifying id (autoIncrementPrimaryKey=True)
         relation.insertRow(attributeList=['Alice', 30])
@@ -162,16 +162,78 @@ class TestRelation(unittest.TestCase):
             relation.insertRow(attributeList=['Charlie', 'Thirty'])
         
         # Insert row with duplicate primary key when autoIncrementPrimaryKey=False
-        relation_no_auto = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False)
+        relation_no_auto = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=False)
         relation_no_auto.insertRow(attributeList=[1, 'Alice', 30])
         with self.assertRaises(KeyError):
             relation_no_auto.insertRow(attributeList=[1, 'Bob', 25])
     
+    def test_insert_row_invalid_user(self):
+        relationName = "User"
+        attributeLabels = ['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled']
+        attributeTypes = [int, str, str, str, str, str, str, str, str, str, bool]
+        relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True)
+
+        # Test inserting a row with an invalid email
+        with self.assertRaises(InvalidDataError):
+            relation.insertRow(attributeList=[1, 'user1', 'invalid-email', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
+
+        # Test inserting a row with an invalid first name
+        with self.assertRaises(InvalidDataError):
+            relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', '123', 'Doe', 'Patient', None, None, None, False])
+
+        # Test inserting a row with an invalid last name
+        with self.assertRaises(InvalidDataError):
+            relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', '123', 'Patient', None, None, None, False])
+
+        # Test inserting a row with an invalid type
+        with self.assertRaises(TypeError):
+            relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'InvalidType', None, None, None, False])
+
+        # Test inserting a row with an invalid specialization
+        with self.assertRaises(InvalidDataError):
+            relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'MHWP', None, None, '123', False])
+
+    def test_insert_row_invalid_appointment(self):
+        relationName = "Appointment"
+        attributeLabels = ['appointment_id', 'patient_id', 'mhwp_id', 'date', 'room_name', 'status']
+        attributeTypes = [int, int, int, datetime, str, str]
+        relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True)
+
+        # Test inserting a row with an invalid date
+        with self.assertRaises(TypeError):
+            relation.insertRow(attributeList=[1, 1, 1, 'invalid-date', 'Room1', 'Scheduled'])
+
+        # Test inserting a row with an invalid room name
+        with self.assertRaises(InvalidDataError):
+            relation.insertRow(attributeList=[1, 1, 1, datetime.today(), None, 'Scheduled'])
+
+        # Test inserting a row with an invalid status
+        with self.assertRaises(InvalidDataError):
+            relation.insertRow(attributeList=[1, 1, 1, datetime.today(), 'Room1', None])
+
+    def test_insert_row_invalid_journal_entry(self):
+        relationName = "JournalEntry"
+        attributeLabels = ['entry_id', 'patient_id', 'text', 'timestamp']
+        attributeTypes = [int, int, str, datetime]
+        relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True)
+
+        # Test inserting a row with an invalid text type
+        with self.assertRaises(TypeError):
+            relation.insertRow(attributeList=[1, 1, 123, datetime.today()])
+
+        # Test inserting a row with an invalid text type
+        with self.assertRaises(InvalidDataError):
+            relation.insertRow(attributeList=[1, 1, None, datetime.today()])
+
+        # Test inserting a row with an invalid timestamp
+        with self.assertRaises(InvalidDataError):
+            relation.insertRow(attributeList=[1, 1, 'Valid text', None])
+
     def test_get_attribute_max_row(self):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
@@ -183,7 +245,7 @@ class TestRelation(unittest.TestCase):
         self.assertEqual(max_row.labels, attributeLabels)
         
         # Test with empty data
-        empty_relation = Relation(relationName, attributeLabels, attributeTypes)
+        empty_relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         self.assertIsNone(empty_relation.getAttributeMaxRow('age'))
         
         # Test with non-existing attribute
@@ -195,7 +257,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
@@ -207,7 +269,7 @@ class TestRelation(unittest.TestCase):
         self.assertEqual(min_row.labels, attributeLabels)
         
         # Test with empty data
-        empty_relation = Relation(relationName, attributeLabels, attributeTypes)
+        empty_relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         self.assertIsNone(empty_relation.getAttributeMinRow('age'))
         
         # Test with non-existing attribute
@@ -218,7 +280,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         
@@ -235,7 +297,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         
@@ -246,7 +308,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Alice', 35])
@@ -273,7 +335,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Alice', 35])
@@ -294,7 +356,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Alice', 35])
@@ -313,7 +375,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
@@ -331,7 +393,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
@@ -348,7 +410,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
@@ -366,7 +428,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
@@ -384,7 +446,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
@@ -399,7 +461,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         
         # Edit row with new values using primary key index
@@ -435,7 +497,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         
         # Edit field in row using primary key index
@@ -459,7 +521,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30])
         relation.insertRow(attributeList=['Bob', 25])
         relation.insertRow(attributeList=['Charlie', 35])
@@ -476,7 +538,7 @@ class TestRelation(unittest.TestCase):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
         attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes)
+        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
         relation.insertRow(attributeList=['Alice', 30]) # id=1
         relation.insertRow(attributeList=['Bob', 25])   # id=2
         relation.insertRow(attributeList=['Charlie', 35]) # id=3
@@ -506,7 +568,7 @@ class TestRelation(unittest.TestCase):
     def test_length(self):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
-        relation = Relation(relationName, attributeLabels)
+        relation = Relation(relationName, attributeLabels,validityChecking=False)
         self.assertEqual(len(relation), 0)
         relation.insertRow(attributeList=['Alice', 30])
         self.assertEqual(len(relation), 1)
@@ -697,7 +759,7 @@ class TestDatabase(unittest.TestCase):
                    'password', 
                    'Test', 
                    'User', 
-                   'patient', 
+                   'Patient', 
                    None, None, None, None, False])
         rowList = RowList([row])
         with self.assertRaises(ValueError):
@@ -726,8 +788,8 @@ class TestDatabase(unittest.TestCase):
 
     def test_insert_row_list(self):
         # Insert a list of rows without the primary key
-        row1 = Row(['user1', 'user1@example.com', 'password', 'First1', 'Last1', 'patient', None, None, None, False])
-        row2 = Row(['user2', 'user2@example.com', 'password', 'First2', 'Last2', 'patient', None, None, None, False])
+        row1 = Row(['user1', 'user1@example.com', 'password', 'FirstOne', 'LastOne', 'Patient', None, None, None, False])
+        row2 = Row(['user2', 'user2@example.com', 'password', 'FirstTwo', 'LastTwo', 'Patient', None, None, None, False])
         rowList = RowList([row1, row2])
         self.db.insert('User', rowList=rowList)
         user = self.db.getRelation('User').data
