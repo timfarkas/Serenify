@@ -1,36 +1,12 @@
 from datetime import datetime
+import re 
 
-# Custom exception classes
-class UserError(Exception):
-    """Base class for exceptions related to user operations."""
-    pass
+class InvalidDataError(ValueError):
+    """Exception raised for errors in the input data."""
+    def __init__(self, message: str):
+        super().__init__(message)
 
-class UserAlreadyExistsError(UserError):
-    """Exception raised when attempting to create a user that already exists."""
-    pass
 
-class UserNotFoundError(UserError):
-    """Exception raised when a user cannot be found."""
-    pass
-
-class InvalidUserTypeError(UserError):
-    """Exception raised for invalid user types."""
-    pass
-
-class RecordError(Exception):
-    """Base class for exceptions related to record operations."""
-    pass
-
-class RecordAlreadyExistsError(RecordError):
-    """Exception raised when attempting to create a record that already exists."""
-    pass
-
-class RecordNotFoundError(RecordError):
-    """Exception raised when a record cannot be found."""
-    pass
-
-# Entities
-## Base User class
 class User:
     """A class to represent a user in the system."""
     def __init__(self, user_id: int = None, username: str = '', password: str = '', user_type: str = '', is_disabled: bool = False):
@@ -44,13 +20,40 @@ class User:
         user_type (str): The type of user (e.g., 'Admin', 'Patient', 'MHWP').
         is_disabled (bool): Flag indicating if the user is disabled.
         """
-        self.user_id = user_id
-        self.username = username
-        self.password = password
-        self.type = user_type
-        self.is_disabled = is_disabled
 
-## Admin class inheriting from User
+        raise RuntimeError("User should not be directly initialized, please use Patient, MHWP, or Admin class.")
+
+    @staticmethod
+    def checkValidDataStatic(user_id, username, password, type, is_disabled):
+        if user_id is not None and not isinstance(user_id, int):
+            raise InvalidDataError(f"User ID must be an integer if provided. (given {user_id})")
+        
+        if not username:
+            raise InvalidDataError("Username cannot be null.")
+        
+        if len(username) > 50:
+            raise InvalidDataError("Username must be 3-50 characters long.")
+        
+        if not re.match(r'^[a-zA-Z0-9_.-]{3,50}$', username):
+            raise InvalidDataError("Username may only contain letters, numbers, and a few special characters (- . _).")
+        
+        if re.search(r'[!@#$%^&*(),?":{}|<>]', username):
+            raise InvalidDataError("Username contains invalid special characters.")
+        
+        if not password:
+            raise InvalidDataError("Password cannot be empty.")
+        
+        if len(password) < 8:
+            raise InvalidDataError("Password must be at least 8 characters long.")
+        
+        if type not in ['Admin', 'MHWP', 'Patient']:
+            raise InvalidDataError("Type must be one of the following: 'Admin', 'MHWP', 'Patient'.")
+        
+        if is_disabled is None:
+            raise InvalidDataError("Is_disabled cannot be None.")
+        
+        return True
+      
 class Admin(User):
     """A class to represent an admin user."""
     def __init__(self, user_id: int = None, username: str = '', password: str = '', is_disabled: bool = False):
@@ -63,12 +66,25 @@ class Admin(User):
         password (str): The password for the admin.
         is_disabled (bool): Flag indicating if the admin is disabled.
         """
-        super().__init__(user_id, username, password, 'Admin', is_disabled)
+        self.user_id = user_id
+        self.username = username
+        self.password = password
+        self.type = 'Admin'
+        self.is_disabled = is_disabled
+        
+        ## Check user data correctness
+        User.checkValidDataStatic(self.user_id, self.username, self.password, self.type, self.is_disabled)
 
-## Patient class inheriting from User
+
 class Patient(User):
     """A class to represent a patient user."""
-    def __init__(self, user_id: int = None, username: str = '', password: str = '', fName: str = '', lName: str = '', email: str = '',
+    def __init__(self, 
+                user_id: int = None, 
+                username: str = '', 
+                password: str = '', 
+                fName: str = '', 
+                lName: str = '', 
+                email: str = '',
                 emergency_contact_name : str = None,
                 emergency_contact_email: str = None, 
                 is_disabled: bool = False):
@@ -84,15 +100,55 @@ class Patient(User):
         email (str): The email address of the patient.
         emergency_contact_email (str, optional): The emergency contact email for the patient.
         is_disabled (bool): Flag indicating if the patient is disabled.
-        """
-        super().__init__(user_id, username, password, 'Patient', is_disabled)
+        """    
+
+        self.user_id = user_id
+        self.username = username
+        self.password = password
+        self.type = 'Patient'
+        self.is_disabled = is_disabled
+
         self.fName = fName
         self.lName = lName
         self.email = email
         self.emergency_contact_email = emergency_contact_email
         self.emergency_contact_name = emergency_contact_name
         
-## MHWP class inheriting from User
+        success = self.checkValidData()
+        
+        if not success:
+            raise InvalidDataError("Data validity check failed.")
+
+    @staticmethod
+    def checkValidDataStatic(user_id, username, password, type, fName, lName, email, emergency_contact_name, emergency_contact_email, is_disabled):
+        # Check user-specific data
+        User.checkValidDataStatic(user_id, username, password, type, is_disabled)
+
+        # Check fName
+        if not fName or not re.match(r'^[a-zA-Z]{1,50}$', fName):
+            raise InvalidDataError("First name must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
+
+        # Check lName
+        if not lName or not re.match(r'^[a-zA-Z]{1,50}$', lName):
+            raise InvalidDataError("Last name must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
+
+        # Check email
+        if not email or not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
+            raise InvalidDataError("Email must be non-empty and follow a valid email format.")
+
+        # Check emergency_contact_email
+        if emergency_contact_email and not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', emergency_contact_email):
+            raise InvalidDataError("Emergency contact email must follow a valid email format if provided.")
+
+        # Check emergency_contact_name
+        if emergency_contact_name and not re.match(r'^[a-zA-Z ]{1,50}$', emergency_contact_name):
+            raise InvalidDataError("Emergency contact name must contain only alphabetic characters and spaces, with a maximum length of 50, if provided.")
+        
+        return True
+    
+    def checkValidData(self):
+        return Patient.checkValidDataStatic(self.user_id, self.username, self.password, self.type, self.fName, self.lName, self.email, self.emergency_contact_name, self.emergency_contact_email, self.is_disabled)
+        
 class MHWP(User):
     """A class to represent a mental health worker professional (MHWP) user."""
     def __init__(self, user_id: int = None, username: str = '', password: str = '', fName: str = '', lName: str = '', email: str = '', specialization: str = '', is_disabled: bool = False):
@@ -109,13 +165,49 @@ class MHWP(User):
         specialization (str): The specialization of the MHWP.
         is_disabled (bool): Flag indicating if the MHWP is disabled.
         """
-        super().__init__(user_id, username, password, 'MHWP', is_disabled)
+        self.user_id = user_id
+        self.username = username
+        self.password = password
+        self.type = 'MHWP'
+        self.is_disabled = is_disabled
+
         self.fName = fName
         self.lName = lName
         self.email = email
         self.specialization = specialization
+        
+        success = self.checkValidData()
+        
+        if not success:
+            raise InvalidDataError("Data validity check failed.")
+    
+    @staticmethod
+    def checkValidDataStatic(user_id, username, password, type, fName, lName, email, specialization, is_disabled):
+        # Check user-specific data
+        User.checkValidDataStatic(user_id, username, password, type, is_disabled)
 
-## JournalEntry class
+        # Check fName
+        if not fName or not re.match(r'^[a-zA-Z]{1,50}$', fName):
+            raise InvalidDataError("First name must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
+
+        # Check lName
+        if not lName or not re.match(r'^[a-zA-Z]{1,50}$', lName):
+            raise InvalidDataError("Last name must be non-empty and contain only alphabetic characters, with a maximum length of 50.")
+
+        # Check email
+        if not email or not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
+            raise InvalidDataError("Email must be non-empty and follow a valid email format.")
+
+        # Check specialization
+        if specialization and not re.match(r'^[a-zA-Z\s]+$', specialization):
+            raise InvalidDataError("Specialization must contain only alphabetic characters and spaces if provided.")
+       
+        return True
+
+    def checkValidData(self):
+        return MHWP.checkValidDataStatic(self.user_id, self.username, self.password, self.type, self.fName, self.lName, self.email, self.specialization, self.is_disabled)
+
+
 class JournalEntry:
     """A class to represent a journal entry."""
     def __init__(self, entry_id: int = None, patient_id: int = None, text: str = '', timestamp: datetime = None):
@@ -128,12 +220,40 @@ class JournalEntry:
         text (str): The text content of the journal entry.
         timestamp (datetime, optional): The timestamp of when the entry was created. Can be None.
         """
+    
         self.entry_id = entry_id
         self.patient_id = patient_id  # foreign key to Patient
         self.text = text
         self.timestamp = timestamp
 
-## Appointment class
+        success = self.checkValidData()
+        
+        if not success:
+            raise InvalidDataError("Data validity check failed.")
+
+    @staticmethod
+    def checkValidDataStatic(entry_id, patient_id, text, timestamp):
+        if entry_id is not None and not isinstance(entry_id, int):
+            raise InvalidDataError("Entry ID must be an integer if provided.")
+        
+        if patient_id is None:
+            raise InvalidDataError("Patient ID must not be None.")
+        elif patient_id is not None and not isinstance(patient_id, int):
+            raise InvalidDataError("Patient ID must be an integer.")
+        
+        if not text:
+            raise InvalidDataError("Text cannot be empty.")
+        
+        if timestamp is None:
+            raise InvalidDataError("Timestamp cannot be None.")
+        if not isinstance(timestamp, datetime):
+            raise InvalidDataError("Timestamp must be a datetime object.")
+        
+        return True
+
+    def checkValidData(self):
+        return self.checkValidDataStatic(self.entry_id, self.patient_id, self.text, self.timestamp)
+
 class Appointment:
     """A class to represent an appointment."""
     def __init__(self, appointment_id: int = None, patient_id: int = None, mhwp_id: int = None, date: datetime = None, room_name: str = None, status: str = ''):
@@ -147,6 +267,7 @@ class Appointment:
         date (datetime, optional): The date of the appointment. Can be None.
         status (str): The status of the appointment.
         """
+        
         self.appointment_id = appointment_id
         self.patient_id = patient_id  # foreign key to Patient
         self.mhwp_id = mhwp_id        # foreign key to MHWP
@@ -154,7 +275,46 @@ class Appointment:
         self.room_name = room_name
         self.status = status
 
-## PatientRecord class
+        success = self.checkValidData()
+        
+        if not success:
+            raise InvalidDataError("Data validity check failed.")
+
+    @staticmethod
+    def checkValidDataStatic(appointment_id, patient_id, mhwp_id, date, room_name, status):
+        if appointment_id is not None and not isinstance(appointment_id, int):
+            raise InvalidDataError("Appointment ID must be an integer if provided.")
+        
+        if patient_id is None:
+            raise InvalidDataError("Patient ID must not be None.")
+        if not isinstance(patient_id, int):
+            raise InvalidDataError("Patient ID must be an integer.")
+        
+        if mhwp_id is None:
+            raise InvalidDataError("MHWP ID must not be None.")
+        if not isinstance(mhwp_id, int):
+            raise InvalidDataError("MHWP ID must be an integer.")
+        
+        if date is None:
+            raise InvalidDataError("Timestamp cannot be None.")
+        if not isinstance(date, datetime):
+            raise InvalidDataError("Timestamp must be a datetime object.")
+        
+        if room_name is None:
+            raise InvalidDataError("Room name must not be None.")
+        if room_name == '':
+            raise InvalidDataError("Room name must not be an empty string.")
+        if len(room_name) > 50:
+            raise InvalidDataError("Room name must be 50 characters or less.")
+        
+        if not status:
+            raise InvalidDataError("Status cannot be empty.")
+        
+        return True
+
+    def checkValidData(self):
+        return self.checkValidDataStatic(self.appointment_id, self.patient_id, self.mhwp_id, self.date, self.room_name, self.status)
+
 class PatientRecord:
     """A class to represent a patient record entry."""
     def __init__(self, record_id: int = None, patient_id: int = None, mhwp_id: int = None, notes: str = '', conditions: list = None):
@@ -168,13 +328,48 @@ class PatientRecord:
         notes (str): The notes associated with the patient record entry.
         conditions (list, optional): The conditions associated with the patient record entry.
         """
+        
         self.record_id = record_id
         self.patient_id = patient_id  # foreign key to Patient
         self.mhwp_id = mhwp_id        # foreign key to MHWP
         self.notes = notes
         self.conditions = conditions
 
-## Allocation class
+        success = self.checkValidData()
+        
+        if not success:
+            raise InvalidDataError("Data validity check failed.")
+    
+    @staticmethod
+    def checkValidDataStatic(record_id, patient_id, mhwp_id, notes, conditions):
+        if record_id is not None and not isinstance(record_id, int):
+            raise InvalidDataError("Record ID must be an integer if provided.")
+        
+        if patient_id is None:
+            raise InvalidDataError("Patient ID must not be None.")
+        if not isinstance(patient_id, int):
+            raise InvalidDataError("Patient ID must be an integer if provided.")
+        
+        if mhwp_id is None:
+            raise InvalidDataError("MHWP ID must not be None.")
+        if not isinstance(mhwp_id, int):
+            raise InvalidDataError("MHWP ID must be an integer if provided.")
+        
+        if notes is None:
+            raise InvalidDataError("Notes must not be None.")
+        if len(notes.split()) > 500:
+            raise InvalidDataError("Notes must not exceed 500 words.")
+
+        if conditions is None:
+            raise InvalidDataError("Conditions must not be None.")
+        if not isinstance(conditions, list):
+            raise InvalidDataError("Conditions must be a list.")
+        
+        return True
+
+    def checkValidData(self):
+        return self.checkValidDataStatic(self.record_id, self.patient_id, self.mhwp_id, self.notes, self.conditions)
+
 class Allocation:
     """A class to represent an allocation."""
     def __init__(self, allocation_id: int = None, admin_id: int = None, patient_id: int = None, mhwp_id: int = None, start_date: datetime = None, end_date: datetime = None):
@@ -189,6 +384,7 @@ class Allocation:
         start_date (datetime, optional): The start date of the allocation. Can be None.
         end_date (datetime, optional): The end date of the allocation. Can be None.
         """
+        
         self.allocation_id = allocation_id
         self.admin_id = admin_id      # foreign key to Admin
         self.patient_id = patient_id  # foreign key to Patient
@@ -196,18 +392,116 @@ class Allocation:
         self.start_date = start_date
         self.end_date = end_date
 
-"""New entities created for new features."""
+        success = self.checkValidData()
+        
+        if not success:
+            raise InvalidDataError("Data validity check failed.")
+    
+    @staticmethod
+    def checkValidDataStatic(allocation_id, admin_id, patient_id, mhwp_id, start_date, end_date):
+        if allocation_id is not None and not isinstance(allocation_id, int):
+            raise InvalidDataError("Allocation ID must be an integer if provided.")
+        
+        if admin_id is None or not isinstance(admin_id, int):
+            raise InvalidDataError("Admin ID must be an integer and not None.")
+        
+        if patient_id is None or not isinstance(patient_id, int):
+            raise InvalidDataError("Patient ID must be an integer and not None.")
+        
+        if mhwp_id is None or not isinstance(mhwp_id, int):
+            raise InvalidDataError("MHWP ID must be an integer and not None.")
+        
+        if start_date is None:
+            raise InvalidDataError("Start date must not be None.")
+        if not isinstance(start_date, datetime):
+            raise InvalidDataError("Start date must be a datetime object.")
+        
+        if end_date is None:
+            raise InvalidDataError("End date must not be None.")
+        if not isinstance(end_date, datetime):
+            raise InvalidDataError("End date must be a datetime object.")
+        
+        return True
+
+    def checkValidData(self):
+        return self.checkValidDataStatic(self.allocation_id, self.admin_id, self.patient_id, self.mhwp_id, self.start_date, self.end_date)
+
 class MoodEntry:
-    def __init__(self,moodentry_id: int = None, patient_id: int = None, moodscore:int=None,comment: str = '', timestamp: datetime = None):
+    """
+    A class to represent a mood entry for a patient.
+
+    Attributes:
+    moodentry_id (int, optional): The unique identifier for the mood entry. Can be None.
+    patient_id (int, optional): The ID of the patient associated with the mood entry. Can be None.
+    moodscore (int, optional): The mood score of the patient. Can be None.
+    comment (str): A comment associated with the mood entry.
+    timestamp (datetime, optional): The timestamp of when the mood entry was recorded. Can be None.
+    """
+    def __init__(self, moodentry_id: int = None, patient_id: int = None, moodscore: int = None, comment: str = '', timestamp: datetime = None):
+
         self.moodentry_id= moodentry_id
         self.patient_id = patient_id  # foreign key to Patient
         self.moodscore = moodscore
         self.comment = comment
         self.timestamp = timestamp
 
-class MHWPReview:
-    def __init__(self,MHWP_review_id: int = None, patient_id: int = None,mhwp_id: int = None, reviewscore:int=None,reviewcomment: str = '', timestamp: datetime = None):
+        success = self.checkValidData()
+        
+        if not success:
+            raise InvalidDataError("Data validity check failed.")
 
+
+    @staticmethod
+    def checkValidDataStatic(moodentry_id, patient_id, moodscore, comment, timestamp):
+        if moodentry_id is not None and not isinstance(moodentry_id, int):
+            raise InvalidDataError("Mood entry ID must be an integer if provided.")
+        
+        if patient_id is None:
+            raise InvalidDataError("Patient ID must not be None.")
+        if not isinstance(patient_id, int):
+            raise InvalidDataError("Patient ID must be an integer.")
+        
+        if moodscore is None:
+            raise InvalidDataError("Mood score must not be None.")
+        if not isinstance(moodscore, int):
+            raise InvalidDataError("Mood score must be an integer.")
+        if moodscore < 1 or moodscore > 6:
+            raise InvalidDataError("Mood score must be an integer between 1 and 6.")
+        
+        if comment is None:
+            raise InvalidDataError("Comment must not be None.")
+        if not isinstance(comment, str):
+            raise InvalidDataError("Comment must be a string.")
+        if len(comment) >= 255:
+            raise InvalidDataError("Comment must be below 255 characters.")
+        
+        if timestamp is None:
+            raise InvalidDataError("Timestamp must not be None.")
+        if not isinstance(timestamp, datetime):
+            raise InvalidDataError("Timestamp must be a datetime object.")
+        
+        return True
+
+    def checkValidData(self):
+        return self.checkValidDataStatic(self.moodentry_id, self.patient_id, self.moodscore, self.comment, self.timestamp)
+
+class MHWPReview:
+    """
+    A class to represent a review for a Mental Health Worker Professional (MHWP).
+     """
+    def __init__(self, MHWP_review_id: int = None, patient_id: int = None, mhwp_id: int = None, reviewscore: int = None, reviewcomment: str = '', timestamp: datetime = None):
+        """
+        Initialize an MHWPReview object.
+
+        Parameters:
+        MHWP_review_id (int, optional): The unique identifier for the review. Can be None.
+        patient_id (int, optional): The unique identifier for the patient. Must not be None.
+        mhwp_id (int, optional): The unique identifier for the MHWP. Must not be None.
+        reviewscore (int, optional): The score given in the review. Must be an integer between 0 and 5.
+        reviewcomment (str): The comment provided in the review. Must be less than 255 characters.
+        timestamp (datetime, optional): The time when the review was created. Must not be None.
+        """
+        
         self.MHWP_review_id=MHWP_review_id
         self.patient_id = patient_id
         self.mhwp_id= mhwp_id  # foreign key to Patient
@@ -215,19 +509,93 @@ class MHWPReview:
         self.reviewcomment = reviewcomment
         self.timestamp = timestamp
 
-# class ChatRoom:
-#     def __init__(self,room_id: int = None, patient_id: int = None, mhwp_id: int = None):
-#
-#         self.room_id=room_id
-#         self.patient_id = patient_id
-#         self.mhwp_id= mhwp_id
+        success = self.checkValidData()
+        
+        if not success:
+            raise InvalidDataError("Data validity check failed.")
+    
+    @staticmethod
+    def checkValidDataStatic(MHWP_review_id, patient_id, mhwp_id, reviewscore, reviewcomment, timestamp):
+        if MHWP_review_id is not None and not isinstance(MHWP_review_id, int):
+            raise InvalidDataError("MHWP review ID must be an integer if provided.")
+        
+        if patient_id is None:
+            raise InvalidDataError("Patient ID must not be None.")
+        if not isinstance(patient_id, int):
+            raise InvalidDataError("Patient ID must be an integer.")
+        
+        if mhwp_id is None:
+            raise InvalidDataError("MHWP ID must not be None.")
+        if not isinstance(mhwp_id, int):
+            raise InvalidDataError("MHWP ID must be an integer.")
+        
+        if reviewscore is None:
+            raise InvalidDataError("Review score must not be None.")
+        if not isinstance(reviewscore, int):
+            raise InvalidDataError("Review score must be an integer.")
+        if reviewscore < 0 or reviewscore > 5:
+            raise InvalidDataError("Review score must be an integer ranging from 0 to 5.")
+        
+        if not isinstance(reviewcomment, str):
+            raise InvalidDataError("Review comment must be a string.")
+        if len(reviewcomment) >= 255:
+            raise InvalidDataError("Review comment must be less than 255 characters.")
+        
+        if timestamp is None:
+            raise InvalidDataError("Timestamp must not be None.")
+        if not isinstance(timestamp, datetime):
+            raise InvalidDataError("Timestamp must be a datetime object.")
+        
+        return True
 
+    def checkValidData(self):
+        return self.checkValidDataStatic(self.MHWP_review_id, self.patient_id, self.mhwp_id, self.reviewscore, self.reviewcomment, self.timestamp)
 
 class ChatContent:
     def __init__(self,chatcontent_id:int=None, allocation_id: int = None, user_id: int = None, text: str = '', timestamp: datetime = None):
+        
         self.chatcontent_id = chatcontent_id
         self.allocation_id = allocation_id
         self.user_id = user_id
         self.text = text
         self.timestamp = timestamp
+
+        success = self.checkValidData()
+        
+        if not success:
+            raise InvalidDataError("Data validity check failed.")
+    
+    @staticmethod
+    def checkValidDataStatic(chatcontent_id, allocation_id, user_id, text, timestamp):
+        if chatcontent_id is not None and not isinstance(chatcontent_id, int):
+            raise InvalidDataError("Chat content ID must be an integer if provided.")
+        
+        if allocation_id is None:
+            raise InvalidDataError("Allocation ID must not be None.")
+        if not isinstance(allocation_id, int):
+            raise InvalidDataError("Allocation ID must be an integer.")
+        
+        if user_id is None:
+            raise InvalidDataError("User ID must not be None.")
+        if not isinstance(user_id, int):
+            raise InvalidDataError("User ID must be an integer.")
+        
+        if text is None:
+            raise InvalidDataError("Text must not be None.")
+        if not isinstance(text, str):
+            raise InvalidDataError("Text must be a string.")
+        if text == '':
+            raise InvalidDataError("Text must not be an empty string.")
+        if len(text) >= 255:
+            raise InvalidDataError("Text must be below 255 characters.")
+        
+        if timestamp is None:
+            raise InvalidDataError("Timestamp must not be None.")
+        if not isinstance(timestamp, datetime):
+            raise InvalidDataError("Timestamp must be a datetime object.")
+        
+        return True
+
+    def checkValidData(self):
+        return self.checkValidDataStatic(self.chatcontent_id, self.allocation_id, self.user_id, self.text, self.timestamp)
 
