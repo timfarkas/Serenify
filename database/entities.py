@@ -154,7 +154,7 @@ class Patient(User):
         # Check email
         if not email or not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
             raise InvalidDataError(f"Email ({email}) must be non-empty and follow a valid email format.")
-
+        
         # Check emergency_contact_email
         if emergency_contact_email and not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', emergency_contact_email):
             raise InvalidDataError("Emergency contact email must follow a valid email format if provided.")

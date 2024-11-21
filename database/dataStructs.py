@@ -39,6 +39,27 @@ class Row(list):
         indentStr = "   "*indent
         return indentStr+"Row:\n"+indentStr+" Labels: "+str(self.labels)+"\n"+indentStr+" Values:"+str(self.values) if labelled else indentStr+str(self.values)
 
+    def getFieldIndex(self, attributeLabel):
+        """
+        Retrieve the index associated with a given attribute label.
+
+        Parameters:
+        attributeLabel (str): The label of the attribute to retrieve the value for.
+
+        Returns:
+        The value corresponding to the provided attribute label.
+
+        Raises:
+        ValueError: If the labels are None or the attribute label is not found.
+        """
+        if self.labels is not None and attributeLabel in self.labels:
+            return self.labels.index(attributeLabel)
+        elif self.labels is None:   
+            raise ValueError(f"Row labels are None, can't do label-based value lookup.")
+        else:
+            raise ValueError(f"Field {attributeLabel} not found among row fields ({self.labels})")
+
+
     def getField(self, attributeLabel):
         """
         Retrieve the value associated with a given attribute label.
@@ -488,6 +509,14 @@ class Relation():
         if self.autoIncrementPrimaryKey:
             newValues = [primaryKey] + newValues
         
+        o = 1 if self.autoIncrementPrimaryKey else 0
+
+        ### check attribute value validity
+        if self.validityChecking and self.__isEntityTyped:
+            self._validateRowValues(attributeList=newValues, entityType=newValues[self.__typeIndex-o])
+        elif self.validityChecking:
+            self._validateRowValues(attributeList=newValues)
+
         self.data.loc[self.data[self.primaryKeyName] == primaryKey] = newValues
     
     def editFieldInRow(self, primaryKey: int, targetAttribute: str, value) -> None:
@@ -514,6 +543,16 @@ class Relation():
         
         if self.typeChecking and not isinstance(value, self.types[attributeIndex]):
             raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[attributeIndex]}.")
+        
+        ### check attribute value validity
+        row = self.getRowsWhereEqual(self.primaryKeyName,primaryKey)[0]
+        row.values[row.getFieldIndex(targetAttribute)] = value
+    
+        if self.validityChecking and self.__isEntityTyped:
+            o = 1 if self.autoIncrementPrimaryKey else 0
+            self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex-o])
+        elif self.validityChecking:
+            self._validateRowValues(attributeList=row.values)
         
         self.data.loc[self.data[self.primaryKeyName] == primaryKey, targetAttribute] = value
 
