@@ -4,7 +4,7 @@ import os
 import shutil
 from datetime import datetime
 from .dataStructs import Row, RowList, Relation 
-from .entities import Admin, Patient, MHWP, JournalEntry, PatientRecord, Appointment, Allocation
+from .entities import InvalidDataError, User, Admin, Patient, MHWP, JournalEntry, PatientRecord, Appointment, Allocation, MoodEntry
 from .database import Database  
 
 '''
@@ -587,7 +587,7 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(user.iloc[0]['specialization'], 'Counseling')
 
     def test_insert_journal_entry(self):
-        journal_entry = JournalEntry(patient_id=1, text='Today was a good day.')
+        journal_entry = JournalEntry(patient_id=1, text='Today was a good day.', timestamp=datetime.now())
         self.db.insert_journal_entry(journal_entry)
         entry = self.db.getRelation('JournalEntry').data
         self.assertEqual(len(entry), 1)
@@ -764,6 +764,129 @@ class TestDatabase(unittest.TestCase):
         user = self.db.getRelation('User').data
         self.assertEqual(len(user), 1)
         self.assertEqual(user.iloc[0]['username'], 'patient1')
+
+class TestEntities(unittest.TestCase):
+   
+    def test_mhwp_invalid_data(self):
+        # Test invalid first name
+        with self.assertRaises(InvalidDataError):
+            MHWP(username='mhwpUser', password='validPass123', fName='123', lName='Valid', email='valid@example.com', specialization='Psychology')
+        
+        # Test invalid last name
+        with self.assertRaises(InvalidDataError):
+            MHWP(username='mhwpUser', password='validPass123', fName='Valid', lName='123', email='valid@example.com', specialization='Psychology')
+        
+        # Test invalid email
+        with self.assertRaises(InvalidDataError):
+            MHWP(username='mhwpUser', password='validPass123', fName='Valid', lName='Valid', email='invalid-email', specialization='Psychology')
+        
+        # Test invalid specialization
+        with self.assertRaises(InvalidDataError):
+            MHWP(username='mhwpUser', password='validPass123', fName='Valid', lName='Valid', email='valid@example.com', specialization='123')
+
+    def test_journal_entry_invalid_data(self):
+        # Test invalid entry_id
+        with self.assertRaises(InvalidDataError):
+            JournalEntry(entry_id='not_an_int', patient_id=1, text='Valid text', timestamp=datetime.now())
+        
+        # Test invalid patient_id
+        with self.assertRaises(InvalidDataError):
+            JournalEntry(entry_id=1, patient_id='not_an_int', text='Valid text', timestamp=datetime.now())
+        
+        # Test empty text
+        with self.assertRaises(InvalidDataError):
+            JournalEntry(entry_id=1, patient_id=1, text='', timestamp=datetime.now())
+        
+        # Test invalid timestamp
+        with self.assertRaises(InvalidDataError):
+            JournalEntry(entry_id=1, patient_id=1, text='Valid text', timestamp='not_a_datetime')
+
+    def test_appointment_invalid_data(self):
+        # Test invalid appointment_id
+        with self.assertRaises(InvalidDataError):
+            Appointment(appointment_id='not_an_int', patient_id=1, mhwp_id=1, date=datetime.now(), room_name='Room A', status='Scheduled')
+        
+        # Test invalid patient_id
+        with self.assertRaises(InvalidDataError):
+            Appointment(appointment_id=1, patient_id='not_an_int', mhwp_id=1, date=datetime.now(), room_name='Room A', status='Scheduled')
+        
+        # Test invalid mhwp_id
+        with self.assertRaises(InvalidDataError):
+            Appointment(appointment_id=1, patient_id=1, mhwp_id='not_an_int', date=datetime.now(), room_name='Room A', status='Scheduled')
+        
+        # Test invalid date
+        with self.assertRaises(InvalidDataError):
+            Appointment(appointment_id=1, patient_id=1, mhwp_id=1, date='not_a_datetime', room_name='Room A', status='Scheduled')
+        
+    def test_patient_invalid_data(self):
+        # Test invalid username
+        with self.assertRaises(InvalidDataError):
+            Patient(username='!nv@l!d', email='valid@example.com', password='validPass123', fName='John', lName='Doe', emergency_contact_email='contact@example.com', emergency_contact_name='Jane Doe', is_disabled=False)
+        
+        # Test invalid email
+        with self.assertRaises(InvalidDataError):
+            Patient(username='validUser', email='invalid-email', password='validPass123', fName='John', lName='Doe', emergency_contact_email='contact@example.com', emergency_contact_name='Jane Doe', is_disabled=False)
+        
+        # Test invalid first name
+        with self.assertRaises(InvalidDataError):
+            Patient(username='validUser', email='valid@example.com', password='validPass123', fName='123', lName='Doe', emergency_contact_email='contact@example.com', emergency_contact_name='Jane Doe', is_disabled=False)
+        
+        # Test invalid last name
+        with self.assertRaises(InvalidDataError):
+            Patient(username='validUser', email='valid@example.com', password='validPass123', fName='John', lName='123', emergency_contact_email='contact@example.com', emergency_contact_name='Jane Doe', is_disabled=False)
+
+    def test_admin_invalid_data(self):
+        # Test invalid username
+        with self.assertRaises(InvalidDataError):
+            Admin(username='!nv@l!d', password='validPass123')
+        
+        # Test invalid password
+        with self.assertRaises(InvalidDataError):
+            Admin(username='validUser', password='short')
+
+    def test_allocation_invalid_data(self):
+        # Test invalid allocation_id
+        with self.assertRaises(InvalidDataError):
+            Allocation(allocation_id='not_an_int', patient_id=1, mhwp_id=1, start_date=datetime.now(), end_date=datetime.now())
+        
+        # Test invalid patient_id
+        with self.assertRaises(InvalidDataError):
+            Allocation(allocation_id=1, patient_id='not_an_int', mhwp_id=1, start_date=datetime.now(), end_date=datetime.now())
+        
+        # Test invalid mhwp_id
+        with self.assertRaises(InvalidDataError):
+            Allocation(allocation_id=1, patient_id=1, mhwp_id='not_an_int', start_date=datetime.now(), end_date=datetime.now())
+        
+        # Test invalid start_date
+        with self.assertRaises(InvalidDataError):
+            Allocation(allocation_id=1, patient_id=1, mhwp_id=1, start_date='not_a_datetime', end_date=datetime.now())
+        
+        # Test invalid end_date
+        with self.assertRaises(InvalidDataError):
+            Allocation(allocation_id=1, patient_id=1, mhwp_id=1, start_date=datetime.now(), end_date='not_a_datetime')
+
+    def test_moodentry_invalid_data(self):
+        # Test invalid moodentry_id
+        with self.assertRaises(InvalidDataError):
+            MoodEntry(moodentry_id='not_an_int', patient_id=1, moodscore=3, comment='Feeling good', timestamp=datetime.now())
+        
+        # Test invalid patient_id
+        with self.assertRaises(InvalidDataError):
+            MoodEntry(moodentry_id=1, patient_id='not_an_int', moodscore=3, comment='Feeling good', timestamp=datetime.now())
+        
+        # Test invalid moodscore
+        with self.assertRaises(InvalidDataError):
+            MoodEntry(moodentry_id=1, patient_id=1, moodscore='not_an_int', comment='Feeling good', timestamp=datetime.now())
+        
+        # Test moodscore out of range
+        with self.assertRaises(InvalidDataError):
+            MoodEntry(moodentry_id=1, patient_id=1, moodscore=7, comment='Feeling good', timestamp=datetime.now())
+        
+        # Test invalid timestamp
+        with self.assertRaises(InvalidDataError):
+            MoodEntry(moodentry_id=1, patient_id=1, moodscore=3, comment='Feeling good', timestamp='not_a_datetime')
+
+
 
 if __name__ == '__main__':
     unittest.main()
