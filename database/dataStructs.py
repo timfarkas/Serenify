@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import traceback
+
 ## Database backend types representing rows, lists of rows, and relations
 class Row(list):
     """
@@ -36,6 +38,27 @@ class Row(list):
         """
         indentStr = "   "*indent
         return indentStr+"Row:\n"+indentStr+" Labels: "+str(self.labels)+"\n"+indentStr+" Values:"+str(self.values) if labelled else indentStr+str(self.values)
+
+    def getFieldIndex(self, attributeLabel):
+        """
+        Retrieve the index associated with a given attribute label.
+
+        Parameters:
+        attributeLabel (str): The label of the attribute to retrieve the value for.
+
+        Returns:
+        The value corresponding to the provided attribute label.
+
+        Raises:
+        ValueError: If the labels are None or the attribute label is not found.
+        """
+        if self.labels is not None and attributeLabel in self.labels:
+            return self.labels.index(attributeLabel)
+        elif self.labels is None:   
+            raise ValueError(f"Row labels are None, can't do label-based value lookup.")
+        else:
+            raise ValueError(f"Field {attributeLabel} not found among row fields ({self.labels})")
+
 
     def getField(self, attributeLabel):
         """
@@ -104,9 +127,10 @@ class Relation():
         relationAttributeNames (list): The attribute names, with the first value as the primary key.
         relationAttributeTypes (list, optional): The types of the attributes.
         autoIncrementPrimaryKey (bool, default True): Whether the primary key should auto-increment.
+        validityChecking (bool, default True): Whether to perform validity checks on data.
     """
     
-    def __init__(self, relationName : str, attributeLabels : list, relationAttributeTypes : list = None, autoIncrementPrimaryKey: bool=True):
+    def __init__(self, relationName : str, attributeLabels : list, relationAttributeTypes : list = None, autoIncrementPrimaryKey: bool=True, validityChecking : bool = True):
         """
         Initialize a Relation object.
 
@@ -119,8 +143,9 @@ class Relation():
         self.name = relationName
         self.numColumns = len(attributeLabels)
 
+        # set up type and validity checks
         self.typeChecking = relationAttributeTypes is not None
-
+        
         if self.typeChecking:
             if len(relationAttributeTypes) != self.numColumns: 
                 raise ValueError(f"No. of relationAttributeNames {attributeLabels} must be equal to no. of relationAttributeTypes {relationAttributeTypes}") 
@@ -130,6 +155,7 @@ class Relation():
             self.types = None
             self.primaryKeyType = int if autoIncrementPrimaryKey else None
 
+
         self.attributeLabels = attributeLabels
         self.primaryKeyName = attributeLabels[0]
         self.autoIncrementPrimaryKey = autoIncrementPrimaryKey
@@ -138,6 +164,60 @@ class Relation():
             raise ValueError(f"Primary key auto incrementing (set to true) is only supported with primary key type int (not {self.primaryKeyType}).  ")
 
         self.data = pd.DataFrame(columns=attributeLabels)
+
+        self.validityChecking = validityChecking
+        if self.validityChecking:
+            self.__initValidityChecking()
+
+    def __initValidityChecking(self):
+        """
+        Initialize validity checking for the relation.
+
+        This method sets up the entity classes that are valid for validity checking.
+        It filters out any classes related to errors or exceptions from the list of
+        entity classes. If the relation name is not found in the list of valid entity
+        classes, a ValueError is raised.
+
+        Raises:
+        ValueError: If the relation name is not a valid entity class for validity checking.
+        """
+        from .entities import __all__ as entity_classes
+        self.entity_classes = [entity for entity in entity_classes if 'Error' not in entity and 'Exception' not in entity]
+
+        if self.name not in self.entity_classes:
+            raise ValueError(f"self.validityChecking is true but relation name '{self.name}' is not a valid entity class for validity checking. Valid entity classes are: {self.entity_classes}. Turn off validity checking or choose a valid entity class.")
+
+        ### import classes and store as instantiable objects
+        try: 
+            classNameList = [self.name]
+
+            ### Entity subtyping logic
+            ### User Relation can contain three entity types, thus requires type-specific validity check
+            if self.name == "User":
+                self.__isEntityTyped = True
+                classNameList = ['Patient','Admin','MHWP']
+                self.__typeIndex = 6
+
+                ## this specifies which columns of the User table are relevant for the respective entity
+                ## these will be dropped for data validation 
+                self.__dropRowDict = {
+                    'Patient': [self.__typeIndex,9],
+                    'Admin':[self.__typeIndex,2,4,5,7,8,9],
+                    'MHWP':[self.__typeIndex,7,8] 
+                }
+            else:
+                self.__isEntityTyped = False
+
+
+            ## import and get classes
+            module_ = __import__('database.entities', fromlist=classNameList)
+            classes_ = [getattr(module_, className) for className in classNameList]
+            
+            self.__classes = classes_
+        except Exception as e:
+            traceback.print_exc()
+            raise e.add_note("Unexpected error occurred when initialising Relation-level validity checking.")
+        
 
     def getAttributeMaxRow(self, attribute) -> Row:
         """
@@ -252,7 +332,7 @@ class Relation():
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
             return None 
-        resultRelation = Relation(self.name+"_where",self.attributeLabels,self.types,autoIncrementPrimaryKey=False)
+        resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self.validityChecking)
         results = self.data[self.data[attribute].apply(lambda x: x == value)]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
@@ -310,7 +390,7 @@ class Relation():
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
             return None 
-        resultRelation = Relation(self.name+"_where",self.attributeLabels,self.types,autoIncrementPrimaryKey=False)
+        resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self.validityChecking)
         results = self.data[self.data[attribute] > value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
@@ -368,7 +448,7 @@ class Relation():
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
             return None 
-        resultRelation = Relation(self.name+"_where",self.attributeLabels,self.types,autoIncrementPrimaryKey=False)
+        resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self.validityChecking)
         results = self.data[self.data[attribute] < value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
@@ -429,6 +509,14 @@ class Relation():
         if self.autoIncrementPrimaryKey:
             newValues = [primaryKey] + newValues
         
+        o = 1 if self.autoIncrementPrimaryKey else 0
+
+        ### check attribute value validity
+        if self.validityChecking and self.__isEntityTyped:
+            self._validateRowValues(attributeList=newValues, entityType=newValues[self.__typeIndex-o])
+        elif self.validityChecking:
+            self._validateRowValues(attributeList=newValues)
+
         self.data.loc[self.data[self.primaryKeyName] == primaryKey] = newValues
     
     def editFieldInRow(self, primaryKey: int, targetAttribute: str, value) -> None:
@@ -456,6 +544,16 @@ class Relation():
         if self.typeChecking and not isinstance(value, self.types[attributeIndex]):
             raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[attributeIndex]}.")
         
+        ### check attribute value validity
+        row = self.getRowsWhereEqual(self.primaryKeyName,primaryKey)[0]
+        row.values[row.getFieldIndex(targetAttribute)] = value
+    
+        if self.validityChecking and self.__isEntityTyped:
+            o = 1 if self.autoIncrementPrimaryKey else 0
+            self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex-o])
+        elif self.validityChecking:
+            self._validateRowValues(attributeList=row.values)
+        
         self.data.loc[self.data[self.primaryKeyName] == primaryKey, targetAttribute] = value
 
     def insertRow(self, attributeList: list = None, row: Row = None) -> None:
@@ -466,19 +564,20 @@ class Relation():
         attributeList (list, optional): The list of attributes for the row.
         row (Row, optional): A Row object to insert.
         """
-        autoIncrementPrimaryKey = self.autoIncrementPrimaryKey
-        attributes = None
-        if attributeList is not None and row is None:
-            attributes = attributeList
-        elif attributeList is None and row is not None:
+        ### check if attributeList or row is valid
+        if attributeList is None and row is None:
+            raise ValueError("No attributeList and row specified.")
+        if row is not None:
             if not isinstance(row, Row):
                 raise TypeError(f"Expected row to be a Row object, got {type(row)}")
-            attributes = row.values
-        elif attributeList is None and row is None:
-            raise ValueError("No attributeList and row specified.")
-        elif attributeList is not None and row is not None:
-            raise ValueError("Row and attribute list passed")
-
+        if attributeList is not None:
+            if not isinstance(attributeList, list):
+                raise TypeError(f"Expected attributeList to be a list, got {type(attributeList)}")
+        
+        autoIncrementPrimaryKey = self.autoIncrementPrimaryKey
+        attributes = attributeList if attributeList is not None else row.values
+        
+        ### check if passed attributes are valid
         if autoIncrementPrimaryKey and len(attributes) == len(self.attributeLabels):
             raise ValueError(f"Received attributes list {attributes} of length {len(attributes)}, expected {len(self.attributeLabels)-1}. Mind that you need to leave out the primary key if you set auto incrementing to true.")
         elif autoIncrementPrimaryKey and len(attributes) != len(self.attributeLabels)-1:
@@ -486,6 +585,7 @@ class Relation():
         elif not autoIncrementPrimaryKey and len(attributes) != len(self.attributeLabels):
             raise ValueError(f"Received attributes list {attributes} of length {len(attributes)}, expected {len(self.attributeLabels)-1}.") 
 
+        ### check if attribute types are valid
         o = 1 if autoIncrementPrimaryKey else 0
         for i, value in enumerate(attributes):
             if value is None:
@@ -493,23 +593,32 @@ class Relation():
             elif self.typeChecking and type(value) != self.types[i+o]:
                 raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[i+o]}.")
         
+        ### check if primary key is valid
         for i, row in enumerate(self.data[self.primaryKeyName]):
             if attributes[0] == row and not self.autoIncrementPrimaryKey:
                 raise KeyError(f"Invalid primary key. Key {attributes[0]} is a duplicate of primary key of row {i}.")
+        
+        ### check attribute value validity
+        if self.validityChecking and self.__isEntityTyped:
+            self._validateRowValues(attributeList=attributes, entityType=attributes[self.__typeIndex-o])
+        elif self.validityChecking:
+            self._validateRowValues(attributeList=attributes)
+        
 
-        if not autoIncrementPrimaryKey:
+        ### add row
+        if not autoIncrementPrimaryKey: ### use provided primary key
             if self.data.empty:
                 self.data = pd.DataFrame([attributes], columns=self.attributeLabels)
             else:
                 self.data = pd.concat([self.data, pd.DataFrame([attributes], columns=self.attributeLabels)], ignore_index=True)
-        else:
+        else: ### add row with autoincremented key
             key = self._generateIncrementedPrimaryKey()
             new_row = pd.DataFrame([[key] + attributes], columns=self.attributeLabels)
             if self.data.empty:
                 self.data = new_row
             else:
                 self.data = pd.concat([self.data, new_row], ignore_index=True)
-    
+        
     def insertRows(self, rows:RowList):
         """
         Inserts multiple rows into the relation.
@@ -523,6 +632,39 @@ class Relation():
         else:
             for row in rows:
                 self.insertRow(row=row)
+
+    def _validateRowValues(self, attributeList: list = None, entityType: str = None):
+        ### retrieve appropriate class
+        list = attributeList.copy()
+        relevantClasses = self.__classes
+        isTyped = self.__isEntityTyped
+        if isTyped:
+            dropRowDict = self.__dropRowDict
+        correctEntityClass = None
+        if not isTyped:
+            correctEntityClass = relevantClasses[0]
+        else:
+            ### find appropriate class
+            for entityClass in relevantClasses:
+                if entityClass.__name__ == entityType:
+                    correctEntityClass = entityClass
+            if correctEntityClass is None:
+                raise TypeError(f"Validation is switched on, but class of name {entityType} could not be found among {relevantClasses}")
+            
+            ### drop values in attributeList based on class
+            indicesToDrop = sorted(dropRowDict.get(correctEntityClass.__name__), reverse=True)
+            
+            o = 1 if self.autoIncrementPrimaryKey else 0 ## primary key missing offset
+            for index  in indicesToDrop:
+                list.pop(index-o)
+        
+        ### instantiate correct class
+        if self.autoIncrementPrimaryKey:
+            correctEntityClass(None,*list)
+        else:
+            correctEntityClass(*list)
+
+
 
     def dropRows(self, id : int = None, ids : list = None):
         """
