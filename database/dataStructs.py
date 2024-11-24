@@ -724,6 +724,10 @@ class Relation():
                 converted_values.append(int(value))
             elif isinstance(value, (pd.Float64Dtype, pd.Float32Dtype)):
                 converted_values.append(float(value))
+            elif isinstance(value, (np.bool, pd.BooleanDtype)):
+                converted_values.append(bool(value))
+            elif isinstance(value, (pd.StringDtype)):
+                converted_values.append(str(value))
             else:
                 converted_values.append(value)
         
