@@ -8,10 +8,9 @@ sys.path.append(project_root)  # Add the project root to sys.path
 from database.database import Database  # Import Database
 
 class New_patient():
-
     def __init__(self, root):
         self.root = root
-        self.root.title("Login")
+        self.root.title("New Patient Registration")
         self.root.geometry("600x600")
 
         self.db = Database(verbose=True)
@@ -25,51 +24,97 @@ class New_patient():
         h2_label = tk.Label(patient_root, text="Welcome! Please fill out the below:", font=("Arial", 18, "bold"))
         h2_label.pack()
 
+        # Input fields stored
+        self.name_entry = tk.Entry(patient_root)
+        self.age_entry = tk.Entry(patient_root)
+        self.address_entry = tk.Entry(patient_root)
+        self.diagnosis_entry = tk.Entry(patient_root)
+        self.email_entry = tk.Entry(patient_root)
+        self.mobile_entry = tk.Entry(patient_root)
+        self.ice_entry = tk.Entry(patient_root)
+
+        # Personal information fieldset
         fieldset = tk.LabelFrame(patient_root, text="Personal Information", padx=10, pady=10)
         fieldset.pack(padx=10, pady=10)
 
-        name_label = tk.Label(fieldset, text="Name:")
-        name_label.grid(row=0, column=0)
-        name_entry = tk.Entry(fieldset)
-        name_entry.grid(row=0, column=1)
+        tk.Label(fieldset, text="Name:").grid(row=0, column=0)
+        self.name_entry.grid(row=0, column=1)
 
-        age_label = tk.Label(fieldset, text="Age:")
-        age_label.grid(row=1, column=0)
-        age_entry = tk.Entry(fieldset)
-        age_entry.grid(row=1, column=1)
+        tk.Label(fieldset, text="Age:").grid(row=1, column=0)
+        self.age_entry.grid(row=1, column=1)
 
-        age_label = tk.Label(fieldset, text="Home address:")
-        age_label.grid(row=2, column=0)
-        age_entry = tk.Entry(fieldset)
-        age_entry.grid(row=2, column=1)
+        tk.Label(fieldset, text="Home Address:").grid(row=2, column=0)
+        self.address_entry.grid(row=2, column=1)
 
-        age_label = tk.Label(fieldset, text="Diagnosis:")
-        age_label.grid(row=3, column=0)
-        age_entry = tk.Entry(fieldset)
-        age_entry.grid(row=3, column=1)
+        tk.Label(fieldset, text="Diagnosis:").grid(row=3, column=0)
+        self.diagnosis_entry.grid(row=3, column=1)
 
-        age_label = tk.Label(fieldset, text="Email:")
-        age_label.grid(row=4, column=0)
-        age_entry = tk.Entry(fieldset)
-        age_entry.grid(row=4, column=1)
+        tk.Label(fieldset, text="Email:").grid(row=4, column=0)
+        self.email_entry.grid(row=4, column=1)
 
-        age_label = tk.Label(fieldset, text="Mobile:")
-        age_label.grid(row=5, column=0)
-        age_entry = tk.Entry(fieldset)
-        age_entry.grid(row=5, column=1)
+        tk.Label(fieldset, text="Mobile:").grid(row=5, column=0)
+        self.mobile_entry.grid(row=5, column=1)
 
-        age_label = tk.Label(fieldset, text="ICE name and mobile:")
-        age_label.grid(row=6, column=0)
-        age_entry = tk.Entry(fieldset)
-        age_entry.grid(row=6, column=1)
+        tk.Label(fieldset, text="ICE Name and Mobile:").grid(row=6, column=0)
+        self.ice_entry.grid(row=6, column=1)
+        
+        tk.Label(fieldset, text="Username:").grid(row=6, column=0)
+        self.username_entry.grid(row=6, column=1)
+        
+        tk.Label(fieldset, text="Password:").grid(row=6, column=0)
+        self.password_entry.grid(row=6, column=1)
 
-        complete_button = tk.Button(root, text="Logout", command=completeUser)
+
+        complete_button = tk.Button(root, text="Submit Information", command=self.submit_user)
         complete_button.grid(row=11, column=0, columnspan = 6, pady=5)
 
+        complete_button = tk.Button(root, text="Login", command=self.completeUser)
+        complete_button.grid(row=11, column=0, columnspan = 6, pady=5)
+    
+    def submit_user(self):
+        # Retrieve input values and add them to the database
+        name = self.name_entry.get()
+        age = self.age_entry.get()
+        address = self.address_entry.get()
+        diagnosis = self.diagnosis_entry.get()
+        email = self.email_entry.get()
+        mobile = self.mobile_entry.get()
+        ice = self.ice_entry.get()
+        username = self.username_entry.get()
+        password = self.password_entry.get()
 
-        def completeUser(self):
-            subprocess.Popen(["python3", "patient/patientMain.py"])
-            self.root.destroy()
+        # Validate inputs (example: ensure required fields are filled)
+        if not name or not age or not email or not mobile:
+            tk.messagebox.showerror("Error", "Please fill out all required fields.")
+            return
+
+        try:
+            # Insert data into the database
+            user_data = {
+                "username": email,  # Example: using email as username
+                "email": email,
+                "password": "defaultpassword123",  # Set default password (later to be changed by user)
+                "fName": name.split()[0],  # Assume first name is the first word
+                "lName": " ".join(name.split()[1:]),  # Rest as last name
+                "type": "patient",
+                "emergency_contact_email": ice.split()[-1],  # Assume last word is mobile number
+                "emergency_contact_name": " ".join(ice.split()[:-1]),  
+                "specialization": diagnosis,  
+                "is_disabled": False,
+            }
+
+            # Add to the database
+            self.db.user.insert(user_data)
+            self.db.close()  # Save the changes to the database
+            tk.messagebox.showinfo("Success", "New patient registered successfully!")
+
+        except Exception as e:
+            tk.messagebox.showerror("Error", f"Failed to register patient: {e}")
+
+
+    def completeUser(self):
+        subprocess.Popen(["python3", "login/login.py"])
+        self.root.destroy()
 
 
 if __name__ == "__main__":
