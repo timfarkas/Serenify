@@ -1,11 +1,20 @@
 import tkinter as tk
 from tkinter import messagebox
 import subprocess # This allows us to open other files
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(project_root)  # Add the project root to sys.path
+
+from database.database import Database  # Import Database
+
 class LoginPage:
     def __init__(self, root):
         self.root = root
         self.root.title("Login")
-        self.root.geometry("400x400")
+        self.root.geometry("600x600")
+
+        self.db = Database(verbose=True)
 
         # H1 equivalent
         h1_label = tk.Label(root, text="Signing in.", font=("Arial", 24, "bold"))
@@ -52,14 +61,15 @@ class LoginPage:
             messagebox.showerror("Login Failed", "Invalid username or password")
     
     def correctDetails(self, username, password, role):
-        ################ THESE MUST BE REPLACED WITH DATABASE DATA!!!!!!!! ##############
-        if role == "admin" and username == "admin" and password == "admin123":
-            return True
-        elif role == "mhwp" and username == "mhwp" and password == "mhwp123":
-            return True
-        elif role == "patient" and username == "patient" and password == "patient123":
-            return True
-        else:
+        try:
+            # Query the database for the user
+            user_relation = self.db.getRelation("User")
+            user_data = user_relation.find(
+                lambda row: row['username'] == username and row['password'] == password and row['type'] == role
+            )
+            return bool(user_data)  # Return True if a matching user is found
+        except Exception as e:
+            messagebox.showerror("Database Error", f"An error occurred while checking credentials: {e}")
             return False
 
     def findMainPage(self, role):

@@ -4,7 +4,6 @@ def open_patient_window():
     patient_root = tk.Toplevel()  # Toplevel for the patient window
     patient_root.title("New Patient Submission")
 
-    # H1 equivalent
     h1_label = tk.Label(patient_root, text="Sign up", font=("Arial", 24, "bold"))
     h1_label.pack()
 
@@ -51,7 +50,7 @@ def open_patient_window():
 
     # Add a button to the patient info window
     button = tk.Button(patient_root, text="Complete", command=patient_root.destroy)
-    button.pack() # This needs to log the new info to the 
+    button.pack() # This needs to log the new info to the database 
 
 
 if __name__ == "__main__":
