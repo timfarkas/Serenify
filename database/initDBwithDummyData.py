@@ -10,11 +10,11 @@ import datetime
 def initDummyDatabase(db: Database):
     try:
         # Create User objects
-        admin_user = Admin(user_id=1, username='admin1', password='pass123')
+        admin_user = Admin(user_id=1, username='admin1', password='pass1234567')
         patient_user = Patient(
             user_id=2,
             username='patient1',
-            password='pass123',
+            password='pass1234567',
             fName='John',
             lName='Doe',
             email='johndoe@example.com'
@@ -22,8 +22,8 @@ def initDummyDatabase(db: Database):
         mhwp_user = MHWP(
             user_id=3,
             username='mhwp1',
-            password='pass123',
-            fName='Dr. Martin',
+            password='pass1234567',
+            fName='DrMartin',
             lName='Smith',
             email='drsmith@example.com',
             specialization='Psychology'
@@ -34,12 +34,11 @@ def initDummyDatabase(db: Database):
         db.insert_patient(patient_user)
         db.insert_mhwp(mhwp_user)
 
-        
         # Allocate mhwp to patient and insert allocation into database
         allocation = Allocation(
-            admin_id=admin_user.user_id, ## example admin id
-            patient_id=patient_user.user_id, ## example patient id
-            mhwp_id=mhwp_user.user_id, ## example mhwp id
+            admin_id=admin_user.user_id,  ## example admin id
+            patient_id=patient_user.user_id,  ## example patient id
+            mhwp_id=mhwp_user.user_id,  ## example mhwp id
             start_date=datetime.datetime.now(),
             end_date=datetime.datetime.now()
         )
@@ -143,7 +142,7 @@ def initDummyDatabase(db: Database):
         patient_user2 = Patient(
             user_id=4,
             username='patient2',
-            password='pass456',
+            password='pass456789',
             fName='Jane',
             lName='Smith',
             email='janesmith@example.com'
@@ -151,8 +150,8 @@ def initDummyDatabase(db: Database):
         mhwp_user2 = MHWP(
             user_id=5,
             username='mhwp2',
-            password='pass456',
-            fName='Dr.',
+            password='pass456789',
+            fName='Dr',
             lName='Brown',
             email='drbrown@example.com',
             specialization='Counseling'
@@ -182,7 +181,6 @@ def initDummyDatabase(db: Database):
             timestamp=datetime.datetime.now()
         )
 
-
         db.insert_journal_entry(journal_entry2)
 
         # Create another PatientRecord object and insert
@@ -201,7 +199,6 @@ def initDummyDatabase(db: Database):
             notes='Second round of follow-up assessment notes.',
             conditions=['Depression']
         )
-
 
         db.insert_patient_record(patient_record2)
         db.insert_patient_record(patient_record3)
@@ -228,8 +225,7 @@ def initDummyDatabase(db: Database):
         # Insert appointments into the database
         db.insert_appointment(appointment1)
         db.insert_appointment(appointment2)
-        
-        
+
         db.printAll()
 
         print(db.getRelation("Appointment"))
@@ -243,6 +239,6 @@ def initDummyDatabase(db: Database):
 
 
 if __name__ == "__main__":
-    db = Database(overwrite = True)
+    db = Database(overwrite=True)
     initDummyDatabase(db)
     db.close()
