@@ -3,10 +3,12 @@ from tkinter import messagebox
 import subprocess # This allows us to open other files
 import sys
 import os
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "database"))
 sys.path.append(project_root)  # Add the project root to sys.path
 
 from database.database import Database  # Import Database
+from database.entities import Appointment  ####### 
+from database.dataStructs import Row  #######
 
 class LoginPage:
     def __init__(self, root):
@@ -62,6 +64,10 @@ class LoginPage:
     
     def correctDetails(self, username, password, role):
         try:
+            
+            self.db = Database()
+            self.db.printAll()
+
             # Query the database for the user
             user_relation = self.db.getRelation("User")
             user_data = user_relation.find(

@@ -1,4 +1,5 @@
 import tkinter as tk
+import subprocess
 
 root = tk.Tk()
 root.title("mhwp")
@@ -45,11 +46,14 @@ see_request_button4.pack()
 dashboard_button = tk.Button(root, text="Patient dashboard") 
 dashboard_button.pack()
 
-# logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
-# logout_button.pack()
+# logout button
+logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
+logout_button.pack()
 
-    # def exitUser(self):
-    #     pass
+def exitUser(self):
+    subprocess.Popen(["python3", "login/logout.py"])
+    self.root.destroy()
+
         ######### Inputs #########
         # username = self.username_entry.get()
         # password = self.password_entry.get()

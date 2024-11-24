@@ -90,6 +90,11 @@ class EditInfo:
         #Back button
         self.back_button = tk.Button(root, text="Back to the main page", command=self.backButton)
         self.back_button.grid(row=12, column=0, columnspan=2, pady=5)
+
+
+    def backButton(self):
+        subprocess.Popen(["python3", "mhwpMain.py"])
+        self.root.destroy()
     
     def load_current_info(self):
         db = Database()

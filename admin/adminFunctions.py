@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+import subprocess
 import sys
 import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
@@ -367,6 +368,14 @@ class AllocationSelection(UserSelectionApp):
         # back button
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
+
+        # logout button
+        logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
+        logout_button.pack()
+
+    def exitUser(self):
+        subprocess.Popen(["python3", "login/logout.py"])
+        self.root.destroy()
 
 class KeyStatistics(tk.Toplevel):
     def __init__(self, parent):
