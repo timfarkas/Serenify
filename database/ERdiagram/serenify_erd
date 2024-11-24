@@ -1,0 +1,42 @@
+digraph {
+	{
+		rank=min
+		User [label="User
+{PK} user_id: int, username: str, password: str, type: str, is_disabled: bool"]
+	}
+	Spacer1 [label="" height=0.01 shape=point style=invis width=0.01]
+	{
+		rank=same
+		Admin [label="Admin
+{PK} admin_id: int" shape=box]
+		Patient [label="Patient
+{PK} patient_id: int, fName: str, lName: str, email: str, emergency_contact_email: str" shape=box]
+		MHWP [label="MHWP
+{PK} mhwp_id: int, fName: str, lName: str, email: str, specialization: str" shape=box]
+	}
+	User -> Admin [label=inherits arrowhead=onormal style=dashed]
+	User -> Patient [label=inherits arrowhead=onormal style=dashed]
+	User -> MHWP [label=inherits arrowhead=onormal style=dashed]
+	Admin -> Spacer1 [style=invis]
+	Spacer1 -> Patient [style=invis]
+	Patient -> MHWP [style=invis]
+	{
+		rank=same
+		JournalEntry [label="JournalEntry
+{PK} entry_id: int, text: str, timestamp: datetime"]
+		Appointment [label="Appointment
+{PK} appointment_id: int, roomName : str, date: datetime, status: str"]
+		PatientRecord [label="PatientRecord
+{PK} record_id: int, notes: str, conditions: list"]
+		Allocation [label="Allocation
+{PK} allocation_id: int, start_date: datetime, end_date: datetime"]
+	}
+	Admin -> Allocation [label="creates (1:N)" arrowhead=vee dir=both style=solid]
+	Patient -> Allocation [label="allocated to (1:1)" arrowhead=vee dir=both style=solid]
+	MHWP -> Allocation [label="responsible for (1:N)" arrowhead=vee dir=both style=solid]
+	Patient -> JournalEntry [label="writes (1:N)" arrowhead=vee dir=both style=solid]
+	Patient -> Appointment [label="books (1:N)" arrowhead=vee dir=both style=solid]
+	MHWP -> Appointment [label="confirms (1:N)" arrowhead=vee dir=both style=solid]
+	Patient -> PatientRecord [label="has record entries (1:N)" arrowhead=vee dir=both style=solid]
+	PatientRecord -> MHWP [label="created by (N:N)" arrowhead=vee dir=both style=solid]
+}
