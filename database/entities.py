@@ -626,3 +626,10 @@ class ChatContent:
     def checkValidData(self):
         return self.checkValidDataStatic(self.chatcontent_id, self.allocation_id, self.user_id, self.text, self.timestamp)
 
+class UserError(Exception):
+    """Custom exception for user-related errors."""
+    pass
+
+class RecordError(Exception):
+    """Custom exception for user-related errors."""
+    pass

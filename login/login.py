@@ -70,10 +70,9 @@ class LoginPage:
 
             # Query the database for the user
             user_relation = self.db.getRelation("User")
-            user_data = user_relation.find(
-                lambda row: row['username'] == username and row['password'] == password and row['type'] == role
-            )
-            return bool(user_data)  # Return True if a matching user is found
+            user_data = user_relation.getRowsWhereEqual('username',username)
+           
+            return bool( user_data[0][3] == password)  # Return True if a matching user is found
         except Exception as e:
             messagebox.showerror("Database Error", f"An error occurred while checking credentials: {e}")
             return False
