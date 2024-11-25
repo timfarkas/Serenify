@@ -9,6 +9,7 @@ sys.path.append(project_root)  # Add the project root to sys.path
 from database.database import Database  # Import Database
 from database.entities import Appointment  ####### 
 from database.dataStructs import Row  #######
+import patient.patientMain
 
 class LoginPage:
     def __init__(self, root):
@@ -58,16 +59,14 @@ class LoginPage:
         role = self.user_role.get()
         # Check credentials (replace with real validation logic)
         if self.correctDetails(username, password, role):
-            self.findMainPage(role)
+            self.findMainPage(username, password, role)
         else:
             messagebox.showerror("Login Failed", "Invalid username or password")
     
     def correctDetails(self, username, password, role):
         try:
-            
             self.db = Database()
             self.db.printAll()
-
             # Query the database for the user
             user_relation = self.db.getRelation("User")
             user_data = user_relation.getRowsWhereEqual('username',username)
@@ -77,16 +76,16 @@ class LoginPage:
             messagebox.showerror("Database Error", f"An error occurred while checking credentials: {e}")
             return False
 
-    def findMainPage(self, role):
+    def findMainPage(self, username, password, role):
         # Takes user to the main page
         if role == "admin":
-            subprocess.Popen(["python3", "admin/adminMain.py"])
+            exec(open("admin/adminFunctions.py").read())
             self.root.destroy()
         elif role == "mhwp":
-            subprocess.Popen(["python3", "mhwp/mhwpMain.py"])
+            exec(open("mhwp/mhwpMain.py").read())
             self.root.destroy()
         elif role == "patient": 
-            subprocess.Popen(["python3", "patient/patientMain.py"])
+            exec(open("patient/patientMain.py").read())
             self.root.destroy()
         else:
             messagebox.showerror("Error", "Role not recognised.")
