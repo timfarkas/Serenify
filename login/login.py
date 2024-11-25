@@ -7,9 +7,11 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "da
 sys.path.append(project_root)  # Add the project root to sys.path
 
 from database.database import Database  # Import Database
-from database.entities import Appointment  ####### 
-from database.dataStructs import Row  #######
-import patient.patientMain
+from database.entities import Appointment  
+from database.dataStructs import Row  
+# import patient.patientMain
+# import admin.adminFunctions
+# import mhwp.mhwpMain
 
 class LoginPage:
     def __init__(self, root):

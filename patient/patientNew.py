@@ -1,5 +1,6 @@
 import tkinter as tk
 import subprocess
+from tkinter import messagebox
 import sys
 import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "database"))
@@ -37,8 +38,11 @@ class New_patient():
         fieldset = tk.LabelFrame(patient_root, text="Personal Information", padx=10, pady=10)
         fieldset.pack(padx=10, pady=10)
 
-        tk.Label(fieldset, text="Name:").grid(row=0, column=0)
-        self.name_entry.grid(row=0, column=1)
+        tk.Label(fieldset, text="First Name:").grid(row=0, column=0)
+        self.fName_entry.grid(row=0, column=1)
+        
+        tk.Label(fieldset, text="Last Name:").grid(row=0, column=0)
+        self.lName_entry.grid(row=0, column=1)
 
         tk.Label(fieldset, text="Age:").grid(row=1, column=0)
         self.age_entry.grid(row=1, column=1)
@@ -73,7 +77,8 @@ class New_patient():
     
     def submit_user(self):
         # Retrieve input values and add them to the database
-        name = self.name_entry.get()
+        fName = self.fName_entry.get()
+        lName = self.lName_entry.get()
         age = self.age_entry.get()
         address = self.address_entry.get()
         diagnosis = self.diagnosis_entry.get()
@@ -84,7 +89,7 @@ class New_patient():
         password = self.password_entry.get()
 
         # Validate inputs (example: ensure required fields are filled)
-        if not name or not age or not email or not mobile:
+        if not fName or not lName or not age or not email or not mobile:
             tk.messagebox.showerror("Error", "Please fill out all required fields.")
             return
 
@@ -94,8 +99,8 @@ class New_patient():
                 "username": email,  # Example: using email as username
                 "email": email,
                 "password": "defaultpassword123",  # Set default password (later to be changed by user)
-                "fName": name.split()[0],  # Assume first name is the first word
-                "lName": " ".join(name.split()[1:]),  # Rest as last name
+                "fName": fName,  # Assume first name is the first word
+                "lName": lName,  # Rest as last name
                 "type": "patient",
                 "emergency_contact_email": ice.split()[-1],  # Assume last word is mobile number
                 "emergency_contact_name": " ".join(ice.split()[:-1]),  
@@ -111,6 +116,22 @@ class New_patient():
         except Exception as e:
             tk.messagebox.showerror("Error", f"Failed to register patient: {e}")
 
+        
+            newValues =(username, email, password, fName, lName, address, age, diagnosis)
+        try:
+            # Try to perform the update
+            user = db.getRelation("User")
+            user.insertRow(newValues=list(newValues))
+            db.close() #to save the database
+            messagebox.showinfo(
+            "Information Updated",
+            'Information updated successfully')
+        except (IndexError, ValueError, TypeError) as e:
+            # Handle specific exceptions raised by editRow
+            messagebox.showerror("Update Failed", f"Error adding new patient: {str(e)}")
+
+        else:
+            messagebox.showerror("Update Failed", "No new information found.")
 
     def completeUser(self):
         subprocess.Popen(["python3", "login/login.py"])
