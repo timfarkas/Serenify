@@ -221,7 +221,7 @@ class Database:
         self.logger.info(f"Loading DB from {self.data_file}")
         try:
             with open(self.data_file, 'rb') as f:
-                data = pickle.load(f)
+                data = pickle.load(f) ## if this causes issues, you might want to try removing (and reinitializing) your database.pkl file
                 self.user = data['user']
                 self.journal_entry = data['journal_entry']
                 self.appointment = data['appointment']
@@ -235,6 +235,8 @@ class Database:
             self.initDict()
         except KeyError as k: ## catch errors being caused by old data
             self.logger.warn(f"Could not find a relation in {self.data_file}. Try deleting (and reinitializing) database.pkl.",k)
+        except ModuleNotFoundError as m: ## pickle having different module structure
+            self.logger.warn(f"Error when opening {self.data_file}. This might be caused by imports having been wrongly structured when last saving the database. Try deleting (and reinitializing) database.pkl.",k)
         except Exception as e:
             raise e
 
