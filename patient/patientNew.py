@@ -102,13 +102,13 @@ class New_patient():
         subprocess.Popen(["python3", "login/login.py"])
         self.root.destroy()
 
-# if __name__ == "__main__":
-#     root = tk.Tk()  # Creates a root window if running standalone
-#     app = New_patient(root)
-#     root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()  # Creates a root window if running standalone
+    app = New_patient(root)
+    root.mainloop()
 
 # Used for debugging
-db = Database()
-print("Getting and printing relation 'User':")
-userRelation = db.getRelation('User')
-print(userRelation)
+# db = Database()
+# print("Getting and printing relation 'User':")
+# userRelation = db.getRelation('User')
+# print(userRelation)
