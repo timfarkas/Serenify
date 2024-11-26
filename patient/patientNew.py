@@ -98,20 +98,17 @@ class New_patient():
             # Handle specific exceptions raised by editRow
             messagebox.showerror("Update Failed", f"Error adding new patient: {str(e)}")
 
-        else:
-            messagebox.showerror("Update Failed", "No new information found.")
-
     def completeUser(self):
         subprocess.Popen(["python3", "login/login.py"])
         self.root.destroy()
 
-if __name__ == "__main__":
-    root = tk.Tk()  # Creates a root window if running standalone
-    app = New_patient(root)
-    root.mainloop()
+# if __name__ == "__main__":
+#     root = tk.Tk()  # Creates a root window if running standalone
+#     app = New_patient(root)
+#     root.mainloop()
 
-## Used for debugging
-# db = Database()
-# print("Getting and printing relation 'User':")
-# userRelation = db.getRelation('User')
-# print(userRelation)
+# Used for debugging
+db = Database()
+print("Getting and printing relation 'User':")
+userRelation = db.getRelation('User')
+print(userRelation)
