@@ -187,14 +187,14 @@ class Relation():
             if self.name == "User":
                 self.__isEntityTyped = True
                 classNameList = ['Patient','Admin','MHWP']
-                self.__typeIndex = 6
+                self._typeIndex = 6
 
                 ## this specifies which columns of the User table are irrelevant for the respective entity
                 ## these will be dropped for data validation
                 self.__dropColumnDict = {
-                    'Patient': [self.__typeIndex,9],
-                    'Admin':[self.__typeIndex,2,4,5,7,8,9],
-                    'MHWP':[self.__typeIndex,7,8]
+                    'Patient': [self._typeIndex,9],
+                    'Admin':[self._typeIndex,2,4,5,7,8,9],
+                    'MHWP':[self._typeIndex,7,8]
                 }
             else:
                 self.__isEntityTyped = False
@@ -517,7 +517,7 @@ class Relation():
 
         ### check attribute value validity
         if self.validityChecking and self.__isEntityTyped:
-            self._validateRowValues(attributeList=newValues, entityType=newValues[self.__typeIndex])
+            self._validateRowValues(attributeList=newValues, entityType=newValues[self._typeIndex])
         elif self.validityChecking:
             self._validateRowValues(attributeList=newValues)
 
@@ -554,7 +554,7 @@ class Relation():
         row.values[row.getFieldIndex(targetAttribute)] = value
 
         if self._validityChecking and self.__isEntityTyped:
-            self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex])
+            self._validateRowValues(attributeList=row.values, entityType=row.values[self._typeIndex])
         elif self._validityChecking:
             self._validateRowValues(attributeList=row.values)
         
@@ -607,7 +607,7 @@ class Relation():
             
         ### check attribute value validity
         if self._validityChecking and self.__isEntityTyped:
-            self._validateRowValues(attributeList=attributes, entityType=attributes[self.__typeIndex])
+            self._validateRowValues(attributeList=attributes, entityType=attributes[self._typeIndex])
         elif self._validityChecking:
             self._validateRowValues(attributeList=attributes)
 

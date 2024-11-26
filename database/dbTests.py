@@ -849,9 +849,20 @@ class TestDatabase(unittest.TestCase):
         patient2 = Patient(username='patient2', email='patient2@example.com', password='password123', fName='Jane', lName='Doe', emergency_contact_email='contact@example.com', is_disabled=False)
         patient3 = Patient(username='patient3', email='patient3@example.com', password='password123', fName='Jim', lName='Beam', emergency_contact_email='contact@example.com', is_disabled=False)
         
+        mhwp1 = MHWP(
+            username='mhwp1',
+            email='mhwp1@example.com',
+            password='password123',
+            fName='Jane',
+            lName='Smith',
+            specialization='Counseling'
+        )
+        
+
         self.db.insert_patient(patient1)
         self.db.insert_patient(patient2)
         self.db.insert_patient(patient3)
+        self.db.insert_mhwp(mhwp1)
 
         # Insert appointments for patients
         appointment1 = Appointment(patient_id=2, mhwp_id=2, date=datetime(2023, 1, 1, 10, 0), status='Scheduled', room_name='Room 101')
@@ -863,9 +874,9 @@ class TestDatabase(unittest.TestCase):
         # Delete by patient_id
         self.db.delete_patient(patientId=2)
         user = self.db.getRelation('User').data
-        self.assertEqual(len(user), 2)
+        self.assertEqual(len(user), 3)
         remaining_ids = user['user_id'].tolist()
-        self.assertEqual(remaining_ids, [1, 3])
+        self.assertEqual(remaining_ids, [1, 3, 4])
 
         
 
@@ -878,8 +889,8 @@ class TestDatabase(unittest.TestCase):
         self.db.delete_patient(patientId=1)
         self.db.delete_patient(patientId=3)
         user = self.db.getRelation('User').data
-        self.assertEqual(len(user), 0)
-        
+        self.assertEqual(len(user), 1)
+
         # Test error when patientId is not an integer
         with self.assertRaises(TypeError):
             self.db.delete_patient(patientId='1')
@@ -887,6 +898,12 @@ class TestDatabase(unittest.TestCase):
         # Test error when patientId does not exist
         with self.assertRaises(KeyError):
             self.db.delete_patient(patientId=99)
+
+        # Test error when attempting to delete non-patient
+        with self.assertRaises(NotImplementedError):
+            self.db.delete_patient(patientId=4)
+
+        
 
     def test_insert_mhwp(self):
         mhwp = MHWP(

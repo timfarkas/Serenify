@@ -436,6 +436,9 @@ class Database:
         if "user_id" not in user_relation.data.columns or patientId not in user_relation.data["user_id"].values:
             raise KeyError(f"Patient id {patientId} does not exist in User relation.")
 
+        if user_relation.getRowsWhereEqual("user_id",patientId)[0][user_relation._typeIndex] != "Patient":
+            raise NotImplementedError(f"User with id {patientId} is not a patient, deleting not supported.")
+
         for relationName, patientIdColumn in [("User", "user_id"), 
                                               ("Appointment", "patient_id"), 
                                               ("PatientRecord", "patient_id"), 
