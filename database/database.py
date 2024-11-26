@@ -7,6 +7,7 @@ from datetime import datetime as date
 
 from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent, Forum, Notification
 from .dataStructs import Row, Relation, RowList
+import warnings
 
 
 ## Database class
@@ -219,19 +220,26 @@ class Database:
         Loads the database from a file, restoring the state of all relations.
         """
         self.logger.info(f"Loading DB from {self.data_file}")
-        with open(self.data_file, 'rb') as f:
-            data = pickle.load(f)
-            self.user = data['user']
-            self.journal_entry = data['journal_entry']
-            self.appointment = data['appointment']
-            self.patient_record = data['patient_record']
-            self.allocation = data['allocation']
-            self.mood_entry = data['mood_entry']
-            self.review_entry = data['review_entry']
-            self.chatcontent = data['chatcontent']
-            self.forum = data['forum']
-            self.notification = data['notification']
-        self.initDict()
+        try:
+            with open(self.data_file, 'rb') as f:
+                data = pickle.load(f) ## if this causes issues, you might want to try removing (and reinitializing) your database.pkl file
+                self.user = data['user']
+                self.journal_entry = data['journal_entry']
+                self.appointment = data['appointment']
+                self.patient_record = data['patient_record']
+                self.allocation = data['allocation']
+                self.mood_entry = data['mood_entry']
+                self.review_entry = data['review_entry']
+                self.chatcontent = data['chatcontent']
+                self.forum = data['forum']
+                self.notification = data['notification']
+            self.initDict()
+        except KeyError as k: ## catch errors being caused by old data
+            self.logger.warn(f"Could not find a relation in {self.data_file}. Try deleting (and reinitializing) database.pkl.",k)
+        except ModuleNotFoundError as m: ## pickle having different module structure
+            self.logger.warn(f"Error when opening {self.data_file}. This might be caused by imports having been wrongly structured when last saving the database. Try deleting (and reinitializing) database.pkl.",k)
+        except Exception as e:
+            raise e
 
     @ensure_open
     def __save_database(self):
@@ -500,3 +508,12 @@ class Database:
 
     def insert_notification(self, notification : Notification):
             self.insert("Notification",Row([notification.user_id, notification.notifycontent, notification.source_id,notification.new, notification.timestamp]))
+
+
+class RecordError(Exception):
+    def __init__(self, *args, **kwargs):
+        warnings.warn("RecordError is deprecated and will be removed soon, please use InvalidDataError instead", DeprecationWarning, stacklevel=2)
+
+class UserError(Exception):
+    def __init__(self, *args, **kwargs):
+        warnings.warn("UserError is deprecated and will be removed soon, please use InvalidDataError instead", DeprecationWarning, stacklevel=2)
