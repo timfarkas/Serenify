@@ -2,7 +2,6 @@ import sys
 import os
 import tkinter as tk
 from tkinter import ttk, messagebox
-from patient.custom_calendar import Calendar
 from datetime import datetime, timedelta
 import traceback
 import smtplib
@@ -12,14 +11,12 @@ from email.mime.text import MIMEText
 
 
 # Fixed import path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-sys.path.append(project_root)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-
-from database.database import Database
+from database import Database
 from database.entities import Appointment
 from database.dataStructs import Row
-
+from custom_calendar import Calendar
 
 
 
@@ -30,16 +27,6 @@ class AppointmentBooking:
        self.root.title("Appointment Booking System")
        self.patient_id = patient_id
        self.mhwp_id = mhwp_id
-
-############# Not sure if this is correct so only commented it out
-#     # Back button
-#     self.back_button = tk.Button(root, text="Back", command=self.backButton)
-#     self.back_button.pack()
-
-#     def backButton(self):
-#         subprocess.Popen(["python3", "patient/patientMain.py"])
-#         self.root.destroy()
-
 
        # Initialise database connection
        try:
