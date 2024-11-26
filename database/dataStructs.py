@@ -533,27 +533,27 @@ class Relation():
         # ValueError: If the target attribute is not valid.
         # TypeError: If the value does not match the expected type.
         # """
-        # if primaryKey not in self.data[self.primaryKeyName].values:
-        #     raise IndexError(f"Primary key {primaryKey} is out of bounds or invalid.")
-        #
-        # if targetAttribute not in self.attributeLabels:
-        #     raise ValueError(f"Attribute {targetAttribute} is not a valid attribute. Valid attributes are: {self.attributeLabels}.")
-        #
-        # attributeIndex = self.attributeLabels.index(targetAttribute)
-        #
-        # if self.typeChecking and not isinstance(value, self.types[attributeIndex]):
-        #     raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[attributeIndex]}.")
-        #
-        # ### check attribute value validity
-        # row = self.getRowsWhereEqual(self.primaryKeyName,primaryKey)[0]
-        # row.values[row.getFieldIndex(targetAttribute)] = value
-        #
-        # if self.validityChecking and self.__isEntityTyped:
-        #     o = 1 if self.autoIncrementPrimaryKey else 0
-        #     self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex-o])
-        # elif self.validityChecking:
-        #     self._validateRowValues(attributeList=row.values)
-        #
+        if primaryKey not in self.data[self.primaryKeyName].values:
+            raise IndexError(f"Primary key {primaryKey} is out of bounds or invalid.")
+        
+        if targetAttribute not in self.attributeLabels:
+            raise ValueError(f"Attribute {targetAttribute} is not a valid attribute. Valid attributes are: {self.attributeLabels}.")
+        
+        attributeIndex = self.attributeLabels.index(targetAttribute)
+        
+        if self.typeChecking and not isinstance(value, self.types[attributeIndex]):
+            raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[attributeIndex]}.")
+        
+        ### check attribute value validity
+        row = self.getRowsWhereEqual(self.primaryKeyName,primaryKey)[0]
+        row.values[row.getFieldIndex(targetAttribute)] = value
+
+        if self.validityChecking and self.__isEntityTyped:
+            o = 1 if self.autoIncrementPrimaryKey else 0
+            self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex-o])
+        elif self.validityChecking:
+            self._validateRowValues(attributeList=row.values)
+        
         self.data.loc[self.data[self.primaryKeyName] == primaryKey, targetAttribute] = value
 
     def insertRow(self, attributeList: list = None, row: Row = None) -> None:
