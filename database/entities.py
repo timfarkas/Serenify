@@ -699,10 +699,23 @@ class UserError(Exception):
     pass
 
 
-class UserError(Exception):
-    """Custom exception for user-related errors."""
-    pass
+class Forum:
+    def __init__(self, thread_id: int = None, parent_id: int = None, topic: str = '',content: str = '',user_id: int= None,timestamp:datetime=None):
+        self.thread_id=thread_id
+        self.parent_id =parent_id
+        self.topic= topic
+        self.content = content
+        self.user_id = user_id
+        self.timestamp = timestamp
 
-class RecordError(Exception):
-    """Custom exception for user-related errors."""
-    pass
+class Notification:
+    def __init__(self,notification_id:int=None, user_id: int = None, notifycontent: str ='', source_id: int =None,new: bool = None, timestamp: datetime = None):
+        self.notification_id = notification_id
+        self.user_id = user_id
+        self.notifycontent = notifycontent
+        self.source_id = source_id
+        self.new = new
+        self.timestamp = timestamp
+
+
+

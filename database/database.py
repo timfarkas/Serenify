@@ -4,8 +4,8 @@ import os
 import logging
 import sys
 from datetime import datetime as date
-from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, \
-    ChatContent, Forum, Notification
+
+from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent, Forum, Notification
 from .dataStructs import Row, Relation, RowList
 
 
@@ -188,6 +188,10 @@ class Database:
                                                       'new', 'timestamp'],
                                      relationAttributeTypes=[int, int, str, int, bool, date])
 
+        self.notification = Relation('Notification',
+                                 attributeLabels=['notification_id','user_id', 'notifytcontent','source_id','new','timestamp'],
+                                 relationAttributeTypes=[int, int, str, int, bool, date])
+
         self.initDict()
 
     @ensure_open
@@ -196,17 +200,18 @@ class Database:
         Initializes the dictionary mapping entity names to their respective relations.
         """
         self.dataDict = {
-            'User': self.user,
-            'JournalEntry': self.journal_entry,
-            'Appointment': self.appointment,
-            'PatientRecord': self.patient_record,
-            'Allocation': self.allocation,
-            'MoodEntry': self.mood_entry,
-            'MHWPReview': self.review_entry,
-            'ChatContent': self.chatcontent,
+            'User':self.user,
+            'JournalEntry':self.journal_entry,
+            'Appointment':self.appointment,
+            'PatientRecord':self.patient_record,
+            'Allocation':self.allocation,
+            'MoodEntry':self.mood_entry,
+            'MHWPReview':self.review_entry,
+            'ChatContent':self.chatcontent,
             'Forum': self.forum,
             'Notification': self.notification,
-        }
+        } 
+
 
     @ensure_open
     def __load_database(self):
@@ -486,14 +491,12 @@ class Database:
     # def insert_chatroom(self, chatroom : ChatRoom):
     #         self.insert("ChatContent",Row([chatroom.patient_id,chatroom.mhwp_id]))
     @ensure_open
-    def insert_chatcontent(self, chatcontent: ChatContent):
-        self.insert("ChatContent",
-                    Row([chatcontent.allocation_id, chatcontent.user_id, chatcontent.text, chatcontent.timestamp]))
 
-    def insert_forum(self, forum: Forum):
-        self.insert("Forum", Row([forum.parent_id, forum.topic, forum.content, forum.user_id, forum.timestamp]))
+    def insert_chatcontent(self, chatcontent : ChatContent):
+            self.insert("ChatContent",Row([chatcontent.allocation_id,chatcontent.user_id,chatcontent.text,chatcontent.timestamp]))
 
-    def insert_notification(self, notification: Notification):
-        self.insert("Notification",
-                    Row([notification.user_id, notification.notifycontent, notification.source_id, notification.new,
-                         notification.timestamp]))
+    def insert_forum(self, forum : Forum):
+            self.insert("Forum",Row([forum.parent_id,forum.topic,forum.content,forum.user_id,forum.timestamp]))
+
+    def insert_notification(self, notification : Notification):
+            self.insert("Notification",Row([notification.user_id, notification.notifycontent, notification.source_id,notification.new, notification.timestamp]))

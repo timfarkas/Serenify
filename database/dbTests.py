@@ -3,9 +3,9 @@ import logging
 import os
 import shutil
 from datetime import datetime
-from .dataStructs import Row, RowList, Relation 
+from .dataStructs import Row, RowList, Relation
 from .entities import InvalidDataError, User, Admin, Patient, MHWP, JournalEntry, PatientRecord, Appointment, Allocation, MoodEntry
-from .database import Database  
+from .database import Database
 
 '''
 Disclaimer:
