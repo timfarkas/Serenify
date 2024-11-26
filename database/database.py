@@ -6,6 +6,7 @@ import sys
 from datetime import datetime as date
 
 from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent, Forum, Notification
+from .entities import __all__ as entity_classes
 from .dataStructs import Row, Relation, RowList
 import warnings
 
@@ -104,7 +105,6 @@ class Database:
             self.initRelations()
             self.logger.info("Successfully initialized new database with overwriting.")
         else:
-            # Initialize tables as DataFrames
             self.logger.info(f"Found no database file {self.data_file}, initializing new database...")
             self.initRelations()
         self.logger.info("Successfully initialized database.")
@@ -112,7 +112,7 @@ class Database:
     def ensure_open(func):
         def wrapper(self, *args, **kwargs):
             if self._is_closed:
-                raise RuntimeError("Database has been closed")
+                raise RuntimeError("You are performing an action on an instance of database that has already been closed. Try opening a new Database instance or removing the close statement.")
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -411,6 +411,71 @@ class Database:
                          patient.emergency_contact_email, patient.emergency_contact_name, None, patient.is_disabled]))
 
     @ensure_open
+    def delete_patient(self, patientId: int):
+        """
+        Deletes a patient and all associated records from the database.
+
+        Parameters
+        ----------
+        patientId : int
+            The unique identifier of the patient to be deleted.
+
+        Raises
+        ------
+        TypeError
+            If the patientId is not of type int.
+        KeyError
+            If the patientId does not exist in the User relation or if any of the keys in the deletion process are incorrect.
+        """
+        if type(patientId) != int:
+            raise TypeError("Patient id must be of type int.")
+
+        self.logger.info(f"Deleting patient with id {patientId} and all associated records.")
+        
+        user_relation = self.getRelation("User")
+        if "user_id" not in user_relation.data.columns or patientId not in user_relation.data["user_id"].values:
+            raise KeyError(f"Patient id {patientId} does not exist in User relation.")
+
+        for relationName, patientIdColumn in [("User", "user_id"), 
+                                              ("Appointment", "patient_id"), 
+                                              ("PatientRecord", "patient_id"), 
+                                              ("Allocation", "patient_id"), 
+                                              ("JournalEntry", "patient_id"), 
+                                              ("MoodEntry", "patient_id"), 
+                                              ("MHWPReview", "patient_id"), 
+                                              ("ChatContent", "user_id"), 
+                                              ("Forum", "user_id"), 
+                                              ("Notification", "user_id")]:
+            
+            relation = self.getRelation(relationName)
+            if patientIdColumn in relation.data.columns:
+                relation.data.drop(relation.data[relation.data[patientIdColumn] == patientId].index, inplace=True)
+                relation.data.reset_index(drop=True, inplace=True)
+            else:
+                raise KeyError(f"One of the keys in delete_patient ({relationName}, key {patientIdColumn}) is wrong, please fix.")
+        self.logger.info(f"Success deleting patient with id {patientId}.")
+        
+    @ensure_open
+    def delete_patients(self, patientIds: list):
+        """
+        Deletes multiple patients and all associated records from the database.
+
+        Parameters
+        ----------
+        patientIds : list
+            A list of unique identifiers of the patients to be deleted.
+
+        Raises
+        ------
+        TypeError
+            If any of the patientIds is not of type int.
+        KeyError
+            If any patientId does not exist in the User relation or if any of the keys in the deletion process are incorrect.
+        """
+        for id in patientIds:
+            self.delete_patient(id)
+
+    @ensure_open
     def insert_mhwp(self, mhwp: MHWP):
         """
         Inserts an MHWP user into the User relation.
@@ -499,13 +564,14 @@ class Database:
     # def insert_chatroom(self, chatroom : ChatRoom):
     #         self.insert("ChatContent",Row([chatroom.patient_id,chatroom.mhwp_id]))
     @ensure_open
-
     def insert_chatcontent(self, chatcontent : ChatContent):
             self.insert("ChatContent",Row([chatcontent.allocation_id,chatcontent.user_id,chatcontent.text,chatcontent.timestamp]))
 
+    @ensure_open
     def insert_forum(self, forum : Forum):
             self.insert("Forum",Row([forum.parent_id,forum.topic,forum.content,forum.user_id,forum.timestamp]))
 
+    @ensure_open
     def insert_notification(self, notification : Notification):
             self.insert("Notification",Row([notification.user_id, notification.notifycontent, notification.source_id,notification.new, notification.timestamp]))
 

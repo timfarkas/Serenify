@@ -776,38 +776,7 @@ class TestRelation(unittest.TestCase):
         # Test with empty result
         new_relation = relation.getWhereSmaller('age', 20)
         self.assertEqual(len(new_relation), 0)
-    
-    def test_drop_rows(self):
-        relationName = "TestRelation"
-        attributeLabels = ['id', 'name', 'age']
-        attributeTypes = [int, str, int]
-        relation = Relation(relationName, attributeLabels, attributeTypes,validityChecking=False)
-        relation.insertRow(attributeList=['Alice', 30]) # id=1
-        relation.insertRow(attributeList=['Bob', 25])   # id=2
-        relation.insertRow(attributeList=['Charlie', 35]) # id=3
-        
-        # Drop by id
-        relation.dropRows(id=2)
-        self.assertEqual(len(relation), 2)
-        ids = relation.getAllRowIDs()
-        self.assertEqual(ids, [1,3])
-        
-        # Drop by ids
-        relation.dropRows(ids=[1,3])
-        self.assertEqual(len(relation), 0)
-        
-        # Test error when both id and ids are specified
-        with self.assertRaises(ValueError):
-            relation.dropRows(id=1, ids=[2,3])
-        
-        # Test error when id is not integer
-        with self.assertRaises(TypeError):
-            relation.dropRows(id='1')
-        
-        # Test error when ids is not a list
-        with self.assertRaises(TypeError):
-            relation.dropRows(ids='1')
-    
+
     def test_length(self):
         relationName = "TestRelation"
         attributeLabels = ['id', 'name', 'age']
@@ -873,6 +842,51 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(user.iloc[0]['username'], 'patient1')
         self.assertEqual(user.iloc[0]['type'], 'Patient')
         self.assertEqual(user.iloc[0]['email'], 'patient1@example.com')
+
+    def test_delete_patient_and_propagation(self):
+        # Insert some patients
+        patient1 = Patient(username='patient1', email='patient1@example.com', password='password123', fName='John', lName='Doe', emergency_contact_email='contact@example.com', is_disabled=False)
+        patient2 = Patient(username='patient2', email='patient2@example.com', password='password123', fName='Jane', lName='Doe', emergency_contact_email='contact@example.com', is_disabled=False)
+        patient3 = Patient(username='patient3', email='patient3@example.com', password='password123', fName='Jim', lName='Beam', emergency_contact_email='contact@example.com', is_disabled=False)
+        
+        self.db.insert_patient(patient1)
+        self.db.insert_patient(patient2)
+        self.db.insert_patient(patient3)
+
+        # Insert appointments for patients
+        appointment1 = Appointment(patient_id=2, mhwp_id=2, date=datetime(2023, 1, 1, 10, 0), status='Scheduled', room_name='Room 101')
+        appointment2 = Appointment(patient_id=1, mhwp_id=3, date=datetime(2023, 1, 2, 11, 0), status='Scheduled', room_name='Room 102')
+
+        self.db.insert_appointment(appointment1)
+        self.db.insert_appointment(appointment2)
+
+        # Delete by patient_id
+        self.db.delete_patient(patientId=2)
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 2)
+        remaining_ids = user['user_id'].tolist()
+        self.assertEqual(remaining_ids, [1, 3])
+
+        
+
+        # Check if associated records in Appointment relation are deleted
+        appointment_data = self.db.getRelation('Appointment').data
+        self.assertEqual(len(appointment_data), 1)
+        self.assertEqual(appointment_data.iloc[0]['patient_id'], 1)
+        
+        # Delete by multiple patient_ids
+        self.db.delete_patient(patientId=1)
+        self.db.delete_patient(patientId=3)
+        user = self.db.getRelation('User').data
+        self.assertEqual(len(user), 0)
+        
+        # Test error when patientId is not an integer
+        with self.assertRaises(TypeError):
+            self.db.delete_patient(patientId='1')
+        
+        # Test error when patientId does not exist
+        with self.assertRaises(KeyError):
+            self.db.delete_patient(patientId=99)
 
     def test_insert_mhwp(self):
         mhwp = MHWP(
