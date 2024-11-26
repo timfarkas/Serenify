@@ -1,6 +1,7 @@
 import tkinter as tk
 import subprocess
 # import Login ######## THIS NEEDS TO BE CORRECTED #######
+# Close database and save info provided
 
 class LogoutPage:
     def __init__(self, root):
