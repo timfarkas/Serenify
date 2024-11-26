@@ -23,7 +23,7 @@ class Row(list):
         if self.labelled and len(values) != len(labels):
             raise IndexError(f"Length of values ({len(values)}) must be equal to length of labels ({len(labels)})")
         self.values = values
-        self.labels = labels    
+        self.labels = labels
 
     def __str__(self, labelled = True, indent = 0) -> str:
         """
@@ -54,7 +54,7 @@ class Row(list):
         """
         if self.labels is not None and attributeLabel in self.labels:
             return self.labels.index(attributeLabel)
-        elif self.labels is None:   
+        elif self.labels is None:
             raise ValueError(f"Row labels are None, can't do label-based value lookup.")
         else:
             raise ValueError(f"Field {attributeLabel} not found among row fields ({self.labels})")
@@ -75,7 +75,7 @@ class Row(list):
         """
         if self.labels is not None and attributeLabel in self.labels:
             return self.values[self.labels.index(attributeLabel)]
-        elif self.labels is None:   
+        elif self.labels is None:
             raise ValueError(f"Row labels are None, can't do label-based value lookup.")
         else:
             raise ValueError(f"Field {attributeLabel} not found among row fields ({self.labels})")
@@ -129,7 +129,7 @@ class Relation():
         autoIncrementPrimaryKey (bool, default True): Whether the primary key should auto-increment.
         validityChecking (bool, default True): Whether to perform validity checks on data.
     """
-    
+
     def __init__(self, relationName : str, attributeLabels : list, relationAttributeTypes : list = None, autoIncrementPrimaryKey: bool=True, validityChecking : bool = True):
         """
         Initialize a Relation object.
@@ -145,10 +145,10 @@ class Relation():
 
         # set up type and validity checks
         self.typeChecking = relationAttributeTypes is not None
-        
+
         if self.typeChecking:
-            if len(relationAttributeTypes) != self.numColumns: 
-                raise ValueError(f"No. of relationAttributeNames {attributeLabels} must be equal to no. of relationAttributeTypes {relationAttributeTypes}") 
+            if len(relationAttributeTypes) != self.numColumns:
+                raise ValueError(f"No. of relationAttributeNames {attributeLabels} must be equal to no. of relationAttributeTypes {relationAttributeTypes}")
             self.types = relationAttributeTypes
             self.primaryKeyType = relationAttributeTypes[0]
         else:
@@ -188,7 +188,7 @@ class Relation():
             raise ValueError(f"self.validityChecking is true but relation name '{self.name}' is not a valid entity class for validity checking. Valid entity classes are: {self.entity_classes}. Turn off validity checking or choose a valid entity class.")
 
         ### import classes and store as instantiable objects
-        try: 
+        try:
             classNameList = [self.name]
 
             ### Entity subtyping logic
@@ -199,11 +199,11 @@ class Relation():
                 self.__typeIndex = 6
 
                 ## this specifies which columns of the User table are relevant for the respective entity
-                ## these will be dropped for data validation 
+                ## these will be dropped for data validation
                 self.__dropRowDict = {
                     'Patient': [self.__typeIndex,9],
                     'Admin':[self.__typeIndex,2,4,5,7,8,9],
-                    'MHWP':[self.__typeIndex,7,8] 
+                    'MHWP':[self.__typeIndex,7,8]
                 }
             else:
                 self.__isEntityTyped = False
@@ -212,12 +212,12 @@ class Relation():
             ## import and get classes
             module_ = __import__('database.entities', fromlist=classNameList)
             classes_ = [getattr(module_, className) for className in classNameList]
-            
+
             self.__classes = classes_
         except Exception as e:
             traceback.print_exc()
             raise e.add_note("Unexpected error occurred when initialising Relation-level validity checking.")
-        
+
 
     def getAttributeMaxRow(self, attribute) -> Row:
         """
@@ -249,7 +249,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         minRowIdx = self.data[attribute].idxmin()
         return Relation._rowFromSeries(self.data.iloc[minRowIdx],self.attributeLabels)
 
@@ -275,11 +275,11 @@ class Relation():
         return f"Relation: {self.name}"
 
     #### SELECTION FUNCTIONS
-    ### they all do the same, 
+    ### they all do the same,
     #     getRowsWhere return a RowList (basically a list of rows for easy access)
     #     getIDsWhere returns a list of primary key ids
     #     getWhere returns a relation, allowing chaining
-        ## e.g. 
+        ## e.g.
 
     def getRowsWhereEqual(self, attribute, value) -> RowList:
         """
@@ -295,10 +295,10 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         results = self.data[self.data[attribute] == value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
-    
+
     def getIDsWhereEqual(self, attribute, value) -> list:
         """
         Returns primary key IDs where the specified attribute equals the given value.
@@ -313,7 +313,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         results = self.data[self.data[attribute] == value][self.primaryKeyName].tolist()
         return results
 
@@ -331,12 +331,12 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self.validityChecking)
         results = self.data[self.data[attribute].apply(lambda x: x == value)]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
-            resultRelation.insertRows(resultRows)    
+            resultRelation.insertRows(resultRows)
         return resultRelation
 
     def getRowsWhereLarger(self, attribute, value) -> RowList:
@@ -353,10 +353,10 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         results = self.data[self.data[attribute] > value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
-    
+
     def getIDsWhereLarger(self, attribute, value) -> list:
         """
         Returns primary key IDs where the specified attribute is larger than the given value.
@@ -371,7 +371,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         results = self.data[self.data[attribute] > value][self.primaryKeyName].tolist()
         return results
 
@@ -389,14 +389,14 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self.validityChecking)
         results = self.data[self.data[attribute] > value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
-            resultRelation.insertRows(resultRows)    
+            resultRelation.insertRows(resultRows)
         return resultRelation
-    
+
     def getRowsWhereSmaller(self, attribute, value) -> RowList:
         """
         Returns rows where the specified attribute is smaller than the given value.
@@ -411,10 +411,10 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         results = self.data[self.data[attribute] < value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
-    
+
     def getIDsWhereSmaller(self, attribute, value) -> list:
         """
         Returns primary key IDs where the specified attribute is smaller than the given value.
@@ -429,7 +429,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         results = self.data[self.data[attribute] < value][self.primaryKeyName].tolist()
         return results
 
@@ -447,12 +447,12 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None 
+            return None
         resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self.validityChecking)
         results = self.data[self.data[attribute] < value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
-            resultRelation.insertRows(resultRows)    
+            resultRelation.insertRows(resultRows)
         return resultRelation
 
     def _generateIncrementedPrimaryKey(self) -> int:
@@ -468,7 +468,7 @@ class Relation():
             return 1
         maxKey = self.getAttributeMaxRow(self.primaryKeyName)[0]
         return maxKey + 1
-    
+
     def editRow(self, primaryKey: int, newValues: list = None, row: Row = None) -> None:
         """
         Edits a row in the relation based on the given primary key.
@@ -486,29 +486,29 @@ class Relation():
         """
         if primaryKey not in self.data[self.primaryKeyName].values:
             raise IndexError(f"Primary key {primaryKey} is out of bounds or invalid.")
-        
+
         if (newValues is not None and row is not None) or (newValues is None and row is None):
             raise ValueError("Provide either newValues or row, but not both or neither.")
-        
+
         if row is not None:
             if not isinstance(row, Row):
                 raise TypeError(f"Expected row to be a Row object, got {type(row)}")
             newValues = row.values
-        
+
         expectedLength = len(self.attributeLabels) - 1 if self.autoIncrementPrimaryKey else len(self.attributeLabels)
-        
+
         if len(newValues) != expectedLength:
             raise ValueError(f"Received newValues list of length {len(newValues)}, expected {expectedLength}.")
-        
+
         for i, value in enumerate(newValues):
             if self.autoIncrementPrimaryKey:
                 i += 1  # Skip primary key index
             if value is not None and self.typeChecking and type(value) != self.types[i]:
                 raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[i]}.")
-        
+
         if self.autoIncrementPrimaryKey:
             newValues = [primaryKey] + newValues
-        
+
         o = 1 if self.autoIncrementPrimaryKey else 0
 
         ### check attribute value validity
@@ -518,42 +518,42 @@ class Relation():
             self._validateRowValues(attributeList=newValues)
 
         self.data.loc[self.data[self.primaryKeyName] == primaryKey] = newValues
-    
+
     def editFieldInRow(self, primaryKey: int, targetAttribute: str, value) -> None:
         """
         Edits a specific field in a row based on the given primary key and attribute.
 
         Parameters:
-        primaryKey (int): The primary key of the row to edit.
-        targetAttribute (str): The attribute to update.
-        value: The new value for the attribute.
-
-        Raises:
-        IndexError: If the primary key index is out of bounds or invalid.
-        ValueError: If the target attribute is not valid.
-        TypeError: If the value does not match the expected type.
-        """
-        if primaryKey not in self.data[self.primaryKeyName].values:
-            raise IndexError(f"Primary key {primaryKey} is out of bounds or invalid.")
-        
-        if targetAttribute not in self.attributeLabels:
-            raise ValueError(f"Attribute {targetAttribute} is not a valid attribute. Valid attributes are: {self.attributeLabels}.")
-        
-        attributeIndex = self.attributeLabels.index(targetAttribute)
-        
-        if self.typeChecking and not isinstance(value, self.types[attributeIndex]):
-            raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[attributeIndex]}.")
-        
-        ### check attribute value validity
-        row = self.getRowsWhereEqual(self.primaryKeyName,primaryKey)[0]
-        row.values[row.getFieldIndex(targetAttribute)] = value
-    
-        if self.validityChecking and self.__isEntityTyped:
-            o = 1 if self.autoIncrementPrimaryKey else 0
-            self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex-o])
-        elif self.validityChecking:
-            self._validateRowValues(attributeList=row.values)
-        
+        # primaryKey (int): The primary key of the row to edit.
+        # targetAttribute (str): The attribute to update.
+        # value: The new value for the attribute.
+        #
+        # Raises:
+        # IndexError: If the primary key index is out of bounds or invalid.
+        # ValueError: If the target attribute is not valid.
+        # TypeError: If the value does not match the expected type.
+        # """
+        # if primaryKey not in self.data[self.primaryKeyName].values:
+        #     raise IndexError(f"Primary key {primaryKey} is out of bounds or invalid.")
+        #
+        # if targetAttribute not in self.attributeLabels:
+        #     raise ValueError(f"Attribute {targetAttribute} is not a valid attribute. Valid attributes are: {self.attributeLabels}.")
+        #
+        # attributeIndex = self.attributeLabels.index(targetAttribute)
+        #
+        # if self.typeChecking and not isinstance(value, self.types[attributeIndex]):
+        #     raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[attributeIndex]}.")
+        #
+        # ### check attribute value validity
+        # row = self.getRowsWhereEqual(self.primaryKeyName,primaryKey)[0]
+        # row.values[row.getFieldIndex(targetAttribute)] = value
+        #
+        # if self.validityChecking and self.__isEntityTyped:
+        #     o = 1 if self.autoIncrementPrimaryKey else 0
+        #     self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex-o])
+        # elif self.validityChecking:
+        #     self._validateRowValues(attributeList=row.values)
+        #
         self.data.loc[self.data[self.primaryKeyName] == primaryKey, targetAttribute] = value
 
     def insertRow(self, attributeList: list = None, row: Row = None) -> None:
@@ -573,17 +573,17 @@ class Relation():
         if attributeList is not None:
             if not isinstance(attributeList, list):
                 raise TypeError(f"Expected attributeList to be a list, got {type(attributeList)}")
-        
+
         autoIncrementPrimaryKey = self.autoIncrementPrimaryKey
         attributes = attributeList if attributeList is not None else row.values
-        
+
         ### check if passed attributes are valid
         if autoIncrementPrimaryKey and len(attributes) == len(self.attributeLabels):
             raise ValueError(f"Received attributes list {attributes} of length {len(attributes)}, expected {len(self.attributeLabels)-1}. Mind that you need to leave out the primary key if you set auto incrementing to true.")
         elif autoIncrementPrimaryKey and len(attributes) != len(self.attributeLabels)-1:
             raise ValueError(f"Received attributes list {attributes} of length {len(attributes)}, expected {len(self.attributeLabels)-1}.")
         elif not autoIncrementPrimaryKey and len(attributes) != len(self.attributeLabels):
-            raise ValueError(f"Received attributes list {attributes} of length {len(attributes)}, expected {len(self.attributeLabels)-1}.") 
+            raise ValueError(f"Received attributes list {attributes} of length {len(attributes)}, expected {len(self.attributeLabels)-1}.")
 
         ### check if attribute types are valid
         o = 1 if autoIncrementPrimaryKey else 0
@@ -592,18 +592,18 @@ class Relation():
                 pass
             elif self.typeChecking and type(value) != self.types[i+o]:
                 raise TypeError(f"Value {value} (type {type(value)}) does not conform to type {self.types[i+o]}.")
-        
+
         ### check if primary key is valid
         for i, row in enumerate(self.data[self.primaryKeyName]):
             if attributes[0] == row and not self.autoIncrementPrimaryKey:
                 raise KeyError(f"Invalid primary key. Key {attributes[0]} is a duplicate of primary key of row {i}.")
-        
+
         ### check attribute value validity
         if self.validityChecking and self.__isEntityTyped:
             self._validateRowValues(attributeList=attributes, entityType=attributes[self.__typeIndex-o])
         elif self.validityChecking:
             self._validateRowValues(attributeList=attributes)
-        
+
 
         ### add row
         if not autoIncrementPrimaryKey: ### use provided primary key
@@ -618,7 +618,7 @@ class Relation():
                 self.data = new_row
             else:
                 self.data = pd.concat([self.data, new_row], ignore_index=True)
-        
+
     def insertRows(self, rows:RowList):
         """
         Inserts multiple rows into the relation.
@@ -650,14 +650,14 @@ class Relation():
                     correctEntityClass = entityClass
             if correctEntityClass is None:
                 raise TypeError(f"Validation is switched on, but class of name {entityType} could not be found among {relevantClasses}")
-            
+
             ### drop values in attributeList based on class
             indicesToDrop = sorted(dropRowDict.get(correctEntityClass.__name__), reverse=True)
-            
+
             o = 1 if self.autoIncrementPrimaryKey else 0 ## primary key missing offset
             for index  in indicesToDrop:
                 list.pop(index-o)
-        
+
         ### instantiate correct class
         if self.autoIncrementPrimaryKey:
             correctEntityClass(None,*list)
@@ -678,7 +678,7 @@ class Relation():
             raise TypeError("ids must be a list.")
         if id is not None and not isinstance(id, int):
             raise TypeError("id must be an integer.")
-        
+
         if id is None and ids is not None:
             self.data = self.data[~self.data[self.primaryKeyName].isin(ids)]
         elif id is not None and ids is None:
@@ -694,7 +694,7 @@ class Relation():
         str: The string representation of the Relation.
         """
         return str(self.data)
-    
+
     def __len__(self) -> str:
         """
         Returns the number of rows in the Relation.
@@ -724,13 +724,9 @@ class Relation():
                 converted_values.append(int(value))
             elif isinstance(value, (pd.Float64Dtype, pd.Float32Dtype)):
                 converted_values.append(float(value))
-            elif isinstance(value, (np.bool, pd.BooleanDtype)):
-                converted_values.append(bool(value))
-            elif isinstance(value, (pd.StringDtype)):
-                converted_values.append(str(value))
             else:
                 converted_values.append(value)
-        
+
         return Row(converted_values, labels=labels)
 
     @staticmethod

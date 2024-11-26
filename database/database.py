@@ -4,7 +4,7 @@ import os
 import logging
 import sys
 from datetime import datetime as date
-from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent
+from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent, Forum, Notification
 from .dataStructs import Row, Relation, RowList
 
 ## Database class
@@ -166,14 +166,19 @@ class Database:
                                    attributeLabels=['MHWP_review_id', 'patient_id','mhwp_id','reviewscore', 'reviewcomment', 'timestamp'],
                                    relationAttributeTypes=[int, int, int, int, str, date])
         #
-        # self.chatroom = Relation('ChatRoom',
-        #                            attributeLabels=['Room_id', 'patient_id', 'mhwp_id'],
-        #                            relationAttributeTypes=[int, int, int, bool, bool, date])
+        self.forum = Relation('Forum',
+                              attributeLabels=['thread_id', 'parent_id', 'topic', 'content', 'user_id',
+                                               'timestamp'],
+                              relationAttributeTypes=[int, int, str, str, int, date])
 
         self.chatcontent = Relation('ChatContent',
                                  attributeLabels=['chatcontent_id','allocation_id', 'user_id', 'text',
                                                   'timestamp'],
                                  relationAttributeTypes=[int,int, int, str, date])
+
+        self.notification = Relation('Notification',
+                                 attributeLabels=['notification_id','user_id', 'notifytcontent','source_id','new','timestamp'],
+                                 relationAttributeTypes=[int, int, str, int, bool, date])
 
         self.initDict()
 
@@ -191,6 +196,8 @@ class Database:
             'MoodEntry':self.mood_entry,
             'MHWPReview':self.review_entry,
             'ChatContent':self.chatcontent,
+            'Forum': self.forum,
+            'Notification': self.notification,
         } 
 
     @ensure_open
@@ -208,8 +215,9 @@ class Database:
             self.allocation = data['allocation']
             self.mood_entry = data['mood_entry']
             self.review_entry = data['review_entry']
-            # self.chatroom = data['chatroom']
             self.chatcontent = data['chatcontent']
+            self.forum = data['forum']
+            self.notification = data['notification']
         self.initDict()
 
     @ensure_open
@@ -226,8 +234,9 @@ class Database:
                 'allocation': self.allocation,
                 'mood_entry': self.mood_entry,
                 'review_entry': self.review_entry,
-                # 'chatroom': self.chatroom,
+                'forum': self.forum,
                 'chatcontent': self.chatcontent,
+                'notification': self.notification,
             }, f)
 
     @ensure_open
@@ -256,10 +265,12 @@ class Database:
         print(self.mood_entry)
         print("\nReview Entry:")
         print(self.review_entry)
-        # print("\nChat Room:")
-        # print(self.chatroom)
+        print("\nForum:")
+        print(self.forum)
         print("\nChat Content:")
         print(self.chatcontent)
+        print("\nNotification:")
+        print(self.notification)
 
     @ensure_open
     def insert(self, entity: str, row: Row = None, rowList: RowList = None):
@@ -454,3 +465,9 @@ class Database:
     @ensure_open
     def insert_chatcontent(self, chatcontent : ChatContent):
             self.insert("ChatContent",Row([chatcontent.allocation_id,chatcontent.user_id,chatcontent.text,chatcontent.timestamp]))
+
+    def insert_forum(self, forum : Forum):
+            self.insert("Forum",Row([forum.parent_id,forum.topic,forum.content,forum.user_id,forum.timestamp]))
+
+    def insert_notification(self, notification : Notification):
+            self.insert("Notification",Row([notification.user_id, notification.notifycontent, notification.source_id,notification.new, notification.timestamp]))

@@ -34,7 +34,6 @@ def initDummyDatabase(db: Database):
         db.insert_patient(patient_user)
         db.insert_mhwp(mhwp_user)
 
-        
         # Allocate mhwp to patient and insert allocation into database
         allocation = Allocation(
             admin_id=admin_user.user_id,  ## example admin id
@@ -182,7 +181,6 @@ def initDummyDatabase(db: Database):
             timestamp=datetime.datetime.now()
         )
 
-
         db.insert_journal_entry(journal_entry2)
 
         # Create another PatientRecord object and insert
@@ -201,7 +199,6 @@ def initDummyDatabase(db: Database):
             notes='Second round of follow-up assessment notes.',
             conditions=['Depression']
         )
-
 
         db.insert_patient_record(patient_record2)
         db.insert_patient_record(patient_record3)
@@ -228,8 +225,7 @@ def initDummyDatabase(db: Database):
         # Insert appointments into the database
         db.insert_appointment(appointment1)
         db.insert_appointment(appointment2)
-        
-        
+
         db.printAll()
 
         print(db.getRelation("Appointment"))
