@@ -43,7 +43,7 @@ class ResetPage:
         self.login_button.grid(row=5, column=0, columnspan=2, pady=10)
 
 
-        # DEBUG DB
+        # This DEBUG's the DB
         db = Database()
         db.printAll()
         db.close()
@@ -87,3 +87,9 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = ResetPage(root)
     root.mainloop()
+
+###### Used for debugging 
+# db = Database()
+# print("Getting and printing relation 'User':")
+# userRelation = db.getRelation('User')
+# print(userRelation)
