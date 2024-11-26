@@ -87,3 +87,9 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = ResetPage(root)
     root.mainloop()
+
+###### Used for debugging 
+# db = Database()
+# print("Getting and printing relation 'User':")
+# userRelation = db.getRelation('User')
+# print(userRelation)
