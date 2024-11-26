@@ -43,7 +43,7 @@ class ResetPage:
         self.login_button.grid(row=5, column=0, columnspan=2, pady=10)
 
 
-        # DEBUG DB
+        # This DEBUG's the DB
         db = Database()
         db.printAll()
         db.close()
