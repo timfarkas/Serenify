@@ -549,8 +549,7 @@ class Relation():
         row.values[row.getFieldIndex(targetAttribute)] = value
 
         if self.validityChecking and self.__isEntityTyped:
-            o = 1 if self.autoIncrementPrimaryKey else 0
-            self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex-o])
+            self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex])
         elif self.validityChecking:
             self._validateRowValues(attributeList=row.values)
         
