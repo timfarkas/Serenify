@@ -198,7 +198,7 @@ class Relation():
                 classNameList = ['Patient','Admin','MHWP']
                 self.__typeIndex = 6
 
-                ## this specifies which columns of the User table are relevant for the respective entity
+                ## this specifies which columns of the User table are irrelevant for the respective entity
                 ## these will be dropped for data validation
                 self.__dropRowDict = {
                     'Patient': [self.__typeIndex,9],
@@ -508,12 +508,11 @@ class Relation():
 
         if self.autoIncrementPrimaryKey:
             newValues = [primaryKey] + newValues
-
-        o = 1 if self.autoIncrementPrimaryKey else 0
+        
 
         ### check attribute value validity
         if self.validityChecking and self.__isEntityTyped:
-            self._validateRowValues(attributeList=newValues, entityType=newValues[self.__typeIndex-o])
+            self._validateRowValues(attributeList=newValues, entityType=newValues[self.__typeIndex])
         elif self.validityChecking:
             self._validateRowValues(attributeList=newValues)
 
@@ -533,6 +532,7 @@ class Relation():
         # ValueError: If the target attribute is not valid.
         # TypeError: If the value does not match the expected type.
         # """
+        
         if primaryKey not in self.data[self.primaryKeyName].values:
             raise IndexError(f"Primary key {primaryKey} is out of bounds or invalid.")
         
@@ -596,10 +596,13 @@ class Relation():
         for i, row in enumerate(self.data[self.primaryKeyName]):
             if attributes[0] == row and not self.autoIncrementPrimaryKey:
                 raise KeyError(f"Invalid primary key. Key {attributes[0]} is a duplicate of primary key of row {i}.")
-
+        
+        if self.autoIncrementPrimaryKey:
+            attributes.insert(0,None)  ### add None where primary key would be 
+            
         ### check attribute value validity
         if self.validityChecking and self.__isEntityTyped:
-            self._validateRowValues(attributeList=attributes, entityType=attributes[self.__typeIndex-o])
+            self._validateRowValues(attributeList=attributes, entityType=attributes[self.__typeIndex])
         elif self.validityChecking:
             self._validateRowValues(attributeList=attributes)
 
@@ -611,8 +614,8 @@ class Relation():
             else:
                 self.data = pd.concat([self.data, pd.DataFrame([attributes], columns=self.attributeLabels)], ignore_index=True)
         else: ### add row with autoincremented key
-            key = self._generateIncrementedPrimaryKey()
-            new_row = pd.DataFrame([[key] + attributes], columns=self.attributeLabels)
+            attributes[0] = self._generateIncrementedPrimaryKey()
+            new_row = pd.DataFrame([attributes], columns=self.attributeLabels)
             if self.data.empty:
                 self.data = new_row
             else:
@@ -633,6 +636,12 @@ class Relation():
                 self.insertRow(row=row)
 
     def _validateRowValues(self, attributeList: list = None, entityType: str = None):
+        """
+        Takes in a list of row values (with primary key column!) and validates them.
+        """
+        if type(attributeList[0]) != int and attributeList[0] is not None:
+            raise ValueError("Expected first value in attribute list to be primary key, of type int.")
+        
         ### retrieve appropriate class
         list = attributeList.copy()
         relevantClasses = self.__classes
@@ -653,16 +662,12 @@ class Relation():
             ### drop values in attributeList based on class
             indicesToDrop = sorted(dropRowDict.get(correctEntityClass.__name__), reverse=True)
 
-            o = 1 if self.autoIncrementPrimaryKey else 0 ## primary key missing offset
-            for index  in indicesToDrop:
-                list.pop(index-o)
+            for index in indicesToDrop:
+                list.pop(index)
 
         ### instantiate correct class
-        if self.autoIncrementPrimaryKey:
-            correctEntityClass(None,*list)
-        else:
-            correctEntityClass(*list)
-
+        correctEntityClass(*list)
+        
 
 
     def dropRows(self, id : int = None, ids : list = None):

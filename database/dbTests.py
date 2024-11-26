@@ -539,25 +539,25 @@ class TestRelation(unittest.TestCase):
         relationName = "User"
         attributeLabels = ['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled']
         attributeTypes = [int, str, str, str, str, str, str, str, str, str, bool]
-        relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True)
-        relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
+        relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=True, validityChecking=True)
+        relation.insertRow(attributeList=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
         
         # Edit row with new values using primary key index
-        relation.editRow(1, newValues=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, True])
+        relation.editRow(1, newValues=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, True])
         self.assertEqual(relation.data.iloc[0]['is_disabled'], True)
         
         # Edit row with Row object using primary key index
-        new_row = Row([1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
+        new_row = Row(['user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
         relation.editRow(1, row=new_row)
         self.assertEqual(relation.data.iloc[0]['is_disabled'], False)
         
         # Test IndexError for out of bounds primary key index
         with self.assertRaises(IndexError):
-            relation.editRow(2, newValues=[2, 'user2', 'user2@example.com', 'password', 'Jane', 'Doe', 'Patient', None, None, None, False])
+            relation.editRow(2, newValues=['user2', 'user2@example.com', 'password', 'Jane', 'Doe', 'Patient', None, None, None, False])
         
         # Test ValueError for both newValues and row provided
         with self.assertRaises(ValueError):
-            relation.editRow(1, newValues=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, True], row=new_row)
+            relation.editRow(1, newValues=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, True], row=new_row)
         
         # Test ValueError for neither newValues nor row provided
         with self.assertRaises(ValueError):
@@ -565,19 +565,19 @@ class TestRelation(unittest.TestCase):
         
         # Test InvalidDataError for invalid email format
         with self.assertRaises(InvalidDataError):
-            relation.editRow(1, newValues=[1, 'user1', 'invalid-email', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
+            relation.editRow(1, newValues=['user1', 'invalid-email', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
         
         # Test InvalidDataError for invalid first name
         with self.assertRaises(InvalidDataError):
-            relation.editRow(1, newValues=[1, 'user1', 'user1@example.com', 'password', '123', 'Doe', 'Patient', None, None, None, False])
+            relation.editRow(1, newValues=['user1', 'user1@example.com', 'password', '123', 'Doe', 'Patient', None, None, None, False])
         
         # Test InvalidDataError for invalid last name
         with self.assertRaises(InvalidDataError):
-            relation.editRow(1, newValues=[1, 'user1', 'user1@example.com', 'password', 'John', '123', 'Patient', None, None, None, False])
+            relation.editRow(1, newValues=['user1', 'user1@example.com', 'password', 'John', '123', 'Patient', None, None, None, False])
         
         # Test TypeError for invalid type
         with self.assertRaises(TypeError):
-            relation.editRow(1, newValues=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'InvalidType', None, None, None, False])
+            relation.editRow(1, newValues=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'InvalidType', None, None, None, False])
         
         # TODO
         # # Test InvalidDataError for invalid specialization
@@ -586,7 +586,7 @@ class TestRelation(unittest.TestCase):
         
         # Test TypeError for incorrect type
         with self.assertRaises(TypeError):
-            relation.editRow(1, newValues=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, 'not_a_bool'])
+            relation.editRow(1, newValues=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, 'not_a_bool'])
 
     def test_edit_field_in_row(self):
         relationName = "TestRelation"
@@ -663,6 +663,101 @@ class TestRelation(unittest.TestCase):
         # with self.assertRaises(InvalidDataError):
         #     relation.editFieldInRow(1, 'specialization', 'InvalidSpecialization')
        
+    def test_edit_field_in_row_user_relation(self):
+        # Create a user relation with autoIncrementPrimaryKey set to True
+        relationName = "User"
+        attributeLabels = ['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled']
+        attributeTypes = [int, str, str, str, str, str, str, str, str, str, bool]
+        user_relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=True, validityChecking=True)
+        
+        # Populate the relation with users
+        user_relation.insertRow(attributeList=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
+        user_relation.insertRow(attributeList=['user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, None, False])
+        user_relation.insertRow(attributeList=['user3', 'user3@example.com', 'password', 'Alice', 'Johnson', 'Admin', None, None, None, False])
+        
+        # Edit field with valid data
+        user_relation.editFieldInRow(2, 'email', 'test123@newdomain.com')
+        self.assertEqual(user_relation.data.iloc[1]['email'], 'test123@newdomain.com')
+        
+        # Test IndexError for out of bounds primary key index
+        with self.assertRaises(IndexError):
+            user_relation.editFieldInRow(4, 'username', 'user4')
+        
+        # Test ValueError for invalid attribute
+        with self.assertRaises(ValueError):
+            user_relation.editFieldInRow(1, 'non_existent_attribute', 'value')
+        
+        # Test TypeError for incorrect type
+        with self.assertRaises(TypeError):
+            user_relation.editFieldInRow(1, 'is_disabled', 'not_a_bool')
+        
+        # Test InvalidDataError for invalid email format
+        with self.assertRaises(InvalidDataError):
+            user_relation.editFieldInRow(1, 'email', 'invalid-email')
+        
+        # Test InvalidDataError for invalid first name
+        with self.assertRaises(InvalidDataError):
+            user_relation.editFieldInRow(1, 'fName', '123')
+        
+        # Test InvalidDataError for invalid last name
+        with self.assertRaises(InvalidDataError):
+            user_relation.editFieldInRow(1, 'lName', '123')
+        
+        # Test TypeError for invalid type
+        with self.assertRaises(TypeError):
+            user_relation.editFieldInRow(1, 'type', 'InvalidType')
+        
+        # Test InvalidDataError for invalid specialization
+        # with self.assertRaises(InvalidDataError):
+        #     user_relation.editFieldInRow(1, 'specialization', 'InvalidSpecialization')
+        ## TODO
+
+    def  test_edit_field_in_row_user_relation_noautoincrement(self):
+        relationName = "User"
+        attributeLabels = ['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled']
+        attributeTypes = [int, str, str, str, str, str, str, str, str, str, bool]
+        user_relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True)
+        
+        # Populate the relation with users
+        user_relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
+        user_relation.insertRow(attributeList=[2, 'user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, None, False])
+        user_relation.insertRow(attributeList=[3, 'user3', 'user3@example.com', 'password', 'Alice', 'Johnson', 'Admin', None, None, None, False])
+        
+        # Edit field with valid data
+        user_relation.editFieldInRow(2, 'email', 'test123@newdomain.com')
+        self.assertEqual(user_relation.data.iloc[1]['email'], 'test123@newdomain.com')
+        
+        # Test IndexError for out of bounds primary key index
+        with self.assertRaises(IndexError):
+            user_relation.editFieldInRow(4, 'username', 'user4')
+        
+        # Test ValueError for invalid attribute
+        with self.assertRaises(ValueError):
+            user_relation.editFieldInRow(1, 'non_existent_attribute', 'value')
+        
+        # Test TypeError for incorrect type
+        with self.assertRaises(TypeError):
+            user_relation.editFieldInRow(1, 'is_disabled', 'not_a_bool')
+        
+        # Test InvalidDataError for invalid email format
+        with self.assertRaises(InvalidDataError):
+            user_relation.editFieldInRow(1, 'email', 'invalid-email')
+        
+        # Test InvalidDataError for invalid first name
+        with self.assertRaises(InvalidDataError):
+            user_relation.editFieldInRow(1, 'fName', '123')
+        
+        # Test InvalidDataError for invalid last name
+        with self.assertRaises(InvalidDataError):
+            user_relation.editFieldInRow(1, 'lName', '123')
+        
+        # Test TypeError for invalid type
+        with self.assertRaises(TypeError):
+            user_relation.editFieldInRow(1, 'type', 'InvalidType')
+        
+        # Test InvalidDataError for invalid specialization
+        # with self.assertRaises(InvalidDataError):
+        #     user_relation.editFieldInRow(1, 'specialization', 'InvalidSpecialization')
 
     def test_get_where_smaller(self):
         # Similar to above, but returns a Relation
