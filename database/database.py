@@ -219,19 +219,24 @@ class Database:
         Loads the database from a file, restoring the state of all relations.
         """
         self.logger.info(f"Loading DB from {self.data_file}")
-        with open(self.data_file, 'rb') as f:
-            data = pickle.load(f)
-            self.user = data['user']
-            self.journal_entry = data['journal_entry']
-            self.appointment = data['appointment']
-            self.patient_record = data['patient_record']
-            self.allocation = data['allocation']
-            self.mood_entry = data['mood_entry']
-            self.review_entry = data['review_entry']
-            self.chatcontent = data['chatcontent']
-            self.forum = data['forum']
-            self.notification = data['notification']
-        self.initDict()
+        try:
+            with open(self.data_file, 'rb') as f:
+                data = pickle.load(f)
+                self.user = data['user']
+                self.journal_entry = data['journal_entry']
+                self.appointment = data['appointment']
+                self.patient_record = data['patient_record']
+                self.allocation = data['allocation']
+                self.mood_entry = data['mood_entry']
+                self.review_entry = data['review_entry']
+                self.chatcontent = data['chatcontent']
+                self.forum = data['forum']
+                self.notification = data['notification']
+            self.initDict()
+        except KeyError as k: ## catch errors being caused by old data
+            self.logger.warn(f"Could not find a relation in {self.data_file}. Try deleting (and reinitializing) database.pkl.",k)
+        except Exception as e:
+            raise e
 
     @ensure_open
     def __save_database(self):
