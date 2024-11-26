@@ -4,8 +4,10 @@ import os
 import logging
 import sys
 from datetime import datetime as date
+
 from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent, Forum, Notification
 from .dataStructs import Row, Relation, RowList
+
 
 ## Database class
 class Database:
@@ -60,7 +62,8 @@ class Database:
         Inserts an appointment into the Appointment relation.
     """
 
-    def __init__(self, data_file:str='database.pkl', logger: logging.Logger = None, verbose: bool = False, overwrite : bool = False):
+    def __init__(self, data_file: str = 'database.pkl', logger: logging.Logger = None, verbose: bool = False,
+                 overwrite: bool = False):
         """
         Constructs all the necessary attributes for the Database object.
 
@@ -85,7 +88,7 @@ class Database:
 
         if verbose:
             self.logger.setLevel(logging.DEBUG)
-        
+
         self.logger.info("Initializing database...")
 
         self.app_directory = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -110,6 +113,7 @@ class Database:
             if self._is_closed:
                 raise RuntimeError("Database has been closed")
             return func(self, *args, **kwargs)
+
         return wrapper
 
     @ensure_open
@@ -128,43 +132,46 @@ class Database:
         Initializes the relations (tables) in the database with predefined schemas.
         """
         self.user = Relation('User',
-                            attributeLabels=['user_id', #0
-                                             'username', #1
-                                             'email', #2
-                                             'password',#3 
-                                             'fName', #4
-                                             'lName', #5
-                                             'type', #6
-                                             'emergency_contact_email', #7
-                                             'emergency_contact_name', #8
-                                             'specialization', #9
-                                             'is_disabled'],#10
-                            relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, bool])
-                    
+                             attributeLabels=['user_id',  # 0
+                                              'username',  # 1
+                                              'email',  # 2
+                                              'password',  # 3
+                                              'fName',  # 4
+                                              'lName',  # 5
+                                              'type',  # 6
+                                              'emergency_contact_email',  # 7
+                                              'emergency_contact_name',  # 8
+                                              'specialization',  # 9
+                                              'is_disabled'],  # 10
+                             relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, bool])
+
         self.journal_entry = Relation('JournalEntry',
-                                        attributeLabels=['entry_id', 'patient_id', 'text', 'timestamp'],
-                                        relationAttributeTypes= [int, int, str, date])
-        
+                                      attributeLabels=['entry_id', 'patient_id', 'text', 'timestamp'],
+                                      relationAttributeTypes=[int, int, str, date])
+
         self.appointment = Relation('Appointment',
-                                        attributeLabels=['appointment_id', 'patient_id', 'mhwp_id', 'date', 'room_name','status'],
-                                        relationAttributeTypes=[int,int,int,date,str,str])
-        
+                                    attributeLabels=['appointment_id', 'patient_id', 'mhwp_id', 'date', 'room_name',
+                                                     'status'],
+                                    relationAttributeTypes=[int, int, int, date, str, str])
+
         self.patient_record = Relation('PatientRecord',
-                                        attributeLabels=['record_id', 'patient_id', 'mhwp_id', 'notes', 'conditions'],
-                                        relationAttributeTypes=[int,int,int,str,list])
-        
+                                       attributeLabels=['record_id', 'patient_id', 'mhwp_id', 'notes', 'conditions'],
+                                       relationAttributeTypes=[int, int, int, str, list])
+
         self.allocation = Relation('Allocation',
-                                    attributeLabels=['allocation_id', 'admin_id', 'patient_id', 'mhwp_id', 'start_date', 'end_date'],
-                                    relationAttributeTypes=[int,int, int, int, date, date])
+                                   attributeLabels=['allocation_id', 'admin_id', 'patient_id', 'mhwp_id', 'start_date',
+                                                    'end_date'],
+                                   relationAttributeTypes=[int, int, int, int, date, date])
 
         """New entities created for new features."""
         self.mood_entry = Relation('MoodEntry',
-                                      attributeLabels=['moodentry_id', 'patient_id','moodscore', 'comment', 'timestamp'],
-                                      relationAttributeTypes=[int, int, int ,str, date])
+                                   attributeLabels=['moodentry_id', 'patient_id', 'moodscore', 'comment', 'timestamp'],
+                                   relationAttributeTypes=[int, int, int, str, date])
 
         self.review_entry = Relation('MHWPReview',
-                                   attributeLabels=['MHWP_review_id', 'patient_id','mhwp_id','reviewscore', 'reviewcomment', 'timestamp'],
-                                   relationAttributeTypes=[int, int, int, int, str, date])
+                                     attributeLabels=['MHWP_review_id', 'patient_id', 'mhwp_id', 'reviewscore',
+                                                      'reviewcomment', 'timestamp'],
+                                     relationAttributeTypes=[int, int, int, int, str, date])
         #
         self.forum = Relation('Forum',
                               attributeLabels=['thread_id', 'parent_id', 'topic', 'content', 'user_id',
@@ -172,9 +179,14 @@ class Database:
                               relationAttributeTypes=[int, int, str, str, int, date])
 
         self.chatcontent = Relation('ChatContent',
-                                 attributeLabels=['chatcontent_id','allocation_id', 'user_id', 'text',
-                                                  'timestamp'],
-                                 relationAttributeTypes=[int,int, int, str, date])
+                                    attributeLabels=['chatcontent_id', 'allocation_id', 'user_id', 'text',
+                                                     'timestamp'],
+                                    relationAttributeTypes=[int, int, int, str, date])
+
+        self.notification = Relation('Notification',
+                                     attributeLabels=['notification_id', 'user_id', 'notifytcontent', 'source_id',
+                                                      'new', 'timestamp'],
+                                     relationAttributeTypes=[int, int, str, int, bool, date])
 
         self.notification = Relation('Notification',
                                  attributeLabels=['notification_id','user_id', 'notifytcontent','source_id','new','timestamp'],
@@ -199,6 +211,7 @@ class Database:
             'Forum': self.forum,
             'Notification': self.notification,
         } 
+
 
     @ensure_open
     def __load_database(self):
@@ -244,7 +257,9 @@ class Database:
         """
         Returns a string representation of the database, showing all relations and their data.
         """
-        return "User:\n"+str(self.user)+"\nJournal Entry:\n"+str(self.journal_entry)+"\nAppointment:\n"+str(self.appointment)+"\nPatient Record:\n"+str(self.patient_record)+"\nAllocation:\n"+str(self.allocation)+"\nMood Entry\n"+str(self.mood_entry)+"\nChat Content\n"+str(self.chatcontent)
+        return "User:\n" + str(self.user) + "\nJournal Entry:\n" + str(self.journal_entry) + "\nAppointment:\n" + str(
+            self.appointment) + "\nPatient Record:\n" + str(self.patient_record) + "\nAllocation:\n" + str(
+            self.allocation) + "\nMood Entry\n" + str(self.mood_entry) + "\nChat Content\n" + str(self.chatcontent)
 
     @ensure_open
     def printAll(self):
@@ -298,7 +313,8 @@ class Database:
             if entityData is not None:
                 entityData.insertRow(row=row)
             else:
-                raise KeyError(f"{entity} not found in data dict, available values {pd.DataFrame.apply(pd.DataFrame(self.dataDict.values()),str)}")
+                raise KeyError(
+                    f"{entity} not found in data dict, available values {pd.DataFrame.apply(pd.DataFrame(self.dataDict.values()), str)}")
         elif row == None and rowList is not None:
             self.dataDict.get(entity).insertRows(rowList)
         else:
@@ -329,12 +345,12 @@ class Database:
         """
         entityData = self.dataDict.get(entity)
         if entityData != None:
-            return entityData.getRowsWhereEqual(entityData.primaryKeyName,id)
+            return entityData.getRowsWhereEqual(entityData.primaryKeyName, id)
         else:
             raise KeyError(f"{entity} not found in data dict, available values {self.dataDict.values()}")
-    
+
     @ensure_open
-    def getRelation(self, entity : str) -> Relation:
+    def getRelation(self, entity: str) -> Relation:
         """
         Returns the relation object for the specified entity.
 
@@ -360,7 +376,7 @@ class Database:
             raise KeyError(f"{entity} not found in data dict, available values {self.dataDict.values()}")
 
     @ensure_open
-    def insert_admin(self, admin:Admin):
+    def insert_admin(self, admin: Admin):
         """
         Inserts an admin user into the User relation.
 
@@ -369,10 +385,11 @@ class Database:
         admin : Admin
             The admin object to insert.
         """
-        self.insert("User",Row([admin.username,None,admin.password,None,None,admin.type,None,None,None,admin.is_disabled]))
-    
+        self.insert("User", Row([admin.username, None, admin.password, None, None, admin.type, None, None, None,
+                                 admin.is_disabled]))
+
     @ensure_open
-    def insert_patient(self,patient : Patient):
+    def insert_patient(self, patient: Patient):
         """
         Inserts a patient user into the User relation.
 
@@ -381,10 +398,12 @@ class Database:
         patient : Patient
             The patient object to insert.
         """
-        self.insert("User",Row([patient.username,patient.email,patient.password,patient.fName,patient.lName,patient.type,patient.emergency_contact_email,patient.emergency_contact_name,None,patient.is_disabled]))
-    
+        self.insert("User",
+                    Row([patient.username, patient.email, patient.password, patient.fName, patient.lName, patient.type,
+                         patient.emergency_contact_email, patient.emergency_contact_name, None, patient.is_disabled]))
+
     @ensure_open
-    def insert_mhwp(self, mhwp : MHWP):
+    def insert_mhwp(self, mhwp: MHWP):
         """
         Inserts an MHWP user into the User relation.
 
@@ -393,10 +412,12 @@ class Database:
         mhwp : MHWP
             The MHWP object to insert.
         """
-        self.insert("User",Row([mhwp.username,mhwp.email,mhwp.password,mhwp.fName,mhwp.lName,mhwp.type,None,None,mhwp.specialization,mhwp.is_disabled]))
-    
+        self.insert("User",
+                    Row([mhwp.username, mhwp.email, mhwp.password, mhwp.fName, mhwp.lName, mhwp.type, None, None,
+                         mhwp.specialization, mhwp.is_disabled]))
+
     @ensure_open
-    def insert_allocation(self, allocation : Allocation):
+    def insert_allocation(self, allocation: Allocation):
         """
         Inserts an allocation into the Allocation relation.
 
@@ -405,10 +426,12 @@ class Database:
         allocation : Allocation
             The allocation object to insert.
         """
-        self.insert("Allocation",Row([allocation.admin_id,allocation.patient_id,allocation.mhwp_id,allocation.start_date,allocation.end_date]))
-    
+        self.insert("Allocation",
+                    Row([allocation.admin_id, allocation.patient_id, allocation.mhwp_id, allocation.start_date,
+                         allocation.end_date]))
+
     @ensure_open
-    def insert_journal_entry(self, journal_entry : JournalEntry):
+    def insert_journal_entry(self, journal_entry: JournalEntry):
         """
         Inserts a journal entry into the JournalEntry relation.
 
@@ -417,10 +440,10 @@ class Database:
         journal_entry : JournalEntry
             The journal entry object to insert.
         """
-        self.insert("JournalEntry",Row([journal_entry.patient_id,journal_entry.text,journal_entry.timestamp]))
+        self.insert("JournalEntry", Row([journal_entry.patient_id, journal_entry.text, journal_entry.timestamp]))
 
     @ensure_open
-    def insert_patient_record(self, patient_record : PatientRecord):
+    def insert_patient_record(self, patient_record: PatientRecord):
         """
         Inserts a patient record into the PatientRecord relation.
 
@@ -429,7 +452,8 @@ class Database:
         patient_record : PatientRecord
             The patient record object to insert.
         """
-        self.insert("PatientRecord", Row([patient_record.patient_id, patient_record.mhwp_id, patient_record.notes, patient_record.conditions]))
+        self.insert("PatientRecord", Row([patient_record.patient_id, patient_record.mhwp_id, patient_record.notes,
+                                          patient_record.conditions]))
 
     @ensure_open
     def insert_appointment(self, appointment: Appointment):
@@ -441,28 +465,33 @@ class Database:
         appointment : Appointment
             The appointment object to insert.
         """
-        
-        self.insert("Appointment", Row([appointment.patient_id, appointment.mhwp_id, appointment.date, appointment.room_name, appointment.status]))
-    
-    @ensure_open
-    def insert_mood_entry(self, mood_entry : MoodEntry):
-            """
-            Inserts a journal entry into the JournalEntry relation.
 
-            Parameters
-            ----------
-            journal_entry : JournalEntry
-                The journal entry object to insert.
-            """
-            self.insert("MoodEntry",Row([mood_entry.patient_id,mood_entry.moodscore,mood_entry.comment,mood_entry.timestamp]))
+        self.insert("Appointment",
+                    Row([appointment.patient_id, appointment.mhwp_id, appointment.date, appointment.room_name,
+                         appointment.status]))
 
     @ensure_open
-    def insert_review_entry(self, review_entry : MHWPReview):
-            self.insert("MHWPReview",Row([review_entry.patient_id,review_entry.mhwp_id,review_entry.reviewscore,review_entry.reviewcomment,review_entry.timestamp]))
+    def insert_mood_entry(self, mood_entry: MoodEntry):
+        """
+        Inserts a journal entry into the JournalEntry relation.
+
+        Parameters
+        ----------
+        journal_entry : JournalEntry
+            The journal entry object to insert.
+        """
+        self.insert("MoodEntry",
+                    Row([mood_entry.patient_id, mood_entry.moodscore, mood_entry.comment, mood_entry.timestamp]))
+
+    @ensure_open
+    def insert_review_entry(self, review_entry: MHWPReview):
+        self.insert("MHWPReview", Row([review_entry.patient_id, review_entry.mhwp_id, review_entry.reviewscore,
+                                       review_entry.reviewcomment, review_entry.timestamp]))
 
     # def insert_chatroom(self, chatroom : ChatRoom):
     #         self.insert("ChatContent",Row([chatroom.patient_id,chatroom.mhwp_id]))
     @ensure_open
+
     def insert_chatcontent(self, chatcontent : ChatContent):
             self.insert("ChatContent",Row([chatcontent.allocation_id,chatcontent.user_id,chatcontent.text,chatcontent.timestamp]))
 
