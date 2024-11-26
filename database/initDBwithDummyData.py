@@ -2,7 +2,7 @@ import os
 import sys
 
 from .database import Database
-from .entities import UserError, RecordError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
+from .entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 import datetime
 
 
@@ -234,7 +234,7 @@ def initDummyDatabase(db: Database):
         db.close()
 
 
-    except (UserError, RecordError) as e:
+    except (Exception) as e:
         print(f"An error occurred: {e}")
 
 
