@@ -61,12 +61,12 @@ button.pack()
 listbox = tk.Listbox(root)
 listbox.pack()
 
-    ####### Back button - needs completing #######
-    # self.back_button = tk.Button(root, text="Login", command=self.backButton)
-    # self.back_button.pack()
+    # Back button
+    self.back_button = tk.Button(root, text="Back", command=self.backButton)
+    self.back_button.pack()
 
-    # def backButton(self):
-    #     subprocess.Popen(["python3", "mhwpMain.py"])
-    #     self.root.destroy()
+    def backButton(self):
+        subprocess.Popen(["python3", "mhwpMain.py"])
+        self.root.destroy()
 
 root.mainloop()

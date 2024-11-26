@@ -23,12 +23,22 @@ from database.dataStructs import Row
 
 
 
+
 class AppointmentBooking:
    def __init__(self, root, patient_id, mhwp_id):
        self.root = root
        self.root.title("Appointment Booking System")
        self.patient_id = patient_id
        self.mhwp_id = mhwp_id
+
+############# Not sure if this is correct so only commented it out
+#     # Back button
+#     self.back_button = tk.Button(root, text="Back", command=self.backButton)
+#     self.back_button.pack()
+
+#     def backButton(self):
+#         subprocess.Popen(["python3", "patient/patientMain.py"])
+#         self.root.destroy()
 
 
        # Initialise database connection

@@ -699,6 +699,10 @@ class UserError(Exception):
     pass
 
 
+class UserError(Exception):
+    """Custom exception for user-related errors."""
+    pass
+
 class RecordError(Exception):
     """Custom exception for user-related errors."""
     pass

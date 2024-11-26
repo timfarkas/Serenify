@@ -113,11 +113,15 @@ class Patient:
         self.appointments.grid(row=9, column=0, columnspan=6, pady=5)
         self.cancel_appointement.grid(row=10, column=0, columnspan = 6, pady=5)
 
-        ######Link to logging out action when connected to database#######
-        self.logout_button = tk.Button(root, text="Logout")  # command=self.exitUser
+        # Logging out
+        self.logout_button = tk.Button(root, text="Logout", command=self.exitUser)
         self.logout_button.grid(row=11, column=0, columnspan = 6, pady=5)
 
         self.apply_initial_colors()
+
+    def exitUser(self):
+        subprocess.Popen(["python3", "login/logout.py"])
+        self.root.destroy()
 
     def apply_initial_colors(self):
         # Define color mapping based on mood values

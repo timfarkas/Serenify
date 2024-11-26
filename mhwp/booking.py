@@ -26,6 +26,7 @@ class MHWPAppointmentManager:
        self.mhwp_id = mhwp_id
 
 
+
        # Initialise database connection
        try:
            self.db = Database()
@@ -36,6 +37,14 @@ class MHWPAppointmentManager:
            self.root.destroy()
            return
 
+############# Not sure if this is correct so only commented it out
+#     # Back button
+#     self.back_button = tk.Button(root, text="Back", command=self.backButton)
+#     self.back_button.pack()
+
+#     def backButton(self):
+#         subprocess.Popen(["python3", "mhwpMain.py"])
+#         self.root.destroy()
 
        self.setup_ui()
        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
