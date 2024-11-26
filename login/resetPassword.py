@@ -43,7 +43,7 @@ class ResetPage:
         self.login_button.grid(row=5, column=0, columnspan=2, pady=10)
 
 
-        # DEBUG DB
+        # This DEBUG's the DB
         db = Database()
         db.printAll()
         db.close()
@@ -62,6 +62,7 @@ class ResetPage:
         db = Database()
         userRelation = db.getRelation('User')
         userRelation.editFieldInRow(id, targetAttribute='password', value=password)
+        db.printAll()
         db.close()
 
     def changePassword(self, username, password):
@@ -71,6 +72,7 @@ class ResetPage:
             matching_ids = self.match_in_database(username)
             if matching_ids:  # Check if any IDs matched
                 self.updatePassword(matching_ids[0], password)
+            db.printAll()
             db.close()
             print("Password successfully changed")
             messagebox.showinfo("Success", "Password successfully changed")
@@ -82,8 +84,14 @@ class ResetPage:
         exec(open("login/login.py").read())
         self.root.destroy()
 
-# Run the application
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = ResetPage(root)
-    root.mainloop()
+# # Run the application
+# if __name__ == "__main__":
+#     root = tk.Tk()
+#     app = ResetPage(root)
+#     root.mainloop()
+
+###### Used for debugging 
+db = Database()
+print("Getting and printing relation 'User':")
+userRelation = db.getRelation('User')
+print(userRelation)

@@ -2,7 +2,7 @@ import os
 import sys
 
 from .database import Database
-from .entities import UserError, RecordError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
+from .entities import UserError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 import datetime
 
 
