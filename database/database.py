@@ -7,6 +7,7 @@ from datetime import datetime as date
 
 from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent, Forum, Notification
 from .dataStructs import Row, Relation, RowList
+import warnings
 
 
 ## Database class
@@ -507,3 +508,12 @@ class Database:
 
     def insert_notification(self, notification : Notification):
             self.insert("Notification",Row([notification.user_id, notification.notifycontent, notification.source_id,notification.new, notification.timestamp]))
+
+
+class RecordError(Exception):
+    def __init__(self, *args, **kwargs):
+        warnings.warn("RecordError is deprecated and will be removed soon, please use InvalidDataError instead", DeprecationWarning, stacklevel=2)
+
+class UserError(Exception):
+    def __init__(self, *args, **kwargs):
+        warnings.warn("UserError is deprecated and will be removed soon, please use InvalidDataError instead", DeprecationWarning, stacklevel=2)
