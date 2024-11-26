@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
 from database.entities import Patient, JournalEntry, MoodEntry
 from database.initDBwithDummyData import initDummyDatabase
+# from sessions import Session
 from datetime import datetime
 import pandas as pd
 
@@ -26,7 +27,11 @@ import pandas as pd
 current_user_id = 3
 
 class Patient:
-    def __init__(self, root):
+    def __init__(self, root, user_id=None):
+        # Initialize the session instance 
+        # self.session = Session(user_id=user_id)
+        # self.sessionGet()
+
         self.root = root
         self.root.title("Patient")
         self.root.geometry("700x700")
@@ -122,6 +127,15 @@ class Patient:
     def exitUser(self):
         subprocess.Popen(["python3", "login/logout.py"])
         self.root.destroy()
+    
+    # def sessionGet(self):
+    #     """Retrieve the user_id from the session."""
+    #     user_id = self.session.get("user_id")
+    #     if user_id:
+    #         print(f"Session active for user {user_id}")
+    #     else:
+    #         print("No active session or user_id not set.")
+    #     print(f"Session Data: {self.session_data}")
 
     def apply_initial_colors(self):
         # Define color mapping based on mood values
