@@ -188,10 +188,10 @@ class EditInfo:
         subprocess.Popen(["python3", "patient/patientMain.py"])
         self.root.destroy()
 
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = EditInfo(root, current_user_id)
-    root.mainloop()
+# if __name__ == "__main__":
+root = tk.Tk()
+app = EditInfo(root, current_user_id)
+root.mainloop()
 # db = Database()
 # print("Getting and printing relation 'User':")
 # userRelation = db.getRelation('User')

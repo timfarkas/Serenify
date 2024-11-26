@@ -7,7 +7,7 @@ import sys
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath((__file__))))
 sys.path.append(project_root)
-from .notificationbox import opennotification
+from addfeature.notificationbox import opennotification
 from .globalvariables import db
 
 

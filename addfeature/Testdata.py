@@ -4,10 +4,14 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'da
 sys.path.append(project_root)
 
 from .globalvariables import db
+# import admin.
 
 
-room1 = db.getRelation('User')
-print(room1)
-room1.editFieldInRow(1, 'lName',str("AAA"))
-room2 = db.getRelation('User')
-print(room2)
+# exec(open("adminFunctions.py").read())
+#
+#
+userdata = db.getRelation('Allocation')
+# patientdata=userdata.getRowsWhereEqual('username','patient1')
+
+print(userdata)
+

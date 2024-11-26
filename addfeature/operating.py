@@ -16,12 +16,12 @@ from .forum import openforsum
 from .mhwp_rating import openrating
 
 global db,userID
-userID=2
+userID=5
 
 # openmhwpdashboard(userID)
-# openrating(user ID)
-opennotification(userID)
-# openforsum(userID)
+# openrating(userID)
+# opennotification(userID)
+openforsum(userID)
 
 db.close()
 

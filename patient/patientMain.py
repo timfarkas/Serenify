@@ -246,12 +246,12 @@ class Patient:
 
     def edit_information(self):
         # Edit information
-        subprocess.Popen(["python3", "patient/editInfo.py"])
+        subprocess.Popen(["python3", "editInfo.py"])
         self.root.destroy()
 
     def exercises(self):
         # Edit information
-        subprocess.Popen(["python3", "patient/exercises.py"])
+        subprocess.Popen(["python3", "exercises.py"])
         self.root.destroy()
 
     def book(self):
