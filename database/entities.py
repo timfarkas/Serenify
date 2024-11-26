@@ -629,7 +629,6 @@ class ChatContent:
     def checkValidData(self):
         return self.checkValidDataStatic(self.chatcontent_id, self.allocation_id, self.user_id, self.text, self.timestamp)
 
-
 class Forum:
     def __init__(self, thread_id: int = None, parent_id: int = None, topic: str = '',content: str = '',user_id: int= None,timestamp:datetime=None):
         self.thread_id=thread_id
@@ -650,10 +649,3 @@ class Notification:
 
 
 
-class UserError(Exception):
-    """Custom exception for user-related errors."""
-    pass
-
-class RecordError(Exception):
-    """Custom exception for user-related errors."""
-    pass
