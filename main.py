@@ -1,13 +1,21 @@
-from database.database import Database
-
+from sessions import Session
 
 if __name__ == "__main__":
-    # Initialize the database
-    ## This automatically loads the database from database.pkl, or creates a new one if that file doesn't exist
-    db = Database()
+    ### INITIALIZE SESSION 
+    # (do this just once when opening the app)
+    session = Session()
+    session._initialize()
 
-    ### print whole contents of loaded database (for testing purposes)
-    db.printAll()
 
-    # Save the database state before exiting (IMPORTANT, CHANGES WON'T BE SAVED OTHERWISE)
-    db.close()
+    ### SET ID AND ROLE (DO THIS AFTER EACH SUCCESSFUL LOGIN)
+    session.setId(4)
+    session.setRole("MHWP")
+
+    ### SET EXTRA DETAILS, e.g. isDisabled
+    session.set("isDisabled", True)
+
+    session.close() ## this saves the session
+
+
+
+
