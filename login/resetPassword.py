@@ -88,6 +88,7 @@ class ResetPage():
 if __name__ == "__main__":
     root = tk.Tk()
     app = ResetPage(root=root)
+
     root.mainloop()
 
 ###### Used for debugging 
