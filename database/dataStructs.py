@@ -119,18 +119,6 @@ class RowList(list):
         return out
 
 class Relation():
-    """
-    A class to represent a relation.
-    Supports initialization with primary index and variable number of attributes.
-
-    Initial Parameters:
-        relationName (str): The name of the relation.
-        relationAttributeNames (list): The attribute names, with the first value as the primary key.
-        relationAttributeTypes (list, optional): The types of the attributes.
-        autoIncrementPrimaryKey (bool, default True): Whether the primary key should auto-increment.
-        validityChecking (bool, default True): Whether to perform validity checks on data.
-    """
-
     def __init__(self, relationName : str, attributeLabels : list, relationAttributeTypes : list = None, autoIncrementPrimaryKey: bool=True, validityChecking : bool = True):
         """
         Initialize a Relation object.
@@ -140,6 +128,7 @@ class Relation():
         attributeLabels (list): The labels for the attributes.
         relationAttributeTypes (list, optional): The types of the attributes.
         autoIncrementPrimaryKey (bool, default True): Whether the primary key should auto-increment.
+        validityChecking (bool, default True): Whether to perform validity checking on the data.
         """
         self.name = relationName
         self.numColumns = len(attributeLabels)
@@ -198,14 +187,14 @@ class Relation():
             if self.name == "User":
                 self.__isEntityTyped = True
                 classNameList = ['Patient','Admin','MHWP']
-                self.__typeIndex = 6
+                self._typeIndex = 6
 
                 ## this specifies which columns of the User table are irrelevant for the respective entity
                 ## these will be dropped for data validation
-                self.__dropRowDict = {
-                    'Patient': [self.__typeIndex,9],
-                    'Admin':[self.__typeIndex,2,4,5,7,8,9],
-                    'MHWP':[self.__typeIndex,7,8]
+                self.__dropColumnDict = {
+                    'Patient': [self._typeIndex,9],
+                    'Admin':[self._typeIndex,2,4,5,7,8,9],
+                    'MHWP':[self._typeIndex,7,8]
                 }
             else:
                 self.__isEntityTyped = False
@@ -528,7 +517,7 @@ class Relation():
 
         ### check attribute value validity
         if self.validityChecking and self.__isEntityTyped:
-            self._validateRowValues(attributeList=newValues, entityType=newValues[self.__typeIndex])
+            self._validateRowValues(attributeList=newValues, entityType=newValues[self._typeIndex])
         elif self.validityChecking:
             self._validateRowValues(attributeList=newValues)
 
@@ -565,7 +554,7 @@ class Relation():
         row.values[row.getFieldIndex(targetAttribute)] = value
 
         if self._validityChecking and self.__isEntityTyped:
-            self._validateRowValues(attributeList=row.values, entityType=row.values[self.__typeIndex])
+            self._validateRowValues(attributeList=row.values, entityType=row.values[self._typeIndex])
         elif self._validityChecking:
             self._validateRowValues(attributeList=row.values)
         
@@ -618,7 +607,7 @@ class Relation():
             
         ### check attribute value validity
         if self._validityChecking and self.__isEntityTyped:
-            self._validateRowValues(attributeList=attributes, entityType=attributes[self.__typeIndex])
+            self._validateRowValues(attributeList=attributes, entityType=attributes[self._typeIndex])
         elif self._validityChecking:
             self._validateRowValues(attributeList=attributes)
 
@@ -663,7 +652,7 @@ class Relation():
         relevantClasses = self.__classes
         isTyped = self.__isEntityTyped
         if isTyped:
-            dropRowDict = self.__dropRowDict
+            dropColumnDict = self.__dropColumnDict
         correctEntityClass = None
         if not isTyped:
             correctEntityClass = relevantClasses[0]
@@ -676,7 +665,7 @@ class Relation():
                 raise TypeError(f"Validation is switched on, but class of name {entityType} could not be found among {relevantClasses}")
 
             ### drop values in attributeList based on class
-            indicesToDrop = sorted(dropRowDict.get(correctEntityClass.__name__), reverse=True)
+            indicesToDrop = sorted(dropColumnDict.get(correctEntityClass.__name__), reverse=True)
 
             for index in indicesToDrop:
                 list.pop(index)
@@ -684,27 +673,6 @@ class Relation():
         ### instantiate correct class
         correctEntityClass(*list)
         
-
-
-    def dropRows(self, id : int = None, ids : list = None):
-        """
-        Drops rows from the relation based on primary key ID(s).
-
-        Parameters:
-        id (int, optional): A single primary key ID to drop.
-        ids (list, optional): A list of primary key IDs to drop.
-        """
-        if ids is not None and not isinstance(ids, list):
-            raise TypeError("ids must be a list.")
-        if id is not None and not isinstance(id, int):
-            raise TypeError("id must be an integer.")
-
-        if id is None and ids is not None:
-            self.data = self.data[~self.data[self.primaryKeyName].isin(ids)]
-        elif id is not None and ids is None:
-            self.data = self.data[self.data[self.primaryKeyName] != id]
-        else:
-            raise ValueError("Specify either 'id' or 'ids', not both.")
 
     def __str__(self) -> str:
         """

@@ -3,12 +3,11 @@ from tkinter import messagebox
 import subprocess # This allows us to open other files
 import sys
 import os
-# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "database"))
-# sys.path.append(project_root)  # Add the project root to sys.path
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database  # Import Database
-# from database.entities import Appointment  
-# from database.dataStructs import Row  
+from database.entities import Appointment  
+from database.dataStructs import Row  
 # import patient.patientMain
 # import admin.adminFunctions
 # import mhwp.mhwpMain

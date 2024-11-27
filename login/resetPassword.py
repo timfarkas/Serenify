@@ -9,8 +9,8 @@ import pandas as pd
 import subprocess
 
 
-class ResetPage:
-    def __init__(self, root):
+class ResetPage():
+    def __init__(self, root=None):
         self.root = root
         self.root.title("Reset Password")
         self.root.geometry("400x300")
@@ -43,7 +43,7 @@ class ResetPage:
         self.login_button.grid(row=5, column=0, columnspan=2, pady=10)
 
 
-        # DEBUG DB
+        # This DEBUG's the DB
         db = Database()
         db.printAll()
         db.close()
@@ -61,29 +61,38 @@ class ResetPage:
     def updatePassword(self, id, password):
         db = Database()
         userRelation = db.getRelation('User')
+        print(f"Updating password for user_id: {id}")
         userRelation.editFieldInRow(id, targetAttribute='password', value=password)
+        db.printAll()
         db.close()
+        print(f"Password updated and database saved successfully.")        
 
     def changePassword(self, username, password):
-        db = Database()
         print('This should only execute once the user clicks submit...')
         if self.match_in_database(username):
             matching_ids = self.match_in_database(username)
             if matching_ids:  # Check if any IDs matched
                 self.updatePassword(matching_ids[0], password)
-            db.close()
             print("Password successfully changed")
             messagebox.showinfo("Success", "Password successfully changed")
         else:
             print("No information found under the chosen username")
             messagebox.showerror("Reset failed", "No information found under the chosen username")
-            db.close()
+            
+   
     def returnToLogin(self):
         exec(open("login/login.py").read())
         self.root.destroy()
 
-# Run the application
+###### Run the application
 if __name__ == "__main__":
     root = tk.Tk()
-    app = ResetPage(root)
+    app = ResetPage(root=root)
+
     root.mainloop()
+
+###### Used for debugging 
+# db = Database()
+# print("Getting and printing relation 'User':")
+# userRelation = db.getRelation('User')
+# print(userRelation)
