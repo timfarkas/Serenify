@@ -61,9 +61,11 @@ class ResetPage:
     def updatePassword(self, id, password):
         db = Database()
         userRelation = db.getRelation('User')
+        print(f"Updating password for user_id: {id}")
         userRelation.editFieldInRow(id, targetAttribute='password', value=password)
         db.printAll()
         db.close()
+        print(f"Password updated and database saved successfully.")        
 
     def changePassword(self, username, password):
         db = Database()
@@ -84,14 +86,14 @@ class ResetPage:
         exec(open("login/login.py").read())
         self.root.destroy()
 
-# # Run the application
-# if __name__ == "__main__":
-#     root = tk.Tk()
-#     app = ResetPage(root)
-#     root.mainloop()
+###### Run the application
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = ResetPage(root)
+    root.mainloop()
 
 ###### Used for debugging 
-db = Database()
-print("Getting and printing relation 'User':")
-userRelation = db.getRelation('User')
-print(userRelation)
+# db = Database()
+# print("Getting and printing relation 'User':")
+# userRelation = db.getRelation('User')
+# print(userRelation)
