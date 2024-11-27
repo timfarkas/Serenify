@@ -1,12 +1,13 @@
 import tkinter as tk
-from tkinter import messagebox
-import subprocess
+from tkinter import messagebox, ttk
+
 import sys
 import os
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-sys.path.append(project_root)
-from database import Database
-from entities import UserError, RecordError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database.database import Database
+from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
 
 class AllocationEdit(tk.Toplevel):
@@ -268,11 +269,11 @@ class UserSelectionApp(tk.Toplevel):
     def __init__(self, user_type, parent):
         super().__init__()
         self.db = Database()
-        self.geometry("280x165")
+        self.geometry("400x350")
         self.resizable(True, False)
         self.user_type = user_type
         self.parent = parent
-        self.selected_user_id = tk.IntVar(value=-1)
+        self.selected_user_id = None
         self.users = self.db.getRelation('User').getRowsWhereEqual("type", user_type)
         self.create_ui()
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -285,30 +286,59 @@ class UserSelectionApp(tk.Toplevel):
         h1_label.pack()
         
         # instruction label
-        docToUser = tk.Label(self, text=f"Choose the {self.user_type} to edit:", font=("Arial", 12, "bold"))
-        docToUser.pack()
+        doc_to_user = tk.Label(self, text=f"Choose the {self.user_type} to edit:", font=("Arial", 12, "bold"))
+        doc_to_user.pack()
+
+        # treeview frame
+        tree_frame = tk.Frame(self)
+        tree_frame.pack(pady=10, fill="both", expand=True)
+
+        # create a scrollbar for the tree view
+        scrollbar = ttk.Scrollbar(tree_frame)
+        scrollbar.pack(side="right", fill="y")
+
+        # create a treeview widget for displaying users
+        self.tree = ttk.Treeview(tree_frame, yscrollcommand=scrollbar.set, selectmode="browse")
+        self.tree.pack(fill="both", expand=True)
+
+        # connect the scrollbar to the tree view
+        scrollbar.config(command=self.tree.yview)
+
+        # define the columns for the tree view
+        self.tree["columns"] = ("ID", "First Name", "Last Name")
+
+        # define the width and alignment for each column
+        self.tree.column("#0", width=0, stretch=tk.NO)
+        self.tree.column("ID", anchor=tk.CENTER, width=50)
+        self.tree.column("First Name", anchor=tk.CENTER, width=150)
+        self.tree.column("Last Name", anchor=tk.CENTER, width=150)
+
+        # set the heading for each column
+        self.tree.heading("#0", text="", anchor=tk.W)
+        self.tree.heading("ID", text="ID", anchor=tk.W)
+        self.tree.heading("First Name", text="First Name", anchor=tk.W)
+        self.tree.heading("Last Name", text="Last Name", anchor=tk.W)
 
         # creating checkbox for each patient
         for user in self.users:
-            user_name = f"{user[4]} {user[5]}"
-            radio_button = tk.Radiobutton(self, text=user_name, variable=self.selected_user_id, value=user[0])
-            radio_button.pack(padx=60, anchor="w")
+            self.tree.insert("", "end", values=(user[0], user[4], user[5]))
 
         # select button 
         select_button = tk.Button(self, text=f"Select {self.user_type}", command=self.edit_user)  
-        select_button.pack()
+        select_button.pack(pady=0)
 
         # back button
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
     def edit_user(self):
-        selected_user_id = self.selected_user_id.get()
-        if selected_user_id != -1:
+        selected_item = self.tree.selection()
+        if selected_item:
+            self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = UserEditApp(selected_user_id, self)
+            app = UserEditApp(self.selected_user_id, self)
         else:
-            messagebox.showinfo("No {self.user_type} Selected", f"Please select a {self.user_type} to continue.")
+            messagebox.showinfo(f"No {self.user_type} Selected", f"Please select a {self.user_type} to continue.")
 
     def go_back(self): 
         self.destroy()
@@ -338,28 +368,55 @@ class AllocationSelection(UserSelectionApp):
         h1_label.pack()
         
         # instruction label
-        docToUser = tk.Label(self, text=f"Choose the Patient to edit:", font=("Arial", 12, "bold"))
-        docToUser.pack()
+        doc_to_user = tk.Label(self, text=f"Choose the Patient to edit:", font=("Arial", 12, "bold"))
+        doc_to_user.pack()
 
-        # Fetch current MHWP assigned to the patient
-        
+        # treeview frame
+        tree_frame = tk.Frame(self)
+        tree_frame.pack(pady=10, fill="both", expand=True)
+
+        # create a scrollbar for tree view
+        scrollbar = ttk.Scrollbar(tree_frame)
+        scrollbar.pack(side="right", fill="y")
+
+        # create a treeview widget for displaying users
+        self.tree = ttk.Treeview(tree_frame, yscrollcommand=scrollbar.set, selectmode="browse")
+        self.tree.pack(fill="both", expand=True)
+
+        # connect the scrollbar to the tree view
+        scrollbar.config(command=self.tree.yview)
+
+        # define the column for the tree view
+        self.tree["columns"] = ("ID", "Patient Name", "Assigned MHWP")
+
+        # define the width and alignment for each column
+        self.tree.column("#0", width=0, stretch=tk.NO)
+        self.tree.column("ID", anchor=tk.CENTER, width=50)
+        self.tree.column("Patient Name", anchor=tk.CENTER, width=150)
+        self.tree.column("Assigned MHWP", anchor=tk.CENTER, width=200)
+
+        # set the heading for each column
+        self.tree.heading("#0", text="", anchor=tk.W)
+        self.tree.heading("ID", text="ID", anchor=tk.W)
+        self.tree.heading("Patient Name", text="Patient Name", anchor=tk.W)
+        self.tree.heading("Assigned MHWP", text="Assigned MHWP", anchor=tk.W)
 
         # creating checkbox for each patient
         for user in self.users:
             patient_id = user[0]
-            patient = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
-            assigned_mhwp_id = patient[0][3]
-            self.allocation_id = patient[0][0]
+            patient_name = f"{user[4]} {user[5]}"
 
-            if assigned_mhwp_id:
-                assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", assigned_mhwp_id)
+            mhwp_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
+            mhwp_allocation_id = mhwp_allocation[0][3]
+
+            if mhwp_allocation_id:
+                assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
                 assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
             else:
                 assigned_mhwp_name = "Unassigned"
 
-            user_name = f"{user[4]} {user[5]} - {assigned_mhwp_name}"
-            radio_button = tk.Radiobutton(self, text=user_name, variable=self.selected_user_id, value=user[0])
-            radio_button.pack(padx=10, anchor="w")
+            # insert user and their assigned MHWP into treeview
+            self.tree.insert("", "end", values=(user[0], patient_name, assigned_mhwp_name))
 
         # select button 
         select_button = tk.Button(self, text=f"Select {self.user_type}", command=self.edit_user)  
@@ -368,14 +425,6 @@ class AllocationSelection(UserSelectionApp):
         # back button
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
-
-        # logout button
-        logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
-        logout_button.pack()
-
-    def exitUser(self):
-        subprocess.Popen(["python3", "login/logout.py"])
-        self.root.destroy()
 
 class KeyStatistics(tk.Toplevel):
     def __init__(self, parent):
@@ -397,8 +446,6 @@ class KeyStatistics(tk.Toplevel):
             mhwp_name = f"{mhwp_user[0][4]} {mhwp_user[0][5]}"
 
             self.total_appointments.update({mhwp_name : mhwp_appointments})
-
-        print(self.total_appointments)
     
     def create_ui(self):
         
@@ -413,15 +460,12 @@ class KeyStatistics(tk.Toplevel):
 
         # Data for the bar chart (categories and values)
         categories = list(self.total_appointments)
-        print(categories)
         no_items = len(categories)
-        print(no_items)
 
         values = []
         for elements in categories:
             length = len(self.total_appointments[elements])
             values.append(length)
-        print(values)
 
         # Dimensions for the bar chart
         bar_width = (600/no_items) - (no_items * 30)
@@ -462,8 +506,8 @@ class KeyStatistics(tk.Toplevel):
 
         # doesn't seem to be working - TO SPEAK TO TIM
         # calculating the number of disabled accounts
-        disabled_accounts = self.db.getRelation('User').getWhereEqual('is_disabled', True)
-        disabled_accounts_row_count = len(disabled_accounts)
+        #disabled_accounts = self.db.getRelation('User').getWhereEqual('is_disabled', True)
+        #disabled_accounts_row_count = len(disabled_accounts)
 
         # calculating the number of unalocated patients
         unalocated_patients = self.db.getRelation('Allocation').getRowsWhereEqual('mhwp_id', "")
@@ -484,7 +528,7 @@ class KeyStatistics(tk.Toplevel):
         canvas.create_text(300, (key_stats_x_position - 10), text="Key Statistics", font=("Arial", 16, "bold"))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 1), text=f"No. Patients: {patient_row_count}", font=("Arial", 14))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 2), text=f"No. MHWP: {mhwp_row_count}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 3), text=f"No. Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
+        #canvas.create_text(300, (key_stats_x_position + key_stats_gap * 3), text=f"No. Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 4), text=f"No. Unallocated Patients: {unalocated_patients_row_count}", font=("Arial", 14))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 5 + 10), text=f"No. Journal Entries: {no_journal_entries}", font=("Arial", 14))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 6 + 10), text=f"No. of Patient Records: {no_patient_records}", font=("Arial", 14))
