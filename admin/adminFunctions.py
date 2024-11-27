@@ -70,17 +70,15 @@ class AllocationEdit(tk.Toplevel):
         messagebox.showinfo("Success", "MHWP updated successfully.")
 
     def go_back(self):
-        self.db.close()
         self.destroy()
         self.parent.deiconify()
 
     def on_close(self):
-        self.db.close()
         self.destroy()
 
-class UserEditApp(tk.Toplevel):
+class PatientEditApp(tk.Toplevel):
     def __init__(self, user_id, parent):
-        super(UserEditApp, self).__init__()
+        super(PatientEditApp, self).__init__()
         self.db = Database()
         self.parent = parent
         self.user_id = user_id
@@ -140,17 +138,17 @@ class UserEditApp(tk.Toplevel):
         self.emergency_email_entry.config(state='disabled')
         self.emergency_email_entry.grid(row=6, column=1)
 
-        tk.Label(user_frame, text="Specialization:").grid(row=8, column=0)
-        self.specialization_entry = tk.Entry(user_frame)
-        self.specialization_entry.insert(0, user['specialization'] if user['specialization'] else '')
-        self.specialization_entry.config(state='disabled')
-        self.specialization_entry.grid(row=8, column=1)
+        tk.Label(user_frame, text="Emergency Contact Name:").grid(row=7, column=0)
+        self.emergency_name_entry = tk.Entry(user_frame)
+        self.emergency_name_entry.insert(0, user['emergency_contact_name'] if user['emergency_contact_name'] else '')
+        self.emergency_name_entry.config(state='disabled')
+        self.emergency_name_entry.grid(row=7, column=1)
 
-        #tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
-        #self.is_disabled_var = tk.BooleanVar(value=user['is_disabled'])
-        #self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
-        #self.is_disabled_check.config(state='disabled')
-        #self.is_disabled_check.grid(row=10, column=1)
+        tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
+        self.is_disabled_var = tk.BooleanVar(value=bool(user['is_disabled']))
+        self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
+        self.is_disabled_check.config(state='disabled')
+        self.is_disabled_check.grid(row=10, column=1)
 
         # Toggle Edit/Save Button
         self.toggle_button = tk.Button(self, text="Edit", command=self.toggle_edit_save)
@@ -178,8 +176,8 @@ class UserEditApp(tk.Toplevel):
                 'fName': user_data[4],
                 'lName': user_data[5],
                 'emergency_contact_email': user_data[7],
-                'specialization': user_data[8],
-                #'is_disabled': user_data[9]
+                'emergency_contact_name': user_data[8],
+                'is_disabled': user_data[10]
             }
         else:
             messagebox.showerror("Error", "User not found!")
@@ -194,8 +192,8 @@ class UserEditApp(tk.Toplevel):
             self.fName_entry.config(state='normal')
             self.lName_entry.config(state='normal')
             self.emergency_email_entry.config(state='normal')
-            self.specialization_entry.config(state='normal')
-            #self.is_disabled_check.config(state='normal')
+            self.emergency_name_entry.config(state='normal')
+            self.is_disabled_check.config(state='normal')
 
             self.toggle_button.config(text="Save Changes")  
         
@@ -209,8 +207,8 @@ class UserEditApp(tk.Toplevel):
                 'fName': self.fName_entry.get(),
                 'lName': self.lName_entry.get(),
                 'emergency_contact_email': self.emergency_email_entry.get(),
-                'specialization': self.specialization_entry.get(),
-                #'is_disabled': self.is_disabled_var.get()
+                'emergency_contact_name': self.emergency_name_entry.get(),
+                'is_disabled': self.is_disabled_var.get()
             }
 
             self.toggle_button.config(text="Edit")
@@ -222,8 +220,8 @@ class UserEditApp(tk.Toplevel):
             self.fName_entry.config(state='disabled')
             self.lName_entry.config(state='disabled')
             self.emergency_email_entry.config(state='disabled')
-            self.specialization_entry.config(state='disabled')
-            #self.is_disabled_check.config(state='disabled')
+            self.emergency_name_entry.config(state='disabled')
+            self.is_disabled_check.config(state='disabled')
     
     def save_changes_to_db(self):
         user_relation = self.db.getRelation('User')
@@ -234,8 +232,8 @@ class UserEditApp(tk.Toplevel):
             'fName': self.fName_entry.get(),
             'lName': self.lName_entry.get(),
             'emergency_contact_email': self.emergency_email_entry.get(),
-            'specialization': self.specialization_entry.get(),
-            #'is_disabled': self.is_disabled_var.get()
+            'emergency_contact_name': self.emergency_name_entry.get(),
+            'is_disabled': self.is_disabled_var.get()
         }
         
         for field, new_value in updated_data.items():
@@ -250,7 +248,7 @@ class UserEditApp(tk.Toplevel):
         response = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete this {self.user_type}?")
 
         if response:
-            user_relation.dropRows(id=self.user_id)
+            self.db.delete_patient(patientId=self.user_id)
             messagebox.showinfo("Success", f"{self.user_type} deleted successfully.")
             
             self.db.close()
@@ -264,6 +262,178 @@ class UserEditApp(tk.Toplevel):
     def on_close(self):
         self.db.close()
         self.destroy()
+
+class MHWPEditApp(PatientEditApp):
+    def __init__(self, user_id, parent):
+        super().__init__(user_id, parent)
+
+    def create_ui(self):
+        self.title("Edit User Information")
+
+        # H1 equivalent
+        h1_label = tk.Label(self, text=f"Edit {self.user_type} Information", font=("Arial", 24, "bold"))
+        h1_label.pack()
+
+        user = self.fetch_user_details(self.user_id)
+        self.original_data = user
+
+        # Create labels and entry fields
+        user_frame = tk.Frame(self)
+        user_frame.pack(fill='x', padx=10, pady=5)
+
+        tk.Label(user_frame, text=f"User ID: {user['user_id']}", width=15).grid(row=0, column=0)
+        tk.Label(user_frame, text="Username:").grid(row=1, column=0)
+        self.username_entry = tk.Entry(user_frame)
+        self.username_entry.insert(0, user['username'] if user['username'] else '')
+        self.username_entry.config(state='disabled')
+        self.username_entry.grid(row=1, column=1)
+
+        tk.Label(user_frame, text="Email:").grid(row=2, column=0)
+        self.email_entry = tk.Entry(user_frame)
+        self.email_entry.insert(0, user['email'] if user['email'] else '')
+        self.email_entry.config(state='disabled')
+        self.email_entry.grid(row=2, column=1)
+
+        tk.Label(user_frame, text="Password:").grid(row=3, column=0)
+        self.password_entry = tk.Entry(user_frame, show="*")
+        self.password_entry.insert(0, user['password'] if user['password'] else '')
+        self.password_entry.config(state='disabled')
+        self.password_entry.grid(row=3, column=1)
+
+        tk.Label(user_frame, text="First Name:").grid(row=4, column=0)
+        self.fName_entry = tk.Entry(user_frame)
+        self.fName_entry.insert(0, user['fName'] if user['fName'] else '')
+        self.fName_entry.config(state='disabled')
+        self.fName_entry.grid(row=4, column=1)
+
+        tk.Label(user_frame, text="Last Name:").grid(row=5, column=0)
+        self.lName_entry = tk.Entry(user_frame)
+        self.lName_entry.insert(0, user['lName'] if user['lName'] else '')
+        self.lName_entry.config(state='disabled')
+        self.lName_entry.grid(row=5, column=1)
+
+        tk.Label(user_frame, text="Emergency Contact Email:").grid(row=6, column=0)
+        self.emergency_email_entry = tk.Entry(user_frame)
+        self.emergency_email_entry.insert(0, user['emergency_contact_email'] if user['emergency_contact_email'] else '')
+        self.emergency_email_entry.config(state='disabled')
+        self.emergency_email_entry.grid(row=6, column=1)
+
+        tk.Label(user_frame, text="Emergency Contact Name:").grid(row=7, column=0)
+        self.emergency_name_entry = tk.Entry(user_frame)
+        self.emergency_name_entry.insert(0, user['emergency_contact_name'] if user['emergency_contact_name'] else '')
+        self.emergency_name_entry.config(state='disabled')
+        self.emergency_name_entry.grid(row=7, column=1)
+
+        tk.Label(user_frame, text="Specialization:").grid(row=8, column=0)
+        self.specialization_entry = tk.Entry(user_frame)
+        self.specialization_entry.insert(0, user['specialization'] if user['specialization'] else '')
+        self.specialization_entry.config(state='disabled')
+        self.specialization_entry.grid(row=8, column=1)
+
+        tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
+        self.is_disabled_var = tk.BooleanVar(value=bool(user['is_disabled']))
+        self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
+        self.is_disabled_check.config(state='disabled')
+        self.is_disabled_check.grid(row=10, column=1)
+
+        # Toggle Edit/Save Button
+        self.toggle_button = tk.Button(self, text="Edit", command=self.toggle_edit_save)
+        self.toggle_button.pack(pady=0)
+
+        # To speak to Tim about implementing for MHWPs
+        # Delete Button
+        #self.delete_button = tk.Button(self, text=f"Delete {self.user_type}", command=self.delete_user)
+        #self.delete_button.pack(pady=0)
+
+        # Back Button
+        self.back_button = tk.Button(self, text="Back", command=self.go_back)
+        self.back_button.pack(pady=0)
+
+    def fetch_user_details(self, user_id):
+        user_relation = self.db.getRelation('User')
+        user = user_relation.getRowsWhereEqual('user_id', user_id)
+
+        if user:
+            user_data = user[0]
+            return {
+                'user_id': user_data[0],
+                'username': user_data[1],
+                'email': user_data[2],
+                'password': user_data[3],
+                'fName': user_data[4],
+                'lName': user_data[5],
+                'emergency_contact_email': user_data[7],
+                'emergency_contact_name': user_data[8],
+                'specialization': user_data[9],
+                'is_disabled': user_data[10]
+            }
+        else:
+            messagebox.showerror("Error", "User not found!")
+            return {}
+
+    def toggle_edit_save(self):
+        if self.username_entry.cget('state') == 'disabled':
+            # Enable all the entry fields for editing
+            self.username_entry.config(state='normal')
+            self.email_entry.config(state='normal')
+            self.password_entry.config(state='normal')
+            self.fName_entry.config(state='normal')
+            self.lName_entry.config(state='normal')
+            self.emergency_email_entry.config(state='normal')
+            self.emergency_name_entry.config(state='normal')
+            self.specialization_entry.config(state='normal')
+            self.is_disabled_check.config(state='normal')
+
+            self.toggle_button.config(text="Save Changes")  
+        
+        else:
+            self.save_changes_to_db()
+            
+            updated_data = {
+                'username': self.username_entry.get(),
+                'email': self.email_entry.get(),
+                'password': self.password_entry.get(),
+                'fName': self.fName_entry.get(),
+                'lName': self.lName_entry.get(),
+                'emergency_contact_email': self.emergency_email_entry.get(),
+                'emergency_contact_name': self.emergency_name_entry.get(),
+                'specialization': self.specialization_entry.get(),
+                'is_disabled': self.is_disabled_var.get()
+            }
+
+            self.toggle_button.config(text="Edit")
+
+            # disable fields again after saving
+            self.username_entry.config(state='disabled')
+            self.email_entry.config(state='disabled')
+            self.password_entry.config(state='disabled')
+            self.fName_entry.config(state='disabled')
+            self.lName_entry.config(state='disabled')
+            self.emergency_email_entry.config(state='disabled')
+            self.emergency_name_entry.config(state='disabled')
+            self.specialization_entry.config(state='disabled')
+            self.is_disabled_check.config(state='disabled')
+
+    def save_changes_to_db(self):
+        user_relation = self.db.getRelation('User')
+        updated_data = {
+            'username': self.username_entry.get(),
+            'email': self.email_entry.get(),
+            'password': self.password_entry.get(),
+            'fName': self.fName_entry.get(),
+            'lName': self.lName_entry.get(),
+            'emergency_contact_email': self.emergency_email_entry.get(),
+            'emergency_contact_name': self.emergency_name_entry.get(),
+            'specialization': self.specialization_entry.get(),
+            'is_disabled': self.is_disabled_var.get()
+        }
+        
+        for field, new_value in updated_data.items():
+            if self.original_data[field] != new_value:
+                user_relation.editFieldInRow(self.user_id, field, new_value)
+        
+        self.db.close()
+        messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
 
 class UserSelectionApp(tk.Toplevel):
     def __init__(self, user_type, parent):
@@ -336,7 +506,10 @@ class UserSelectionApp(tk.Toplevel):
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = UserEditApp(self.selected_user_id, self)
+            if self.user_type == "Patient":
+                app = PatientEditApp(self.selected_user_id, self)
+            else:
+                app = MHWPEditApp(self.selected_user_id, self)
         else:
             messagebox.showinfo(f"No {self.user_type} Selected", f"Please select a {self.user_type} to continue.")
 
@@ -353,10 +526,11 @@ class AllocationSelection(UserSelectionApp):
         super().__init__(user_type, parent)
 
     def edit_user(self):
-        selected_user_id = self.selected_user_id.get()
-        if selected_user_id != -1:
+        selected_item = self.tree.selection()
+        if selected_item:
+            self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = AllocationEdit(selected_user_id, self)
+            app = AllocationEdit(self.selected_user_id, self)
         else:
             messagebox.showinfo("No Patient Selected", "Please select a patient to continue.")
 
@@ -504,10 +678,9 @@ class KeyStatistics(tk.Toplevel):
         mhwps = self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP')
         mhwp_row_count = len(mhwps)
 
-        # doesn't seem to be working - TO SPEAK TO TIM
         # calculating the number of disabled accounts
-        #disabled_accounts = self.db.getRelation('User').getWhereEqual('is_disabled', True)
-        #disabled_accounts_row_count = len(disabled_accounts)
+        disabled_accounts = self.db.getRelation('User').getRowsWhereEqual('is_disabled', True)
+        disabled_accounts_row_count = len(disabled_accounts)
 
         # calculating the number of unalocated patients
         unalocated_patients = self.db.getRelation('Allocation').getRowsWhereEqual('mhwp_id', "")
@@ -528,7 +701,7 @@ class KeyStatistics(tk.Toplevel):
         canvas.create_text(300, (key_stats_x_position - 10), text="Key Statistics", font=("Arial", 16, "bold"))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 1), text=f"No. Patients: {patient_row_count}", font=("Arial", 14))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 2), text=f"No. MHWP: {mhwp_row_count}", font=("Arial", 14))
-        #canvas.create_text(300, (key_stats_x_position + key_stats_gap * 3), text=f"No. Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
+        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 3), text=f"No. Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 4), text=f"No. Unallocated Patients: {unalocated_patients_row_count}", font=("Arial", 14))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 5 + 10), text=f"No. Journal Entries: {no_journal_entries}", font=("Arial", 14))
         canvas.create_text(300, (key_stats_x_position + key_stats_gap * 6 + 10), text=f"No. of Patient Records: {no_patient_records}", font=("Arial", 14))
