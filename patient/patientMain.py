@@ -119,10 +119,6 @@ class Patient:
 
         self.apply_initial_colors()
 
-    def exitUser(self):
-        subprocess.Popen(["python3", "login/logout.py"])
-        self.root.destroy()
-
     def apply_initial_colors(self):
         # Define color mapping based on mood values
         color_mapping = {
@@ -268,16 +264,11 @@ class Patient:
         subprocess.Popen(["python3", "patient/cancel.py"])
         self.root.destroy()
 
+    def exitUser(self):
+        # Logout 
+        subprocess.Popen(["python3", "login/logout.py"])
+        self.root.destroy()
 
-# logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
-# logout_button.pack()
-
-#     def exitUser(self):
-#         pass
-        ######### Inputs #########
-        # username = self.username_entry.get()
-        # password = self.password_entry.get()
-        # role = self.user_role.get()
 
 # Run the application
 if __name__ == "__main__":
