@@ -8,6 +8,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database  # Import Database
 from database.entities import Appointment  
 from database.dataStructs import Row  
+from sessions import Session
+
 # import patient.patientMain
 # import admin.adminFunctions
 # import mhwp.mhwpMain
@@ -22,7 +24,8 @@ class LoginPage:
 
         self.db = Database(verbose=True)
         # Initialize the session instance 
-        # self.session = Session()  
+        self.session = Session()  
+        self.session.open()
 
         # H1 equivalent
         h1_label = tk.Label(root, text="Signing in.", font=("Arial", 24, "bold"))
@@ -62,16 +65,25 @@ class LoginPage:
         username = self.username_entry.get()
         password = self.password_entry.get()
         role = self.user_role.get()
-        # Check credentials (replace with real validation logic)
-        if self.correctDetails(username, password, role):
-            # self.sessionStart()
+        
+        user_relation = self.db.getRelation("User")
+        user_data = user_relation.getRowsWhereEqual('username',username)[0]
+        verified = bool(user_data[3] == password)
+
+        if verified:
+            ### extract user details as session variables
+            for key, value in zip(user_data.labels, user_data.values):
+                if key != "password": ## skip password
+                    self.session.set(key=key,value=value)
+            print(self.session)
+            self.session.close()
             self.findMainPage(username, password, role)
         else:
             messagebox.showerror("Login Failed", "Invalid username or password")
-    
+
     def correctDetails(self, username, password, role):
         try:
-            self.db = Database()
+            
             # self.db.printAll()
             # Query the database for the user
             user_relation = self.db.getRelation("User")
@@ -81,6 +93,8 @@ class LoginPage:
         except Exception as e:
             messagebox.showerror("Database Error", f"An error occurred while checking credentials: {e}")
             return False
+        
+
 
     def findMainPage(self, username, password, role):
         # Takes user to the main page

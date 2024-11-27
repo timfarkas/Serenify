@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
 from database.entities import Patient, JournalEntry, MoodEntry
 from database.initDBwithDummyData import initDummyDatabase
-# from sessions import Session
+from sessions import Session
 from datetime import datetime
 import pandas as pd
 
@@ -24,20 +24,24 @@ import pandas as pd
 
 #as sessions etc dont work yet -- for now current user_id will be hardcoded
 #that needs to be resolved and automater though
-current_user_id = 3
+
 
 class Patient:
     def __init__(self, root, user_id=None):
         # Initialize the session instance 
-        # self.session = Session(user_id=user_id)
-        # self.sessionGet()
+        self.session = Session()
+        self.session.open()
+        self.current_user_id = self.session.getId()
 
         self.root = root
         self.root.title("Patient")
         self.root.geometry("700x700")
 
+        db = Database()
+        self.patientName = db.getRelation("User").getRowsWhereEqual("user_id",self.current_user_id)[0][4]
+
         # Title label
-        self.title_label = tk.Label(root, text="Welcome back", font=("Arial", 24, "bold"))
+        self.title_label = tk.Label(root, text=f"Welcome back, {self.patientName}!", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=6, pady=10)
 
         #Mood of the day

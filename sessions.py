@@ -70,7 +70,7 @@ class Session:
         
 
     def __repr__(self):
-        return f"Session(session_id={self.session_id}, user_id={self.user_id}, data={self.session_data})"
+        return f"Session \n({self.session_data})"
 
 session = Session()
 
