@@ -172,7 +172,7 @@ class EditInfo:
                     messagebox.showerror("Password Mismatch", "The new passwords do not match.")
                     return
 
-            newValues =(username, email, new_password if new_password else current_password, fname, lname, x, emergency_contact_email, emergency_contact_name, y, True)
+            newValues =(username, email, new_password if new_password else current_password, fname, lname, x, emergency_contact_email, emergency_contact_name, y, False)
             try:
                 # Try to perform the update
                 user = db.getRelation("User")
