@@ -2,9 +2,9 @@ import os
 import sys
 
 from .database import Database
-from .entities import UserError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
+from .entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 import datetime
-
+import traceback
 
 # Test functions
 def initDummyDatabase(db: Database):
@@ -234,11 +234,11 @@ def initDummyDatabase(db: Database):
         db.close()
 
 
-    except (UserError, RecordError) as e:
-        print(f"An error occurred: {e}")
+    except (Exception) as e:
+        print("An error occurred:")
+        traceback.print_exc()
 
 
 if __name__ == "__main__":
     db = Database(overwrite=True)
     initDummyDatabase(db)
-    db.close()
