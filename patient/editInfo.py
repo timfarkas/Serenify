@@ -103,7 +103,8 @@ class EditInfo:
         user_info = pd.DataFrame(user_info)
         if not user_info.empty:
             #Accessing the columns using the numeric index
-            #1 - username; 2 - email; 3 - password; 4 - first name; 5 - last name; 7 - emergency contact email
+            #1 - username; 2 - email; 3 - password; 4 - first name; 5 - last name; 
+            #8 - emergency contact name; 9 - emergency contact email
             # keeping password entries empty 
             self.username_entry.insert(0, user_info.iloc[0][1] if pd.notna(user_info.iloc[0][1]) else "")
             self.email_entry.insert(0, user_info.iloc[0][2] if pd.notna(user_info.iloc[0][2]) else "")

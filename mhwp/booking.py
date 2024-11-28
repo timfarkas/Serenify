@@ -7,12 +7,8 @@ import smtplib
 from email.mime.text import MIMEText
 
 
-# Fixed import path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-sys.path.append(project_root)
-
-
-from database.database import Database
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database import Database
 from database.entities import Appointment
 from database.dataStructs import Row
 
