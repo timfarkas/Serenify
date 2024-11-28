@@ -10,7 +10,7 @@ if project_root not in sys.path:
 
 # Now absolute imports will work
 from .database import Database
-from .entities import UserError, RecordError,Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment,MoodEntry,MHWPReview,ChatContent,Forum,Notification
+from .entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment,MoodEntry,MHWPReview,ChatContent,Forum,Notification
 import datetime
 
 
