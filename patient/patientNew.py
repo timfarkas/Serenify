@@ -62,7 +62,7 @@ class New_patient():
         complete_button = tk.Button(patient_root, text="Submit Information", command=self.submit_user)
         complete_button.grid(row=3, column=0, columnspan=2, pady=(10, 5))
 
-        login_button = tk.Button(patient_root, text="Login", command=self.completeUser)
+        login_button = tk.Button(patient_root, text="Login", command=self.backToLogin)
         login_button.grid(row=4, column=0, columnspan=2, pady=(0, 10))
 
     
@@ -98,8 +98,8 @@ class New_patient():
             # Handle specific exceptions raised by editRow
             messagebox.showerror("Update Failed", f"Error adding new patient: {str(e)}")
 
-    def completeUser(self):
-        subprocess.Popen(["python3", "login/login.py"])
+    def backToLogin(self):
+        subprocess.Popen(["python3", "-m", "login.login"])
         self.root.destroy()
 
 if __name__ == "__main__":
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     app = New_patient(root)
     root.mainloop()
 
-# Used for debugging
+####### Used for debugging
 # db = Database()
 # print("Getting and printing relation 'User':")
 # userRelation = db.getRelation('User')
