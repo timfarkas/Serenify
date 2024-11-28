@@ -7,10 +7,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 
-# Fixed import path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
 from database import Database
 from database.entities import Appointment
 from database.dataStructs import Row

@@ -3,7 +3,6 @@ from tkinter import messagebox
 import subprocess # This allows us to open other files
 import sys
 import os
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database  # Import Database
 from database.entities import Appointment  
