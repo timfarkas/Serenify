@@ -3,15 +3,21 @@ import pandas as pd
 import webbrowser
 import subprocess
 from tkinter import messagebox
-
-#search bar to  exercises - could be improved??
-#extra feature - exercise tracking?? maybe a tick box next to exercise that can be 'marked as done' and then stats on that as well
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sessions import Session
 
 class Exercises:
     def __init__(self, root):
         self.root = root
         self.root.title("Mental Health Exercises")
         self.root.geometry("1000x800")
+
+        # Initialize the session instance 
+        self.session = Session()
+        self.session.open()
+        self.current_user_id = self.session.getId()
 
         # Search Bar and Clear Button
         self.search_frame = tk.Frame(root)
@@ -21,8 +27,6 @@ class Exercises:
         self.search_entry.grid(row=0, column=0, pady=10)
         self.search_button = tk.Button(self.search_frame, text="Search", command=self.search_exercises) 
         self.search_button.grid(row=0, column=1, pady=5)
-        # self.clear_button = tk.Button(self.search_frame, text="Clear") #command=self.clear_search,
-        # self.clear_button.grid(row=1, column=1)
 
         #Back button
         self.back_button = tk.Button(root, text="Back to the main page", command=self.backButton)
@@ -87,7 +91,6 @@ class Exercises:
         row = 2
         col = 0
         # Create buttons for each category and its exercises
-        # self.buttons = {}  # Dictionary to store button references by category and button index
         for category, exercises in self.exercises.items():
             # Add category label
             label = tk.Label(self.root, text=category, font=("Arial", 18, "bold"), fg="light blue")
@@ -102,10 +105,6 @@ class Exercises:
                 if col == 4:  # Move to next row after every 4 buttons
                     col = 0
                     row += 1
-                # # Store the button in the dictionary
-                # if category not in self.buttons:
-                #     self.buttons[category] = []
-                # self.buttons[category].append(button)
 
 
     def open_link(self, url):

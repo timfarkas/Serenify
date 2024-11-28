@@ -16,10 +16,6 @@ import pandas as pd
 # initDummyDatabase(db)
 # db.close()
 
-#as sessions etc dont work yet -- for now current user_id will be hardcoded
-#that needs to be resolved and automater though
-current_user_id = 4
-
 class Patient:
     def __init__(self, root, user_id=None):
         # Initialize the session instance 
@@ -128,7 +124,7 @@ class Patient:
         try:
             db = Database()
             user_info = db.getRelation("User")
-            user_info = user_info.getRowsWhereEqual('user_id', current_user_id)
+            user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
             user_info = pd.DataFrame(user_info)
             if not user_info.empty:
                 #Accessing the is_disabled column using the numeric index - 10 (True/False)
@@ -196,7 +192,7 @@ class Patient:
             messagebox.showwarning("No Mood Selected", "Please select a mood before submitting.")
             return
         else:
-            mood_entry = MoodEntry(moodentry_id = None, patient_id=current_user_id, moodscore=self.selected_mood, comment=mood_comment, timestamp=datetime.now())
+            mood_entry = MoodEntry(moodentry_id = None, patient_id=self.current_user_id, moodscore=self.selected_mood, comment=mood_comment, timestamp=datetime.now())
             db = Database() # opens data system
             db. insert_mood_entry(mood_entry)
             db. close()
@@ -249,7 +245,7 @@ class Patient:
 
         if journal_text:
             # self.journal_entries.append(journal_text)
-            journal_entry = JournalEntry(entry_id = None, patient_id=current_user_id, text=journal_text, timestamp=datetime.now())
+            journal_entry = JournalEntry(entry_id = None, patient_id=self.current_user_id, text=journal_text, timestamp=datetime.now())
             db = Database() # opens data system
             db. insert_journal_entry(journal_entry)
             db. close()
@@ -266,7 +262,7 @@ class Patient:
             # Fetch journal entries
             db = Database()
             journal_entries = db.getRelation("JournalEntry")
-            filtered_rows = journal_entries.getRowsWhereEqual('patient_id', current_user_id)
+            filtered_rows = journal_entries.getRowsWhereEqual('patient_id', self.current_user_id)
             self.journal_df = pd.DataFrame(filtered_rows)
 
             # Search the DataFrame for the term
@@ -283,7 +279,7 @@ class Patient:
     def view_all_journal_entries(self):
         db = Database()
         journal_entries = db.getRelation("JournalEntry")
-        filtered_rows = journal_entries.getRowsWhereEqual('patient_id', current_user_id)
+        filtered_rows = journal_entries.getRowsWhereEqual('patient_id', self.current_user_id)
         self.journal_df = pd.DataFrame(filtered_rows)
 
         if not self.journal_df.empty:

@@ -7,22 +7,23 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
 import pandas as pd
 import subprocess
+from sessions import Session
 from database.initDBwithDummyData import initDummyDatabase
 ### Initialize the database with dummy data and save it
-db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
-initDummyDatabase(db)
-# db.close()
-
-##SHOULD WE ADD EMERGENCY CONTACT NAME except just email
-current_user_id = 4 #change when sessions become active 
-## Hashing passwords??
+# db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
+# initDummyDatabase(db)
+# # db.close()
 
 class EditInfo:
-    def __init__(self, root, current_user_id):
+    def __init__(self, root):
+        # Initialize the session instance 
+        self.session = Session()
+        self.session.open()
+        self.current_user_id = self.session.getId()
+
         self.root = root
         self.root.title("Patient")
         self.root.geometry("500x700")
-        self.current_user_id = current_user_id
 
         # Title label
         self.title_label = tk.Label(root, text="Personal Information", font=("Arial", 24, "bold"))
