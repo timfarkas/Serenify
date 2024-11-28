@@ -5,7 +5,6 @@ import sys
 import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "database"))
 sys.path.append(project_root)  # Add the project root to sys.path
-
 from database.database import Database  # Import Database
 
 class New_patient():
@@ -25,55 +24,67 @@ class New_patient():
         h2_label = tk.Label(patient_root, text="Welcome! Please fill out the below:", font=("Arial", 18, "bold"))
         h2_label.pack()
 
-        # Input fields stored
-        self.name_entry = tk.Entry(patient_root)
-        self.age_entry = tk.Entry(patient_root)
-        self.address_entry = tk.Entry(patient_root)
-        self.diagnosis_entry = tk.Entry(patient_root)
-        self.email_entry = tk.Entry(patient_root)
-        self.mobile_entry = tk.Entry(patient_root)
-        self.ice_entry = tk.Entry(patient_root)
-
         # Personal information fieldset
-        fieldset = tk.LabelFrame(patient_root, text="Personal Information", padx=10, pady=10)
-        fieldset.pack(padx=10, pady=10)
+        form_frame = tk.Frame(patient_root)
+        form_frame.pack(padx=10, pady=10)
 
-        tk.Label(fieldset, text="First Name:").grid(row=0, column=0)
-        self.fName_entry.grid(row=0, column=1)
-        
-        tk.Label(fieldset, text="Last Name:").grid(row=0, column=0)
-        self.lName_entry.grid(row=0, column=1)
+        fieldset = tk.LabelFrame(form_frame, text="Personal Information", padx=10, pady=10)
+        fieldset.grid(row=0, column=0, padx=10, pady=10)
 
-        tk.Label(fieldset, text="Age:").grid(row=1, column=0)
-        self.age_entry.grid(row=1, column=1)
+        # Input fields stored
+        self.fName_entry = tk.Entry(fieldset)
+        self.lName_entry = tk.Entry(fieldset)
+        self.age_entry = tk.Entry(fieldset)
+        self.address_entry = tk.Entry(fieldset)
+        self.diagnosis_entry = tk.Entry(fieldset)
+        self.email_entry = tk.Entry(fieldset)
+        self.mobile_entry = tk.Entry(fieldset)
+        self.ice_entry = tk.Entry(fieldset)
+        self.username_entry = tk.Entry(fieldset)
+        self.password_entry = tk.Entry(fieldset)
 
-        tk.Label(fieldset, text="Home Address:").grid(row=2, column=0)
-        self.address_entry.grid(row=2, column=1)
+        # Grid layout for form fields
+        tk.Label(fieldset, text="First Name:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        self.fName_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Label(fieldset, text="Diagnosis:").grid(row=3, column=0)
-        self.diagnosis_entry.grid(row=3, column=1)
+        tk.Label(fieldset, text="Last Name:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.lName_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(fieldset, text="Email:").grid(row=4, column=0)
-        self.email_entry.grid(row=4, column=1)
+        tk.Label(fieldset, text="Age:").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        self.age_entry.grid(row=2, column=1, padx=5, pady=5)
 
-        tk.Label(fieldset, text="Mobile:").grid(row=5, column=0)
-        self.mobile_entry.grid(row=5, column=1)
+        tk.Label(fieldset, text="Home Address:").grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        self.address_entry.grid(row=3, column=1, padx=5, pady=5)
 
-        tk.Label(fieldset, text="ICE Name and Mobile:").grid(row=6, column=0)
-        self.ice_entry.grid(row=6, column=1)
-        
-        tk.Label(fieldset, text="Username:").grid(row=6, column=0)
-        self.username_entry.grid(row=6, column=1)
-        
-        tk.Label(fieldset, text="Password:").grid(row=6, column=0)
-        self.password_entry.grid(row=6, column=1)
+        tk.Label(fieldset, text="Diagnosis:").grid(row=4, column=0, sticky="w", padx=5, pady=5)
+        self.diagnosis_entry.grid(row=4, column=1, padx=5, pady=5)
 
+        tk.Label(fieldset, text="Email:").grid(row=5, column=0, sticky="w", padx=5, pady=5)
+        self.email_entry.grid(row=5, column=1, padx=5, pady=5)
 
-        complete_button = tk.Button(root, text="Submit Information", command=self.submit_user)
-        complete_button.grid(row=11, column=0, columnspan = 6, pady=5)
+        tk.Label(fieldset, text="Mobile:").grid(row=6, column=0, sticky="w", padx=5, pady=5)
+        self.mobile_entry.grid(row=6, column=1, padx=5, pady=5)
 
-        complete_button = tk.Button(root, text="Login", command=self.completeUser)
-        complete_button.grid(row=11, column=0, columnspan = 6, pady=5)
+        tk.Label(fieldset, text="ICE Name and Mobile:").grid(row=7, column=0, sticky="w", padx=5, pady=5)
+        self.ice_entry.grid(row=7, column=1, padx=5, pady=5)
+
+        tk.Label(fieldset, text="Username:").grid(row=8, column=0, sticky="w", padx=5, pady=5)
+        self.username_entry.grid(row=8, column=1, padx=5, pady=5)
+
+        tk.Label(fieldset, text="Password:").grid(row=9, column=0, sticky="w", padx=5, pady=5)
+        self.password_entry.grid(row=9, column=1, padx=5, pady=5)
+
+        # Submit Button
+        complete_button = tk.Button(patient_root, text="Submit Information", command=self.submit_user)
+        complete_button.pack(pady=5)
+
+        # Login Button
+        complete_button = tk.Button(patient_root, text="Login", command=self.completeUser)
+        complete_button.pack(pady=5)
+
+        db = Database()
+        db.printAll()
+        db.close()
     
     def submit_user(self):
         # Retrieve input values and add them to the database
@@ -119,6 +130,7 @@ class New_patient():
         
             newValues =(username, email, password, fName, lName, address, age, diagnosis)
         try:
+            db = Database()
             # Try to perform the update
             user = db.getRelation("User")
             user.insertRow(newValues=list(newValues))
