@@ -11,7 +11,18 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'da
 sys.path.append(project_root)
 from .chatroom import startchatroom
 from .globalvariables import db
+from mhwp.booking import MHWPAppointmentManager
+# from .mhwp_dashboard import open_review
 
+# def sendnotifiation(senderID,recieverID,Content):
+#     newnotify = Notification(
+#                     user_id=recieverID,
+#                     source_id=senderID,
+#                     notifycontent=Content,
+#                     new=True,
+#                     timestamp=datetime.now(),
+#                 )
+#                 db.insert_notification(newnotify)
 
 def opennotification(userID):
     def refresh_treeview():
@@ -27,10 +38,12 @@ def opennotification(userID):
         # Add rows to Treeview
         counter = 0
         for i in usernotification:
-            if counter == 10:
+            print(i)
+            if counter == 30:
                 break
-            sourceuser = db.getRelation('User').getRowsWhereEqual('user_id', i[3])
-            if i[2] == "NM":
+
+            if i[2] == "Newchat":
+                sourceuser = db.getRelation('User').getRowsWhereEqual('user_id', i[3])
                 tree.insert(
                     "",
                     "end",
@@ -41,8 +54,29 @@ def opennotification(userID):
                             i[0]),
                     tags=("new" if i[4] else "old")
                 )
+            elif i[2] == "Newappointment":
+                tree.insert(
+                    "",
+                    "end",
+                    values=("You have a new appointment",
+                            "System",
+                            i[5].strftime("%Y-%m-%d %H:%M:%S"),
+                            i[3],
+                            i[0]),
+                    tags=("new" if i[4] else "old")
+                )
+            elif i[2] == "Newreview":
+                tree.insert(
+                    "",
+                    "end",
+                    values=("You have a new patient review",
+                            "System",
+                            i[5].strftime("%Y-%m-%d %H:%M:%S"),
+                            i[3],
+                            i[0]),
+                    tags=("new" if i[4] else "old")
+                )
             counter += 1
-
     # Create the main application window
     root = Tk()
     root.title("My message box")
@@ -71,27 +105,34 @@ def opennotification(userID):
     def on_row_selected(event):
         """Handles the double-click event on a Treeview row."""
         # Get the selected item
+
         selected_item = tree.selection()[0]
         item_values = tree.item(selected_item, "values")  # Get the values of the selected item
         print("Selected item values:", item_values)
-
-        if userID > int(item_values[3]):
-            patientID = item_values[3]
-            identity = "m"
-        elif userID < int(item_values[3]):
-            patientID = userID
-            identity = "p"
-
-        # Update the 'new' field in the Notification relation
         messageID = int(item_values[4])  # Extract MessageID
         print(f"Updating Message ID: {messageID}")
         allnotification.editFieldInRow(messageID, 'new', False)
 
         # Refresh the Treeview after the update
         refresh_treeview()
+        if item_values[0]=="You have a new chat":
+            if userID > int(item_values[3]):
+                patientID = item_values[3]
+                identity = "m"
+            elif userID < int(item_values[3]):
+                patientID = userID
+                identity = "p"
+            startchatroom(int(patientID), identity)
+        elif item_values[0] == "You have a new appointment":
+            MHWPAppointmentManager(userID)
+        elif item_values[0] == "You have a new patient review":
+            pass
+            # opeen(userID)
+            # Update the 'new' field in the Notification relation
+
 
         # Start the chatroom
-        startchatroom(int(patientID), identity)
+
 
     # Configure tag styles
     tree.tag_configure("old", foreground="gray")

@@ -14,15 +14,27 @@ from .chatroom import startchatroom
 from .mhwp_dashboard import openmhwpdashboard
 from .forum import openforsum
 from .mhwp_rating import openrating
+from mhwp.booking import MHWPAppointmentManager
+from patient.exercises import Exercises
+from .patient_dashboard import openpatientdashboard
 
-global db,userID
-userID=2
+global db
+userID=5
+openmhwpdashboard(userID)
 
-# openmhwpdashboard(userID)
-# openrating(user ID)
-opennotification(userID)
-# openforsum(userID)
+# openpatientdashboard(userID)
+# openrating(userID)
+# opennotification(userID)
+# # openforsum(userID)
+# Exercises(userID)
+#
 
+# root = tk.Tk()
+# MHWPAppointmentManager(root,userID)
+
+
+
+# root.mainloop()
 db.close()
 
 
