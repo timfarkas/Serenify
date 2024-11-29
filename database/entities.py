@@ -1,7 +1,8 @@
 from datetime import datetime
 import re
+import os 
 
-#
+
 __all__ = [
     'InvalidDataError',
     'User',
@@ -374,7 +375,7 @@ class PatientRecord:
     """A class to represent a patient record entry."""
 
     def __init__(self, record_id: int = None, patient_id: int = None, mhwp_id: int = None, notes: str = '',
-                 conditions: list = None):
+                 conditions: list = None, conditions_file : str = 'conditions.txt'):
         """
         Initialize a PatientRecord entry.
 
@@ -392,13 +393,24 @@ class PatientRecord:
         self.notes = notes
         self.conditions = conditions
 
+        app_directory = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+        conditions_file = os.path.join(app_directory, conditions_file)
+
+        try:
+            with open(conditions_file, 'r') as file:
+                self.valid_conditions_list = [re.sub(r'\(.*?\)', '', line).strip() for line in file.readlines()]
+        except FileNotFoundError:
+            raise InvalidDataError(f"Conditions file '{conditions_file}' not found.")
+        except Exception as e:
+            raise InvalidDataError(f"An error occurred while loading conditions file: {str(e)}")
+
         success = self.checkValidData()
 
         if not success:
             raise InvalidDataError("Data validity check failed.")
 
     @staticmethod
-    def checkValidDataStatic(record_id, patient_id, mhwp_id, notes, conditions):
+    def checkValidDataStatic(record_id, patient_id, mhwp_id, notes, conditions, validConditions : list = None):
         if record_id is not None and not isinstance(record_id, int):
             raise InvalidDataError("Record ID must be an integer if provided.")
 
@@ -418,14 +430,18 @@ class PatientRecord:
             raise InvalidDataError("Notes must not exceed 500 words.")
 
         if conditions is None:
-            raise InvalidDataError("Conditions must not be None.")
-        if not isinstance(conditions, list):
+            raise InvalidDataError("Conditions must be a list, not None. Pass an empty list if there are no conditions.")
+        elif not isinstance(conditions, list):
             raise InvalidDataError("Conditions must be a list.")
+        else: ## conditions is a list
+            for condition in conditions:
+                if validConditions is not None and condition not in validConditions:
+                    raise InvalidDataError(f"Condition '{condition}' was not recognized as valid condition.")
 
         return True
 
     def checkValidData(self):
-        return self.checkValidDataStatic(self.record_id, self.patient_id, self.mhwp_id, self.notes, self.conditions)
+        return self.checkValidDataStatic(self.record_id, self.patient_id, self.mhwp_id, self.notes, self.conditions, self.valid_conditions_list)
 
 
 class Allocation:

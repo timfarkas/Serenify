@@ -947,6 +947,7 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(appointment_data.iloc[0]['room_name'], 'Room 101')
 
     def test_insert_patient_record(self):
+        # Positive test case: Valid patient record
         patient_record = PatientRecord(
             patient_id=1,
             mhwp_id=2,
@@ -959,6 +960,26 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(record.iloc[0]['patient_id'], 1)
         self.assertEqual(record.iloc[0]['notes'], 'Patient is recovering well.')
         self.assertEqual(record.iloc[0]['conditions'], ['Anxiety', 'Depression'])
+
+        # Negative test case: Invalid patient record with non-existent condition
+        with self.assertRaises(InvalidDataError):
+            invalid_patient_record = PatientRecord(
+                patient_id=1,
+                mhwp_id=2,
+                notes='Patient is recovering well.',
+                conditions=['NonExistentCondition']
+            )
+            self.db.insert_patient_record(invalid_patient_record)
+
+        # Negative test case: Invalid patient record with too many notes
+        with self.assertRaises(InvalidDataError):
+            invalid_patient_record = PatientRecord(
+                patient_id=1,
+                mhwp_id=2,
+                notes=' '.join(['word'] * 501),  # 501 words
+                conditions=['Anxiety']
+            )
+            self.db.insert_patient_record(invalid_patient_record)
 
     def test_insert_allocation(self):
         allocation = Allocation(
