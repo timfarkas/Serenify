@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import messagebox
 import subprocess # This allows us to open other files
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database.entities import PatientRecord
 from database import Database
 # from database.entities import User, PatientRecord
 # from database.initDBwithDummyData import initDummyDatabase
@@ -88,14 +89,15 @@ class PatientRecords:
         self.save_button.grid(row=2, column=1, pady=10, sticky="e")
 
 
-    def load_patient_records(self, event):
+    def load_patient_records(self, event=None):
         """Loads selected patient's records into the text box."""
         selected_index = self.patient_listbox.curselection()
         if not selected_index:
             return
 
         selected_patient = self.patients.iloc[selected_index[0]]
-        patient_id = selected_patient[0] 
+        patient_id = selected_patient[0]
+        #db.close()
 
         #Loading patient data
         db = Database()
@@ -122,35 +124,108 @@ class PatientRecords:
 
     def save_note(self):
         """Saves the notes for the selected patient."""
+        # Get selected patient index and validate selection
         selected_index = self.patient_listbox.curselection()
         if not selected_index:
             messagebox.showwarning("No Patient Selected", "Please select a patient to save notes.")
             return
-
-        patient_id = self.patients[selected_index[0]]["user_id"]
-        notes = self.notes_entry.get()
-        
-        if not notes:
-            messagebox.showwarning("Incomplete Data", "Please provide a note.")
+        # Extract patient ID and new note text
+        patient_id = int(self.patients.iloc[selected_index[0]][0]) # manually typecasting as otherwise it throws a type error
+        new_note = self.notes_entry.get()
+        if not new_note:
+            messagebox.showwarning("Incomplete Data", "Please provide notes.")
             return
 
-        ####### Save to database
+        try:
+            # Connect to database and get existing records
+            db = Database()
+            records_relation = db.getRelation("PatientRecord")
+            existing_records = records_relation.getRowsWhereEqual('patient_id', patient_id)
+
+            #Initialise variables for existing data
+            existing_notes = ""
+            conditions = []
+            if existing_records:
+                existing_notes = existing_records[0][3]
+                conditions = existing_records[0][4]
+
+            # Combine existing notes with new note
+            combined_notes = f"{existing_notes}\nDiagnosis: ['Depression']\n\nNotes: {new_note}" if existing_notes else new_note
+
+            # Create and save new patient record
+            new_record = PatientRecord(
+                patient_id=patient_id,
+                mhwp_id=3,
+                notes=combined_notes,
+                conditions=conditions if conditions else []
+            )
+            print("Before save:", self.record)
+            db.insert_patient_record(new_record)
+            print("After save:", db.getRelation("PatientRecord").getRowsWhereEqual('patient_id', patient_id))
+
+            # Cleanup and refresh display
+            db.close()
+            db = Database()
+            self.load_patient_records(None)
+            self.notes_entry.delete(0, tk.END)
+            messagebox.showinfo("Success", "Notes saved successfully")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save notes: {str(e)}")
+
 
     def save_diagnosis(self):
         """Saves the notes for the selected patient."""
+        # Get selected patient index and validate selection
         selected_index = self.patient_listbox.curselection()
+        print("Patient selection:", self.patients.iloc[selected_index[0]])
         if not selected_index:
             messagebox.showwarning("No Patient Selected", "Please select a patient to save notes.")
             return
 
-        patient_id = self.patients[selected_index[0]]["user_id"]
-        diagnosis = self.diagnosis_entry.get()
+        # Extract patient ID and new diagnosis
+        patient_id = int(self.patients.iloc[selected_index[0]][0]) # manually typecasting as otherwise it throws a type error
+        new_diagnosis = self.diagnosis_entry.get()
 
-        if not diagnosis:
+        if not new_diagnosis:
             messagebox.showwarning("Incomplete Data", "Please provide a diagnosis.")
             return
-        
-        ######## Save to database
+
+        try:
+            # Connect to database and get existing records
+            db = Database()
+            records_relation = db.getRelation("PatientRecord")
+            existing_records = records_relation.getRowsWhereEqual('patient_id', patient_id)
+
+            # Initialise variables for existing data
+            existing_notes = ""
+            conditions = []
+            if existing_records:
+                latest_record = existing_records[-1]
+                existing_notes = "No notes" if not latest_record[3].strip() else latest_record[3]
+                conditions = [new_diagnosis]
+            else:
+                existing_notes = "No notes"
+                conditions = [new_diagnosis]
+
+            # Create and save new patient record
+            new_record = PatientRecord(
+                patient_id=patient_id,
+                mhwp_id=3,
+                notes=existing_notes,
+                conditions=conditions
+            )
+
+            # Save record and refresh display
+            db.insert_patient_record(new_record)
+            db.close()
+            db = Database()
+            self.load_patient_records(None)
+            self.diagnosis_entry.delete(0, tk.END)
+            messagebox.showinfo("Success", "Diagnosis saved successfully")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save diagnosis: {str(e)}")
 
 
 if __name__ == "__main__":
