@@ -3,18 +3,22 @@ import pandas as pd
 import webbrowser
 import subprocess
 from tkinter import messagebox
+import datetime
+from addfeature.globalvariables import db
+from database.database import ExerRecord
 
 #search bar to  exercises - could be improved??
 #extra feature - exercise tracking?? maybe a tick box next to exercise that can be 'marked as done' and then stats on that as well
 
 class Exercises:
-    def __init__(self, root):
-        self.root = root
+    def __init__(self,userID):
+        self.root = tk.Tk()
         self.root.title("Mental Health Exercises")
         self.root.geometry("1000x800")
+        self.userID=userID
 
         # Search Bar and Clear Button
-        self.search_frame = tk.Frame(root)
+        self.search_frame = tk.Frame(self.root)
         self.search_frame.grid(row=0, column=3, pady=10)
         self.search_var = tk.StringVar()  # For holding the search input
         self.search_entry = tk.Entry(self.search_frame, textvariable=self.search_var, font=('Arial', 14))
@@ -25,11 +29,11 @@ class Exercises:
         # self.clear_button.grid(row=1, column=1)
 
         #Back button
-        self.back_button = tk.Button(root, text="Back to the main page", command=self.backButton)
+        self.back_button = tk.Button(self.root, text="Back to the main page", command=self.backButton)
         self.back_button.grid(row=0, column=0, pady=10)
         
         # H1 equivalent
-        h1_label = tk.Label(root, text="Mental Health Exercises", font=("Arial", 24, "bold"), fg = "light pink")
+        h1_label = tk.Label(self.root, text="Mental Health Exercises", font=("Arial", 24, "bold"), fg = "light pink")
         h1_label.grid(row=1, column=0, columnspan=4, pady=10)
 
         #Exercise Data
@@ -79,11 +83,48 @@ class Exercises:
         }
         self.create_exercise_buttons()
 
+
     #Call 999 in an Emergency
-        self.emergency_label = tk.Label(root, text="Call 999 in an Emergency", font=("Arial", 14), fg = "red")
+        self.emergency_label = tk.Label(self.root, text="Call 999 in an Emergency", font=("Arial", 14), fg = "red")
         self.emergency_label.grid(row=17, column=0, pady=5)
 
+        self.root.mainloop()
+    def feedback_window(self, link,category):
+        webbrowser.open(link)
+        # self.open_link()
+        # Create the main window
+        self.root3 = tk.Tk()
+        self.root3.title("Feedback")  # Set window title
+        self.root3.geometry("250x60")  # Set the size of the window
+
+        # Add a label
+        label = tk.Label(self.root3, text="How do you like the exercises?", font=("Arial", 14),width=30)
+        label.pack()  # Add padding around the label
+
+        # Add a "Good" button
+        good_button = tk.Button(self.root3, text="Good. I finished.", command= lambda : self.record_exercise(category),fg="green")
+        good_button.pack(side="left")
+
+        # Add a "Close" button
+        close_button = tk.Button(self.root3, text="Close", command=self.root3.destroy)
+        close_button.pack(side="right")
+
+
+    def record_exercise(self, cate):
+        newrecord = ExerRecord(
+            user_id= self.userID,
+            exercise=cate,
+            timestamp=datetime.datetime.now(),
+        )
+        db.insert_exerrecord(newrecord)
+        room1 = db.getRelation('ExerRecord')
+        print(room1)
+        self.root3.destroy()
+
+
+
     def create_exercise_buttons(self):
+        button_list=[]
         row = 2
         col = 0
         # Create buttons for each category and its exercises
@@ -94,9 +135,8 @@ class Exercises:
             label.grid(row=row, column=col, columnspan=4, pady=5)
 
             row += 1  # Move to next row
-
             for i, (title, link) in enumerate(exercises):
-                button = tk.Button(self.root, text=title, command=lambda url=link: self.open_link(url), height=2)
+                button = tk.Button(self.root, text=title, command=lambda url=link, cate=category: self.feedback_window(url,cate), height=2)
                 button.grid(row=row, column=col, pady=2, padx=5, sticky="ew")
                 col += 1
                 if col == 4:  # Move to next row after every 4 buttons
@@ -116,6 +156,26 @@ class Exercises:
         subprocess.Popen(["python3", "patient/patientMain.py"])
         self.root.destroy()
 
+
+    def display_search_results(self,searchresults):
+        self.root2 = tk.Tk()
+        self.root2.title("Search")
+        row = 1
+
+        for exercises,link,category in searchresults:
+            if row==9:
+                break
+
+            row += 1  # Move to next row
+            button = tk.Button(self.root2, text=exercises,command=lambda url=link, cate=category: self.feedback_window(link,cate), height=2)
+            button.grid(row=row, pady=2, padx=5, sticky="ew")
+            label = tk.Label(self.root2, text=f"Find {len(searchresults)} Results\nShowing Top {min(8,len(searchresults))}", font=("Arial", 18, "bold"), fg="light blue")
+            label.grid(row=0, pady=5)
+
+    def on_close(self):
+        # db.close()
+        self.root.destroy()
+
     def search_exercises(self):
         search_term = self.search_var.get().lower()
         if search_term:
@@ -123,11 +183,12 @@ class Exercises:
             for category, exercises in self.exercises.items():
                 for exercise_title, link in exercises:
                     if search_term in exercise_title.lower():
-                        matching_exercises.append(f"Exercise {exercise_title} : {link})")
-            
+                        matching_exercises.append([exercise_title,link,category])
+            print(matching_exercises)
             if matching_exercises:
-                results_text = "\n\n".join(matching_exercises)
-                messagebox.showinfo("Search Results", f"Found matching exercises:\n\n{results_text}")
+                self.display_search_results(matching_exercises)
+                # results_text = "\n\n".join(matching_exercises)
+                # messagebox.showinfo("Search Results", f"Found matching exercises:\n\n{results_text}")
             else:
                 messagebox.showinfo("Search Results", "No matching exercises found.")
         else:
@@ -135,10 +196,7 @@ class Exercises:
         self.search_var.set("")  # Clear the search bar
 
 
-
-
 # Run the application
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = Exercises(root)
-    root.mainloop()
+    app = Exercises(2)
+

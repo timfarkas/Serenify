@@ -5,7 +5,7 @@ import logging
 import sys
 from datetime import datetime as date
 
-from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent, Forum, Notification
+from .entities import Admin, Patient, MHWP, JournalEntry, Appointment, PatientRecord, Allocation, MoodEntry, MHWPReview, ChatContent, Forum, Notification, ExerRecord
 from .entities import __all__ as entity_classes
 from .dataStructs import Row, Relation, RowList
 import warnings
@@ -189,9 +189,10 @@ class Database:
                                                       'new', 'timestamp'],
                                      relationAttributeTypes=[int, int, str, int, bool, date])
 
-        self.notification = Relation('Notification',
-                                 attributeLabels=['notification_id','user_id', 'notifytcontent','source_id','new','timestamp'],
-                                 relationAttributeTypes=[int, int, str, int, bool, date])
+
+        self.exerrecord= Relation('ExerRecord',
+                                     attributeLabels=['record_id', 'user_id', 'exercise', 'timestamp'],
+                                     relationAttributeTypes=[int, int, str, date])
 
         self.initDict()
 
@@ -211,6 +212,7 @@ class Database:
             'ChatContent':self.chatcontent,
             'Forum': self.forum,
             'Notification': self.notification,
+            'ExerRecord': self.exerrecord,
         } 
 
 
@@ -233,6 +235,7 @@ class Database:
                 self.chatcontent = data['chatcontent']
                 self.forum = data['forum']
                 self.notification = data['notification']
+                self.exerrecord = data['exerrecord']
             self.initDict()
         except KeyError as k: ## catch errors being caused by old data
             self.logger.warn(f"Could not find a relation in {self.data_file}. Try deleting (and reinitializing) database.pkl.",k)
@@ -258,6 +261,7 @@ class Database:
                 'forum': self.forum,
                 'chatcontent': self.chatcontent,
                 'notification': self.notification,
+                'exerrecord':self.exerrecord,
             }, f)
 
     @ensure_open
@@ -294,6 +298,8 @@ class Database:
         print(self.chatcontent)
         print("\nNotification:")
         print(self.notification)
+        print("\nExerRecord:")
+        print(self.exerrecord)
 
     @ensure_open
     def insert(self, entity: str, row: Row = None, rowList: RowList = None):
@@ -447,8 +453,10 @@ class Database:
                                               ("MoodEntry", "patient_id"), 
                                               ("MHWPReview", "patient_id"), 
                                               ("ChatContent", "user_id"), 
-                                              ("Forum", "user_id"), 
-                                              ("Notification", "user_id")]:
+                                              ("Forum", "user_id"),
+                                              ("Notification", "user_id"),
+                                              ("ExerRecord", "record_id")
+                                              ]:
             
             relation = self.getRelation(relationName)
             if patientIdColumn in relation.data.columns:
@@ -577,6 +585,11 @@ class Database:
     @ensure_open
     def insert_notification(self, notification : Notification):
             self.insert("Notification",Row([notification.user_id, notification.notifycontent, notification.source_id,notification.new, notification.timestamp]))
+
+    @ensure_open
+    def insert_exerrecord(self, exerrecord : ExerRecord):
+            self.insert("ExerRecord",Row([exerrecord.user_id, exerrecord.exercise, exerrecord.timestamp]))
+
 
 
 class RecordError(Exception):

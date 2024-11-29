@@ -10,13 +10,14 @@ if project_root not in sys.path:
 
 # Now absolute imports will work
 from .database import Database
-from .entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment,MoodEntry,MHWPReview,ChatContent,Forum,Notification
+from .entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment,MoodEntry,MHWPReview,ChatContent,Forum,Notification,ExerRecord
 import datetime
 
 
 # Test functions
 def initDummyDatabase(db: Database):
         # Create User objects
+        admin_user0 = Admin(user_id=0, username='System', password='pass123456')
         admin_user1 = Admin(user_id=1, username='admin1', password='pass123456')
         patient_user1 = Patient(
             username='Sunflower',
@@ -63,6 +64,7 @@ def initDummyDatabase(db: Database):
         )
 
         # Insert Admin, Patient & User
+        db.insert_admin(admin_user0)
         db.insert_admin(admin_user1)
         db.insert_patient(patient_user1)
         db.insert_patient(patient_user2)
@@ -243,17 +245,17 @@ def initDummyDatabase(db: Database):
         appointment1 = Appointment(
             appointment_id=1,
             room_name="A",
-            patient_id=4,
-            mhwp_id=12,
-            date=datetime.datetime.now(),
+            patient_id=3,
+            mhwp_id=6,
+            date=datetime.datetime(year=2024, month=12, day=5, hour=10, minute=0, second=0),
             status='active'
         )
         appointment2 = Appointment(
             appointment_id=2,
             room_name="B",
             patient_id=2,
-            mhwp_id=11,
-            date=datetime.datetime.now(),
+            mhwp_id=5,
+            date=datetime.datetime(year=2024, month=12, day=25, hour=10, minute=0, second=0),
             status='active'
         )
         # Insert appointments into the database
@@ -265,14 +267,14 @@ def initDummyDatabase(db: Database):
             mhwp_id=5,
             reviewscore=5,
             reviewcomment="Very nice",
-            timestamp=datetime.datetime.now()
+            timestamp=datetime.datetime(year=2024, month=10, day=25, hour=10, minute=0, second=0)
         )
         reviewentry2 = MHWPReview(
             patient_id=3,
             mhwp_id=5,
             reviewscore=4,
             reviewcomment="Good",
-            timestamp=datetime.datetime.now()
+            timestamp=datetime.datetime(year=2024, month=11, day=21, hour=10, minute=0, second=0)
         )
         db.insert_review_entry(reviewentry1)
         db.insert_review_entry(reviewentry2)
@@ -343,23 +345,44 @@ def initDummyDatabase(db: Database):
         db.insert_forum(forumentry8)
 
         notify1 = Notification(
-            user_id=2,
-            notifycontent="SA",
+            user_id=5,
+            notifycontent="Newappointment",
             source_id=0,
             new=True,
             timestamp=datetime.datetime.now(),
         )
         notify2 = Notification(
             user_id=2,
-            notifycontent="NM",
+            notifycontent="Newchat",
             source_id=5,
+            new=True,
+            timestamp=datetime.datetime.now(),
+        )
+        notify3 = Notification(
+            user_id=5,
+            notifycontent="Newreview",
+            source_id=0,
+            new=True,
+            timestamp=datetime.datetime.now(),
+        )
+        notify4 = Notification(
+            user_id=5,
+            notifycontent="Newchat",
+            source_id=2,
             new=True,
             timestamp=datetime.datetime.now(),
         )
         db.insert_notification(notify1)
         db.insert_notification(notify2)
+        db.insert_notification(notify3)
+        db.insert_notification(notify4)
 
-
+        exer1 = ExerRecord(
+            user_id=2,
+            exercise="Mindfulness",
+            timestamp=datetime.datetime(year=2024, month=11, day=21, hour=10, minute=0, second=0),
+        )
+        db.insert_exerrecord(exer1)
 if __name__ == "__main__":
     db = Database(overwrite=True)
     initDummyDatabase(db)

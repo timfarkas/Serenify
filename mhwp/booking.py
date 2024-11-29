@@ -20,8 +20,8 @@ from database.dataStructs import Row
 
 
 class MHWPAppointmentManager:
-   def __init__(self, root, mhwp_id):
-       self.root = root
+   def __init__(self, mhwp_id):
+       self.root = tk.Tk()
        self.root.title("MHWP Appointment Management")
        self.mhwp_id = mhwp_id
 
@@ -49,7 +49,7 @@ class MHWPAppointmentManager:
        self.setup_ui()
        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-
+       self.root.mainloop()
    def setup_ui(self):
        # Title
        h1_label = ttk.Label(
@@ -408,7 +408,6 @@ class MHWPAppointmentManager:
 
 
 if __name__ == "__main__":
-   root = tk.Tk()
+
    # For testing purposes - in production this would come from login
-   app = MHWPAppointmentManager(root, mhwp_id=5)
-   root.mainloop()
+   app = MHWPAppointmentManager(mhwp_id=5)
