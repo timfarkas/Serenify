@@ -44,9 +44,9 @@ class ResetPage:
 
 
         # This DEBUG's the DB
-        db = Database()
-        db.printAll()
-        db.close()
+        # db = Database()
+        # db.printAll()
+        # db.close()
     
     def match_in_database(self, username):
         # Check if the provided details match the database
@@ -78,11 +78,12 @@ class ResetPage:
             print("No information found under the chosen username")
             messagebox.showerror("Reset failed", "No information found under the chosen username")
             db.close()
+
     def returnToLogin(self):
         exec(open("login/login.py").read())
         self.root.destroy()
 
-# Run the application
+###### Run the application
 if __name__ == "__main__":
     root = tk.Tk()
     app = ResetPage(root)

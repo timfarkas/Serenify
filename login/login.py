@@ -93,11 +93,11 @@ class LoginPage:
             messagebox.showerror("Error", "Role not recognised.")
 
     def newPatientPage(self):
-        subprocess.Popen(["python3", "patient/patientNew.py"])
+        subprocess.Popen(["python3", "-m", "patient.patientNew"])
         self.root.destroy()
 
     def passwordResetPage(self):
-        subprocess.Popen(["python3", "login/resetPassword.py"])
+        subprocess.Popen(["python3", "-m", "login.resetPassword"])
         self.root.destroy()
 
 # Run the application
