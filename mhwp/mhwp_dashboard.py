@@ -5,16 +5,18 @@ from addfeature.patientMoodDisplay import displaymood
 import os
 import sys
 from datetime import datetime
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath((__file__))))
-sys.path.append(project_root)
-from .notificationbox import opennotification
-from .globalvariables import db,userID
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sessions import Session
+from database.database import Database
+from addfeature.notificationbox import opennotification
+from addfeature.forum import openforsum
 from mhwp.booking import MHWPAppointmentManager
-from .forum import openforsum
+from mhwp.patientInfo import PatientRecords
 
-def open_review(userID):
+
+def open_review():
     # Create the main application window
+    db = Database()
     root = tk.Tk()
     root.title("My Patient Review")
     root.geometry("600x200")  # Set window size (optional)
@@ -46,11 +48,15 @@ def open_review(userID):
     # Run the main Tkinter event loop
     root.mainloop()
 
-def openmhwpdashboard(MHWPID):
+def openmhwpdashboard():
+    db = Database()
+    sess = Session()
+    sess.open()
+    userID = sess.getId()
     #Can change this input for test
     # userdata = db.getRelation('Allocations').getAllRows()
     # print(userdata)
-    patientlist = db.getRelation('Allocation').getRowsWhereEqual('mhwp_id',MHWPID)
+    patientlist = db.getRelation('Allocation').getRowsWhereEqual('mhwp_id',userID)
     # print(patientlist)
     patientids=[i[2] for i in patientlist]
 
@@ -65,7 +71,7 @@ def openmhwpdashboard(MHWPID):
             recentmood=usermood[-1][2]
             recentupdate=usermood[-1][4].strftime("%b %d")
         patientdata.append([userdata[0][0], str(userdata[0][4]) + " " + str(userdata[0][5]), userdata[0][2],recentmood,recentupdate])
-    allreview = db.getRelation('MHWPReview').getRowsWhereEqual('mhwp_id',MHWPID)
+    allreview = db.getRelation('MHWPReview').getRowsWhereEqual('mhwp_id',userID)
     reviewlist=[]
     for i in allreview:
         reviewlist.append(i[3])
@@ -77,12 +83,12 @@ def openmhwpdashboard(MHWPID):
     notificationdata = db.getRelation('Notification').getRowsWhereEqual('new',True)
     messagecounter=0
     for i in notificationdata:
-        if i[1]==MHWPID:
+        if i[1]==userID:
             messagecounter+=1
 
-    def clickbutton(MHWPID):
-        label3.config(text="You have 0 new massage",fg="black")
-        opennotification(MHWPID)
+    def clickbutton():
+        # label3.config(text="You have 0 new massage",fg="black")
+        opennotification()
 
 
 
@@ -116,14 +122,16 @@ def openmhwpdashboard(MHWPID):
     # Left fieldset
     fieldset1 = tk.LabelFrame(main_frame, text="MHWP Key Feature", padx=10, pady=10)
     fieldset1.grid(row=0, column=0, padx=10, pady=10)
-    btn = Button(fieldset1, text="Review Booking", command=lambda: MHWPAppointmentManager(userID),width=15)
+    btn = Button(fieldset1, text="Manage Patiennt", command=lambda: PatientRecords(),width=15)
     btn.grid(row=1, column=0, sticky="w")
-    btn = Button(fieldset1, text="Enter Forum", command=lambda: openforsum(userID),width=15)
+    btn = Button(fieldset1, text="Review Booking", command=lambda: MHWPAppointmentManager(), width=15)
     btn.grid(row=2, column=0, sticky="w")
-    btn = Button(fieldset1, text="Open Message", command=lambda: clickbutton(userID),width=15)
+    btn = Button(fieldset1, text="Enter Forum", command=lambda: openforsum(),width=15)
     btn.grid(row=3, column=0, sticky="w")
+    btn = Button(fieldset1, text="Open Message", command=lambda: clickbutton(),width=15)
+    btn.grid(row=4, column=0, sticky="w")
     label3 = tk.Label(fieldset1, text=f"You have {messagecounter} new massages")
-    label3.grid(row=4, column=0, sticky="w")
+    label3.grid(row=5, column=0, sticky="w")
 
 
     # Right fieldset
@@ -136,7 +144,7 @@ def openmhwpdashboard(MHWPID):
     label5.grid(row=1, column=0, sticky="w")
     label6 = tk.Label(fieldset2, text=f"My Rating: {myratingscore}")
     label6.grid(row=2, column=0, sticky="w")
-    btn = Button(fieldset2, text="View my review", command=lambda: open_review(userID),width=15)
+    btn = Button(fieldset2, text="View my review", command=lambda: open_review(),width=15)
     btn.grid(row=3, column=0, sticky="w")
 
     # Treeview within its own frame
@@ -165,8 +173,8 @@ def openmhwpdashboard(MHWPID):
     def on_row_selected(event):
         selected_item = tree.selection()[0]
         item_values = tree.item(selected_item, "values")
-        userid = int(item_values[0])
-        displaymood(userid, "m")
+        displayid = int(item_values[0])
+        displaymood(displayid,"MHWP")
 
     tree.bind("<Double-1>", on_row_selected)
 
@@ -177,7 +185,7 @@ def openmhwpdashboard(MHWPID):
 
     # Run the Tkinter event loop
     def on_close():
-        # db.close()
+        db.close
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
@@ -185,5 +193,4 @@ def openmhwpdashboard(MHWPID):
 
 
 if __name__ == "__main__":
-    MHWPID = 5
-    openmhwpdashboard(MHWPID)
+    openmhwpdashboard()
