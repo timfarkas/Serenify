@@ -4,14 +4,16 @@ from tkinter import scrolledtext
 import os
 import sys
 
-import numpy as np
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-# project_root=(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(project_root)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sessions import Session
 from .chatroom import startchatroom
-from .globalvariables import db
 from mhwp.booking import MHWPAppointmentManager
+from database.database import Database
+sess = Session()
+sess.open()
+userID = sess.getId()
+identity=sess.getRole()
+
 # from .mhwp_dashboard import open_review
 
 # def sendnotifiation(senderID,recieverID,Content):
@@ -24,7 +26,8 @@ from mhwp.booking import MHWPAppointmentManager
 #                 )
 #                 db.insert_notification(newnotify)
 
-def opennotification(userID):
+def opennotification():
+    db = Database()
     def refresh_treeview():
         """Clears and refreshes the Treeview with updated data."""
         # Clear existing rows in the Treeview
@@ -33,17 +36,17 @@ def opennotification(userID):
 
         # Fetch notifications and re-populate
         usernotification = allnotification.getRowsWhereEqual('user_id', userID)
+        # print("all noti",usernotification)
         usernotification.sort(key=lambda x: x[-1], reverse=True)
-
+        print(usernotification)
         # Add rows to Treeview
         counter = 0
         for i in usernotification:
-            print(i)
             if counter == 30:
                 break
-
             if i[2] == "Newchat":
                 sourceuser = db.getRelation('User').getRowsWhereEqual('user_id', i[3])
+                # print(sourceuser)
                 tree.insert(
                     "",
                     "end",
@@ -108,20 +111,19 @@ def opennotification(userID):
 
         selected_item = tree.selection()[0]
         item_values = tree.item(selected_item, "values")  # Get the values of the selected item
-        print("Selected item values:", item_values)
+        # print("Selected item values:", item_values)
         messageID = int(item_values[4])  # Extract MessageID
-        print(f"Updating Message ID: {messageID}")
+        # print(f"Updating Message ID: {messageID}")
         allnotification.editFieldInRow(messageID, 'new', False)
 
         # Refresh the Treeview after the update
         refresh_treeview()
         if item_values[0]=="You have a new chat":
-            if userID > int(item_values[3]):
+            if identity == "MHWP":
                 patientID = item_values[3]
-                identity = "m"
-            elif userID < int(item_values[3]):
+            elif identity == "Patient":
                 patientID = userID
-                identity = "p"
+            print(patientID)
             startchatroom(int(patientID), identity)
         elif item_values[0] == "You have a new appointment":
             MHWPAppointmentManager(userID)
@@ -145,7 +147,10 @@ def opennotification(userID):
     tree.pack(fill="both", expand=True)
 
     def on_close():
+        # db.close()
         root.destroy()
-
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
+
+if __name__ == "__main__":
+    opennotification()

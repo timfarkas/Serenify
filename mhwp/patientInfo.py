@@ -8,7 +8,7 @@ from database.entities import PatientRecord
 from database import Database
 # from database.entities import User, PatientRecord
 # from database.initDBwithDummyData import initDummyDatabase
-# from sessions import Session
+from sessions import Session
 import pandas as pd
 
 # ## Initialize the database with dummy data and save it
@@ -19,21 +19,20 @@ import pandas as pd
 #mhwp_id = 3
 
 class PatientRecords:
-    def __init__(self, root, user_id=None):
+    def __init__(self, user_id=None):
         # Initialize the session instance 
-        # self.session = Session()
-        # self.session.open()
-        # self.current_user_id = self.session.getId()
-
-        self.root = root
+        self.session = Session()
+        self.session.open()
+        self.current_user_id = self.session.getId()
+        self.root =  tk.Tk()
         self.root.title("Patient Records")
         self.root.geometry("700x700")
 
-        self.title_label = tk.Label(root, text=f"Patient Records", font=("Arial", 24, "bold"))
+        self.title_label = tk.Label(self.root, text=f"Patient Records", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=2, pady=5)
 
         #Search Patient Section
-        self.patient_list_frame = tk.LabelFrame(root, text="Search Patient", padx=2, pady=5)
+        self.patient_list_frame = tk.LabelFrame(self.root, text="Search Patient", padx=2, pady=5)
         self.patient_list_frame.grid(row=1, column=0, padx=2, pady=5, sticky = "n")
 
         self.patient_listbox = tk.Listbox(self.patient_list_frame, height=10, width=25)
@@ -59,7 +58,7 @@ class PatientRecords:
             self.patient_listbox.insert(tk.END, full_name)
 
         # Patient Records Section
-        self.record_frame = tk.LabelFrame(root, text="Records", padx=2, pady=5)
+        self.record_frame = tk.LabelFrame(self.root, text="Records", padx=2, pady=5)
         self.record_frame.grid(row=1, column=1, padx=2, pady=5, sticky="n")
 
         self.record_text = tk.Text(self.record_frame, height=15, width=30)
@@ -67,7 +66,7 @@ class PatientRecords:
         self.record_text.config(state=tk.DISABLED)
 
         # Notes Section
-        self.note_frame = tk.LabelFrame(root, text="Add Notes", padx=2, pady=5)
+        self.note_frame = tk.LabelFrame(self.root, text="Add Notes", padx=2, pady=5)
         self.note_frame.grid(row=2, column=0, padx=2, pady=5)
 
         tk.Label(self.note_frame, text="Notes:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
@@ -78,7 +77,7 @@ class PatientRecords:
         self.save_note_button.grid(row=1, column=1, pady=10, sticky="e")
 
         #Diagnosis Section
-        self.note_frame = tk.LabelFrame(root, text="Add or Edit Diagnosis", padx=2, pady=5)
+        self.note_frame = tk.LabelFrame(self.root, text="Add or Edit Diagnosis", padx=2, pady=5)
         self.note_frame.grid(row=2, column=1, padx=2, pady=5)
 
         tk.Label(self.note_frame, text="Diagnosis:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
@@ -88,6 +87,7 @@ class PatientRecords:
         self.save_button = tk.Button(self.note_frame, text="Save", command=self.save_diagnosis)
         self.save_button.grid(row=2, column=1, pady=10, sticky="e")
 
+        self.root.mainloop()
 
     def load_patient_records(self, event=None):
         """Loads selected patient's records into the text box."""
@@ -229,6 +229,5 @@ class PatientRecords:
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = PatientRecords(root)
-    root.mainloop()
+    app = PatientRecords()
+

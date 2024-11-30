@@ -1,21 +1,24 @@
 import tkinter as tk
-from tkinter import ttk
 from tkinter import *
-from addfeature.patientMoodDisplay import displaymood
 import os
 import sys
 from datetime import datetime
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath((__file__))))
-sys.path.append(project_root)
-from .notificationbox import opennotification
-from .globalvariables import db,userID
-from mhwp.booking import MHWPAppointmentManager
-from .forum import openforsum
-from .chatroom import startchatroom
 import datetime
 
-def openpatientdashboard(userID):
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sessions import Session
+from database.database import Database
+from addfeature.notificationbox import opennotification
+from addfeature.forum import openforsum
+from addfeature.chatroom import startchatroom
+from patient.mhwp_rating import openrating
+
+
+def openpatientdashboard():
+    db=Database()
+    sess = Session()
+    sess.open()
+    userID = sess.getId()
     #Can change this input for test
     # # userdata = db.getRelation('Allocations').getAllRows()
     # # print(userdata)
@@ -49,9 +52,9 @@ def openpatientdashboard(userID):
         if i[1]==userID:
             messagecounter+=1
 
-    def clickbutton(MHWPID):
-        label3.config(text="You have 0 new massage",fg="black")
-        opennotification(MHWPID)
+    def clickbutton():
+        # label3.config(text="You have 0 new massage",fg="black")
+        opennotification()
 
 
 
@@ -88,14 +91,16 @@ def openpatientdashboard(userID):
     # Left fieldset
     fieldset1 = tk.LabelFrame(main_frame, text="Patient Key Feature", padx=10, pady=10)
     fieldset1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
-    btn = Button(fieldset1, text="Chat with MHWP", command=lambda:startchatroom(userID,"p"), width=15)
+    btn = Button(fieldset1, text="Rate my MHWP", command=lambda:openrating(), width=15)
     btn.grid(row=1, column=0, sticky="w")
-    btn = Button(fieldset1, text="Enter Forum", command=lambda: openforsum(userID), width=15)
+    btn = Button(fieldset1, text="Chat with MHWP", command=lambda:startchatroom(userID,"Patient"), width=15)
     btn.grid(row=2, column=0, sticky="w")
-    btn = Button(fieldset1, text="Open Message", command=lambda: clickbutton(userID), width=15)
+    btn = Button(fieldset1, text="Enter Forum", command=lambda: openforsum(), width=15)
     btn.grid(row=3, column=0, sticky="w")
+    btn = Button(fieldset1, text="Open Message", command=lambda: clickbutton(), width=15)
+    btn.grid(row=4, column=0, sticky="w")
     label3 = tk.Label(fieldset1, text=f"You have {messagecounter} new messages")
-    label3.grid(row=4, column=0, sticky="w")
+    label3.grid(row=5, column=0, sticky="w")
 
 
     exerrecords = db.getRelation('ExerRecord').getRowsWhereEqual('user_id',userID)
@@ -121,7 +126,7 @@ def openpatientdashboard(userID):
             print(i[4])
             pastscore.append(i[2])
 
-    averagescore=sum(pastscore)/len(pastscore)
+    averagescore=(sum(pastscore)/len(pastscore) if len(pastscore)>0 else "")
 
 
     fieldset2 = tk.LabelFrame(main_frame, text="Patient Data", padx=10, pady=10)
@@ -174,13 +179,11 @@ def openpatientdashboard(userID):
     canv.grid(row=1, column=0, columnspan=2, pady=10)
 
     def on_close():
+        # db.close()
         root.destroy()
-
-
+    root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
 
-
-
-if __name__ == "__main__":
-    MHWPID = 5
-    openmhwpdashboard(MHWPID)
+openpatientdashboard()
+# if __name__ == "__main__":
+#     openpatientdashboard()

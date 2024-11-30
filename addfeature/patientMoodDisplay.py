@@ -1,30 +1,29 @@
 from tkinter import *
 import sys
 import os
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-sys.path.append(project_root)
-
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sessions import Session
+from database.database import Database
 from .chatroom import startchatroom
-from .globalvariables import  db
+
+sess = Session()
+sess.open()
+userID = sess.getId()
 
 
 
+def startchat():
 
-##### DB QUERIES
-
-
-def startchat(userID):
-    startchatroom(userID)
+    startchatroom()
     """This function is triggered by the button."""
 
 
-def displaymood(userId,identity):
-
-    userdata = db.getRelation('User').getRowsWhereEqual('user_id', userId)
+def displaymood(patientID,identity):
+    db = Database()
+    userdata = db.getRelation('User').getRowsWhereEqual('user_id', patientID)
     userName = str(userdata[0][4]) + ' ' + str(userdata[0][5])
     Moodrecord = db.getRelation('MoodEntry')
-    usermood = Moodrecord.getRowsWhereEqual('patient_id', userId)
+    usermood = Moodrecord.getRowsWhereEqual('patient_id', patientID)
     length = len(usermood)
     dotdata=[]
     winwidth=500
@@ -53,17 +52,16 @@ def displaymood(userId,identity):
     else:
         canv.create_text(winwidth/2,winhight/2, text="No Record", fill="Gray", font=("Arial", 20, "bold"))
     canv.pack()
-    if identity=="m":
+    if identity=="MHWP":
         # print("before start",userId,"m")
-        btn = Button(root, text="Start Chat",  command=lambda: startchatroom(userId,"m"))
+        btn = Button(root, text="Start Chat",  command=lambda: startchatroom(patientID,"MHWP"))
         btn.pack(pady=10)
     def on_close():
         # db.close()
         root.destroy()
+        open()
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
 #
 if __name__ == "__main__":
-    userId = 2
-    identity="m"
-    displaymood(userId,identity)
+    displaymood()

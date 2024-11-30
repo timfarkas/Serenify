@@ -5,9 +5,8 @@ import subprocess
 from tkinter import messagebox
 import sys
 import os
-mport datetime
-from addfeature.globalvariables import db
-from database.database import ExerRecord
+import datetime
+from database.database import Database,ExerRecord
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session

@@ -1,14 +1,22 @@
 import os
 import sys
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-sys.path.append(project_root)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database.database import Database
+from sessions import Session
 
-from .globalvariables import db
 
-
+# sess = Session()
+# sess.open()
+# sess.close()
+# sess.set("Test",1)
+# a=sess.get("Test")
+# a+=100
+# sess.set("Test",a)
+# print(sess.get("Test"))
+db=Database()
 room1 = db.getRelation('Notification')
 print(room1)
-# for i in room1:
+# # for i in room1:
 #     print(i)
 
 # doc= room1.getRowsWhereEqual('mhwp_id',5)

@@ -11,12 +11,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
 from database.entities import Appointment
 from database.dataStructs import Row
+from sessions import Session
 
 
 
-
-class MHWPAppointmentManager:
-   def __init__(self, mhwp_id):
+class MHWPAppointmentManager():
+   def __init__(self):
+       sess = Session()
+       sess.open()
+       mhwp_id = sess.getId()
        self.root = tk.Tk()
        self.root.title("MHWP Appointment Management")
        self.mhwp_id = mhwp_id
