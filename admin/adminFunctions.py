@@ -783,11 +783,9 @@ if __name__ == "__main__":
     ## get id and role from session
     userId = sess.getId()
     userRole = sess.getRole()
-    print(userRole)
 
     ## get any other details
     isDisabled = sess.get("isDisabled")
-    print(isDisabled)
 
     if userRole == "Admin" and isDisabled == False:
         app = AdminMainPage()
