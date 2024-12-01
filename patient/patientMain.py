@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
 from database.entities import Patient, JournalEntry, MoodEntry
 from database.initDBwithDummyData import initDummyDatabase
+from sessions import Session
 from datetime import datetime
 import pandas as pd
 
@@ -15,24 +16,22 @@ import pandas as pd
 # initDummyDatabase(db)
 # db.close()
 
-#TO DO:
-#SESSIONS
-#functioning logout (have a session after logging in)
-#see mood display
-#error checks?
-
-#as sessions etc dont work yet -- for now current user_id will be hardcoded
-#that needs to be resolved and automater though
-current_user_id = 3
-
 class Patient:
-    def __init__(self, root):
+    def __init__(self, root, user_id=None):
+        # Initialize the session instance 
+        self.session = Session()
+        self.session.open()
+        self.current_user_id = self.session.getId()
+
         self.root = root
         self.root.title("Patient")
         self.root.geometry("700x700")
 
+        db = Database()
+        self.patientName = db.getRelation("User").getRowsWhereEqual("user_id",self.current_user_id)[0][4]
+
         # Title label
-        self.title_label = tk.Label(root, text="Welcome back", font=("Arial", 24, "bold"))
+        self.title_label = tk.Label(root, text=f"Welcome back, {self.patientName}!", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=6, pady=10)
 
         #Mood of the day
@@ -106,21 +105,62 @@ class Patient:
         # Buttons
         self.exercises_page = tk.Button(root, text="Exercises", command = self.exercises)
         self.edit_into = tk.Button(root, text="Edit personal info", command = self.edit_information)
-        self.appointments = tk.Button(root, text="Book an appointment", command = self.book)
-        self.cancel_appointement = tk.Button(root, text="Cancel your appointment", command = self.cancel) ####RESCHEDULE????
+        self.appointments = tk.Button(root, text="Book or cancel an appointment", command = self.book)
         self.exercises_page.grid(row=7, column=0, columnspan = 6, pady=5)
         self.edit_into.grid(row=8, column=0, columnspan = 6, pady=5)
         self.appointments.grid(row=9, column=0, columnspan=6, pady=5)
-        self.cancel_appointement.grid(row=10, column=0, columnspan = 6, pady=5)
 
         # Logging out
         self.logout_button = tk.Button(root, text="Logout", command=self.exitUser)
         self.logout_button.grid(row=11, column=0, columnspan = 6, pady=5)
 
+        # Turn off widgets if user is disabled
+        self.disable_interactive_widgets()
+
         self.apply_initial_colors()
 
+    def disable_interactive_widgets(self):
+        #Remove some functionalities for disabled users
+        try:
+            db = Database()
+            user_info = db.getRelation("User")
+            user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
+            user_info = pd.DataFrame(user_info)
+            if not user_info.empty:
+                #Accessing the is_disabled column using the numeric index - 10 (True/False)
+                is_disabled = user_info.iloc[0][10]
+            else: 
+                is_disabled = False
+                
+            if is_disabled:
+                # Disable mood submission
+                self.radio1.config(state=tk.DISABLED)
+                self.radio2.config(state=tk.DISABLED)
+                self.radio3.config(state=tk.DISABLED)
+                self.radio4.config(state=tk.DISABLED)
+                self.radio5.config(state=tk.DISABLED)
+                self.radio6.config(state=tk.DISABLED)
+                self.mood_comment_text.config(state=tk.DISABLED)
+                self.submit_button.config(state=tk.DISABLED)
+
+                # Disable journal editing
+                self.journal_text.config(state=tk.DISABLED)
+                self.save_button.config(state=tk.DISABLED)
+
+                # Disable edit personal info
+                self.edit_into.config(state=tk.DISABLED)
+
+                # Disable booking appointments
+                self.appointments.config(state=tk.DISABLED)
+
+                # Show message that the user is disabled
+                messagebox.showinfo("Access Restricted", "Your account is disabled. You cannot make changes or submit new information.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while disabling widgets: {e}")
+
+
     def exitUser(self):
-        subprocess.Popen(["python3", "login/logout.py"])
+        subprocess.Popen(["python3", "main.py"])
         self.root.destroy()
 
     def apply_initial_colors(self):
@@ -152,7 +192,7 @@ class Patient:
             messagebox.showwarning("No Mood Selected", "Please select a mood before submitting.")
             return
         else:
-            mood_entry = MoodEntry(moodentry_id = None, patient_id=current_user_id, moodscore=self.selected_mood, comment=mood_comment, timestamp=datetime.now())
+            mood_entry = MoodEntry(moodentry_id = None, patient_id=self.current_user_id, moodscore=self.selected_mood, comment=mood_comment, timestamp=datetime.now())
             db = Database() # opens data system
             db. insert_mood_entry(mood_entry)
             db. close()
@@ -205,7 +245,7 @@ class Patient:
 
         if journal_text:
             # self.journal_entries.append(journal_text)
-            journal_entry = JournalEntry(entry_id = None, patient_id=current_user_id, text=journal_text, timestamp=datetime.now())
+            journal_entry = JournalEntry(entry_id = None, patient_id=self.current_user_id, text=journal_text, timestamp=datetime.now())
             db = Database() # opens data system
             db. insert_journal_entry(journal_entry)
             db. close()
@@ -222,7 +262,7 @@ class Patient:
             # Fetch journal entries
             db = Database()
             journal_entries = db.getRelation("JournalEntry")
-            filtered_rows = journal_entries.getRowsWhereEqual('patient_id', current_user_id)
+            filtered_rows = journal_entries.getRowsWhereEqual('patient_id', self.current_user_id)
             self.journal_df = pd.DataFrame(filtered_rows)
 
             # Search the DataFrame for the term
@@ -239,7 +279,7 @@ class Patient:
     def view_all_journal_entries(self):
         db = Database()
         journal_entries = db.getRelation("JournalEntry")
-        filtered_rows = journal_entries.getRowsWhereEqual('patient_id', current_user_id)
+        filtered_rows = journal_entries.getRowsWhereEqual('patient_id', self.current_user_id)
         self.journal_df = pd.DataFrame(filtered_rows)
 
         if not self.journal_df.empty:
@@ -263,21 +303,6 @@ class Patient:
         subprocess.Popen(["python3", "patient/booking.py"])
         self.root.destroy()
 
-    def cancel(self):
-        # Cancel appointement 
-        subprocess.Popen(["python3", "patient/cancel.py"])
-        self.root.destroy()
-
-
-# logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
-# logout_button.pack()
-
-#     def exitUser(self):
-#         pass
-        ######### Inputs #########
-        # username = self.username_entry.get()
-        # password = self.password_entry.get()
-        # role = self.user_role.get()
 
 # Run the application
 if __name__ == "__main__":

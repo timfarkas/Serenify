@@ -3,15 +3,17 @@ from tkinter import messagebox
 import subprocess # This allows us to open other files
 import sys
 import os
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "database"))
-sys.path.append(project_root)  # Add the project root to sys.path
-
-from database.database import Database  # Import Database
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database import Database  # Import Database
 from database.entities import Appointment  
 from database.dataStructs import Row  
+from sessions import Session
+
 # import patient.patientMain
 # import admin.adminFunctions
 # import mhwp.mhwpMain
+# from sessions import Session
+
 
 class LoginPage:
     def __init__(self, root):
@@ -20,6 +22,9 @@ class LoginPage:
         self.root.geometry("600x600")
 
         self.db = Database(verbose=True)
+        # Initialize the session instance 
+        self.session = Session()  
+        self.session.open()
 
         # H1 equivalent
         h1_label = tk.Label(root, text="Signing in.", font=("Arial", 24, "bold"))
@@ -59,16 +64,26 @@ class LoginPage:
         username = self.username_entry.get()
         password = self.password_entry.get()
         role = self.user_role.get()
-        # Check credentials (replace with real validation logic)
-        if self.correctDetails(username, password, role):
+        
+        user_relation = self.db.getRelation("User")
+        user_data = user_relation.getRowsWhereEqual('username',username)[0]
+        verified = bool(user_data[3] == password)
+
+        if verified:
+            ### extract user details as session variables
+            for key, value in zip(user_data.labels, user_data.values):
+                if key != "password": ## skip password
+                    self.session.set(key=key,value=value)
+            print(self.session)
+            self.session.close()
             self.findMainPage(username, password, role)
         else:
             messagebox.showerror("Login Failed", "Invalid username or password")
-    
+
     def correctDetails(self, username, password, role):
         try:
-            self.db = Database()
-            self.db.printAll()
+            
+            # self.db.printAll()
             # Query the database for the user
             user_relation = self.db.getRelation("User")
             user_data = user_relation.getRowsWhereEqual('username',username)
@@ -77,6 +92,8 @@ class LoginPage:
         except Exception as e:
             messagebox.showerror("Database Error", f"An error occurred while checking credentials: {e}")
             return False
+        
+
 
     def findMainPage(self, username, password, role):
         # Takes user to the main page
@@ -100,6 +117,19 @@ class LoginPage:
         subprocess.Popen(["python3", "-m", "login.resetPassword"])
         self.root.destroy()
 
+    # def sessionStart(self):
+    #     username = self.username_entry.get()
+    #     # self.db = Database()
+    #     user_relation = self.db.getRelation("User")
+    #     user_data = user_relation.getRowsWhereEqual('username',username)
+    #     if user_data:
+    #         user = user_data[0]
+    #         user_id = user[0] 
+    #         self.session.set("user_id", user_id)
+    #         print(f"User ID {user_id} has been set in the session.")
+    #     else:
+    #         messagebox.showerror("Login Error", "User not found in the database.")
+ 
 # Run the application
 if __name__ == "__main__":
     root = tk.Tk()

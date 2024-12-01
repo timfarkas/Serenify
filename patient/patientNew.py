@@ -3,10 +3,8 @@ import subprocess
 from tkinter import messagebox
 import sys
 import os
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "database"))
-sys.path.append(project_root)  # Add the project root to sys.path
-
-from database.database import Database  # Import Database
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database import Database  # Import Database
 from database.entities import Patient
 
 class New_patient():

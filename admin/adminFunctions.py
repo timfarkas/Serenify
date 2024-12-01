@@ -1,12 +1,13 @@
 import tkinter as tk
-from tkinter import messagebox
-import subprocess
+from tkinter import messagebox, ttk
+
 import sys
 import os
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-sys.path.append(project_root)
-from database import Database
-from entities import UserError, RecordError, Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database.database import Database
+from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
 
 class AllocationEdit(tk.Toplevel):
@@ -69,17 +70,15 @@ class AllocationEdit(tk.Toplevel):
         messagebox.showinfo("Success", "MHWP updated successfully.")
 
     def go_back(self):
-        self.db.close()
         self.destroy()
         self.parent.deiconify()
 
     def on_close(self):
-        self.db.close()
         self.destroy()
 
-class UserEditApp(tk.Toplevel):
+class PatientEditApp(tk.Toplevel):
     def __init__(self, user_id, parent):
-        super(UserEditApp, self).__init__()
+        super(PatientEditApp, self).__init__()
         self.db = Database()
         self.parent = parent
         self.user_id = user_id
@@ -139,17 +138,17 @@ class UserEditApp(tk.Toplevel):
         self.emergency_email_entry.config(state='disabled')
         self.emergency_email_entry.grid(row=6, column=1)
 
-        tk.Label(user_frame, text="Specialization:").grid(row=8, column=0)
-        self.specialization_entry = tk.Entry(user_frame)
-        self.specialization_entry.insert(0, user['specialization'] if user['specialization'] else '')
-        self.specialization_entry.config(state='disabled')
-        self.specialization_entry.grid(row=8, column=1)
+        tk.Label(user_frame, text="Emergency Contact Name:").grid(row=7, column=0)
+        self.emergency_name_entry = tk.Entry(user_frame)
+        self.emergency_name_entry.insert(0, user['emergency_contact_name'] if user['emergency_contact_name'] else '')
+        self.emergency_name_entry.config(state='disabled')
+        self.emergency_name_entry.grid(row=7, column=1)
 
-        #tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
-        #self.is_disabled_var = tk.BooleanVar(value=user['is_disabled'])
-        #self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
-        #self.is_disabled_check.config(state='disabled')
-        #self.is_disabled_check.grid(row=10, column=1)
+        tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
+        self.is_disabled_var = tk.BooleanVar(value=bool(user['is_disabled']))
+        self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
+        self.is_disabled_check.config(state='disabled')
+        self.is_disabled_check.grid(row=10, column=1)
 
         # Toggle Edit/Save Button
         self.toggle_button = tk.Button(self, text="Edit", command=self.toggle_edit_save)
@@ -177,8 +176,8 @@ class UserEditApp(tk.Toplevel):
                 'fName': user_data[4],
                 'lName': user_data[5],
                 'emergency_contact_email': user_data[7],
-                'specialization': user_data[8],
-                #'is_disabled': user_data[9]
+                'emergency_contact_name': user_data[8],
+                'is_disabled': user_data[10]
             }
         else:
             messagebox.showerror("Error", "User not found!")
@@ -193,8 +192,8 @@ class UserEditApp(tk.Toplevel):
             self.fName_entry.config(state='normal')
             self.lName_entry.config(state='normal')
             self.emergency_email_entry.config(state='normal')
-            self.specialization_entry.config(state='normal')
-            #self.is_disabled_check.config(state='normal')
+            self.emergency_name_entry.config(state='normal')
+            self.is_disabled_check.config(state='normal')
 
             self.toggle_button.config(text="Save Changes")  
         
@@ -208,8 +207,8 @@ class UserEditApp(tk.Toplevel):
                 'fName': self.fName_entry.get(),
                 'lName': self.lName_entry.get(),
                 'emergency_contact_email': self.emergency_email_entry.get(),
-                'specialization': self.specialization_entry.get(),
-                #'is_disabled': self.is_disabled_var.get()
+                'emergency_contact_name': self.emergency_name_entry.get(),
+                'is_disabled': self.is_disabled_var.get()
             }
 
             self.toggle_button.config(text="Edit")
@@ -221,8 +220,8 @@ class UserEditApp(tk.Toplevel):
             self.fName_entry.config(state='disabled')
             self.lName_entry.config(state='disabled')
             self.emergency_email_entry.config(state='disabled')
-            self.specialization_entry.config(state='disabled')
-            #self.is_disabled_check.config(state='disabled')
+            self.emergency_name_entry.config(state='disabled')
+            self.is_disabled_check.config(state='disabled')
     
     def save_changes_to_db(self):
         user_relation = self.db.getRelation('User')
@@ -233,8 +232,8 @@ class UserEditApp(tk.Toplevel):
             'fName': self.fName_entry.get(),
             'lName': self.lName_entry.get(),
             'emergency_contact_email': self.emergency_email_entry.get(),
-            'specialization': self.specialization_entry.get(),
-            #'is_disabled': self.is_disabled_var.get()
+            'emergency_contact_name': self.emergency_name_entry.get(),
+            'is_disabled': self.is_disabled_var.get()
         }
         
         for field, new_value in updated_data.items():
@@ -249,7 +248,7 @@ class UserEditApp(tk.Toplevel):
         response = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete this {self.user_type}?")
 
         if response:
-            user_relation.dropRows(id=self.user_id)
+            self.db.delete_patient(patientId=self.user_id)
             messagebox.showinfo("Success", f"{self.user_type} deleted successfully.")
             
             self.db.close()
@@ -264,15 +263,187 @@ class UserEditApp(tk.Toplevel):
         self.db.close()
         self.destroy()
 
+class MHWPEditApp(PatientEditApp):
+    def __init__(self, user_id, parent):
+        super().__init__(user_id, parent)
+
+    def create_ui(self):
+        self.title("Edit User Information")
+
+        # H1 equivalent
+        h1_label = tk.Label(self, text=f"Edit {self.user_type} Information", font=("Arial", 24, "bold"))
+        h1_label.pack()
+
+        user = self.fetch_user_details(self.user_id)
+        self.original_data = user
+
+        # Create labels and entry fields
+        user_frame = tk.Frame(self)
+        user_frame.pack(fill='x', padx=10, pady=5)
+
+        tk.Label(user_frame, text=f"User ID: {user['user_id']}", width=15).grid(row=0, column=0)
+        tk.Label(user_frame, text="Username:").grid(row=1, column=0)
+        self.username_entry = tk.Entry(user_frame)
+        self.username_entry.insert(0, user['username'] if user['username'] else '')
+        self.username_entry.config(state='disabled')
+        self.username_entry.grid(row=1, column=1)
+
+        tk.Label(user_frame, text="Email:").grid(row=2, column=0)
+        self.email_entry = tk.Entry(user_frame)
+        self.email_entry.insert(0, user['email'] if user['email'] else '')
+        self.email_entry.config(state='disabled')
+        self.email_entry.grid(row=2, column=1)
+
+        tk.Label(user_frame, text="Password:").grid(row=3, column=0)
+        self.password_entry = tk.Entry(user_frame, show="*")
+        self.password_entry.insert(0, user['password'] if user['password'] else '')
+        self.password_entry.config(state='disabled')
+        self.password_entry.grid(row=3, column=1)
+
+        tk.Label(user_frame, text="First Name:").grid(row=4, column=0)
+        self.fName_entry = tk.Entry(user_frame)
+        self.fName_entry.insert(0, user['fName'] if user['fName'] else '')
+        self.fName_entry.config(state='disabled')
+        self.fName_entry.grid(row=4, column=1)
+
+        tk.Label(user_frame, text="Last Name:").grid(row=5, column=0)
+        self.lName_entry = tk.Entry(user_frame)
+        self.lName_entry.insert(0, user['lName'] if user['lName'] else '')
+        self.lName_entry.config(state='disabled')
+        self.lName_entry.grid(row=5, column=1)
+
+        tk.Label(user_frame, text="Emergency Contact Email:").grid(row=6, column=0)
+        self.emergency_email_entry = tk.Entry(user_frame)
+        self.emergency_email_entry.insert(0, user['emergency_contact_email'] if user['emergency_contact_email'] else '')
+        self.emergency_email_entry.config(state='disabled')
+        self.emergency_email_entry.grid(row=6, column=1)
+
+        tk.Label(user_frame, text="Emergency Contact Name:").grid(row=7, column=0)
+        self.emergency_name_entry = tk.Entry(user_frame)
+        self.emergency_name_entry.insert(0, user['emergency_contact_name'] if user['emergency_contact_name'] else '')
+        self.emergency_name_entry.config(state='disabled')
+        self.emergency_name_entry.grid(row=7, column=1)
+
+        tk.Label(user_frame, text="Specialization:").grid(row=8, column=0)
+        self.specialization_entry = tk.Entry(user_frame)
+        self.specialization_entry.insert(0, user['specialization'] if user['specialization'] else '')
+        self.specialization_entry.config(state='disabled')
+        self.specialization_entry.grid(row=8, column=1)
+
+        tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
+        self.is_disabled_var = tk.BooleanVar(value=bool(user['is_disabled']))
+        self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
+        self.is_disabled_check.config(state='disabled')
+        self.is_disabled_check.grid(row=10, column=1)
+
+        # Toggle Edit/Save Button
+        self.toggle_button = tk.Button(self, text="Edit", command=self.toggle_edit_save)
+        self.toggle_button.pack(pady=0)
+
+        # To speak to Tim about implementing for MHWPs
+        # Delete Button
+        #self.delete_button = tk.Button(self, text=f"Delete {self.user_type}", command=self.delete_user)
+        #self.delete_button.pack(pady=0)
+
+        # Back Button
+        self.back_button = tk.Button(self, text="Back", command=self.go_back)
+        self.back_button.pack(pady=0)
+
+    def fetch_user_details(self, user_id):
+        user_relation = self.db.getRelation('User')
+        user = user_relation.getRowsWhereEqual('user_id', user_id)
+
+        if user:
+            user_data = user[0]
+            return {
+                'user_id': user_data[0],
+                'username': user_data[1],
+                'email': user_data[2],
+                'password': user_data[3],
+                'fName': user_data[4],
+                'lName': user_data[5],
+                'emergency_contact_email': user_data[7],
+                'emergency_contact_name': user_data[8],
+                'specialization': user_data[9],
+                'is_disabled': user_data[10]
+            }
+        else:
+            messagebox.showerror("Error", "User not found!")
+            return {}
+
+    def toggle_edit_save(self):
+        if self.username_entry.cget('state') == 'disabled':
+            # Enable all the entry fields for editing
+            self.username_entry.config(state='normal')
+            self.email_entry.config(state='normal')
+            self.password_entry.config(state='normal')
+            self.fName_entry.config(state='normal')
+            self.lName_entry.config(state='normal')
+            self.emergency_email_entry.config(state='normal')
+            self.emergency_name_entry.config(state='normal')
+            self.specialization_entry.config(state='normal')
+            self.is_disabled_check.config(state='normal')
+
+            self.toggle_button.config(text="Save Changes")  
+        
+        else:
+            self.save_changes_to_db()
+            
+            updated_data = {
+                'username': self.username_entry.get(),
+                'email': self.email_entry.get(),
+                'password': self.password_entry.get(),
+                'fName': self.fName_entry.get(),
+                'lName': self.lName_entry.get(),
+                'emergency_contact_email': self.emergency_email_entry.get(),
+                'emergency_contact_name': self.emergency_name_entry.get(),
+                'specialization': self.specialization_entry.get(),
+                'is_disabled': self.is_disabled_var.get()
+            }
+
+            self.toggle_button.config(text="Edit")
+
+            # disable fields again after saving
+            self.username_entry.config(state='disabled')
+            self.email_entry.config(state='disabled')
+            self.password_entry.config(state='disabled')
+            self.fName_entry.config(state='disabled')
+            self.lName_entry.config(state='disabled')
+            self.emergency_email_entry.config(state='disabled')
+            self.emergency_name_entry.config(state='disabled')
+            self.specialization_entry.config(state='disabled')
+            self.is_disabled_check.config(state='disabled')
+
+    def save_changes_to_db(self):
+        user_relation = self.db.getRelation('User')
+        updated_data = {
+            'username': self.username_entry.get(),
+            'email': self.email_entry.get(),
+            'password': self.password_entry.get(),
+            'fName': self.fName_entry.get(),
+            'lName': self.lName_entry.get(),
+            'emergency_contact_email': self.emergency_email_entry.get(),
+            'emergency_contact_name': self.emergency_name_entry.get(),
+            'specialization': self.specialization_entry.get(),
+            'is_disabled': self.is_disabled_var.get()
+        }
+        
+        for field, new_value in updated_data.items():
+            if self.original_data[field] != new_value:
+                user_relation.editFieldInRow(self.user_id, field, new_value)
+        
+        self.db.close()
+        messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
+
 class UserSelectionApp(tk.Toplevel):
     def __init__(self, user_type, parent):
         super().__init__()
         self.db = Database()
-        self.geometry("280x165")
+        self.geometry("400x350")
         self.resizable(True, False)
         self.user_type = user_type
         self.parent = parent
-        self.selected_user_id = tk.IntVar(value=-1)
+        self.selected_user_id = None
         self.users = self.db.getRelation('User').getRowsWhereEqual("type", user_type)
         self.create_ui()
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -285,30 +456,62 @@ class UserSelectionApp(tk.Toplevel):
         h1_label.pack()
         
         # instruction label
-        docToUser = tk.Label(self, text=f"Choose the {self.user_type} to edit:", font=("Arial", 12, "bold"))
-        docToUser.pack()
+        doc_to_user = tk.Label(self, text=f"Choose the {self.user_type} to edit:", font=("Arial", 12, "bold"))
+        doc_to_user.pack()
+
+        # treeview frame
+        tree_frame = tk.Frame(self)
+        tree_frame.pack(pady=10, fill="both", expand=True)
+
+        # create a scrollbar for the tree view
+        scrollbar = ttk.Scrollbar(tree_frame)
+        scrollbar.pack(side="right", fill="y")
+
+        # create a treeview widget for displaying users
+        self.tree = ttk.Treeview(tree_frame, yscrollcommand=scrollbar.set, selectmode="browse")
+        self.tree.pack(fill="both", expand=True)
+
+        # connect the scrollbar to the tree view
+        scrollbar.config(command=self.tree.yview)
+
+        # define the columns for the tree view
+        self.tree["columns"] = ("ID", "First Name", "Last Name")
+
+        # define the width and alignment for each column
+        self.tree.column("#0", width=0, stretch=tk.NO)
+        self.tree.column("ID", anchor=tk.CENTER, width=50)
+        self.tree.column("First Name", anchor=tk.CENTER, width=150)
+        self.tree.column("Last Name", anchor=tk.CENTER, width=150)
+
+        # set the heading for each column
+        self.tree.heading("#0", text="", anchor=tk.W)
+        self.tree.heading("ID", text="ID", anchor=tk.W)
+        self.tree.heading("First Name", text="First Name", anchor=tk.W)
+        self.tree.heading("Last Name", text="Last Name", anchor=tk.W)
 
         # creating checkbox for each patient
         for user in self.users:
-            user_name = f"{user[4]} {user[5]}"
-            radio_button = tk.Radiobutton(self, text=user_name, variable=self.selected_user_id, value=user[0])
-            radio_button.pack(padx=60, anchor="w")
+            self.tree.insert("", "end", values=(user[0], user[4], user[5]))
 
         # select button 
         select_button = tk.Button(self, text=f"Select {self.user_type}", command=self.edit_user)  
-        select_button.pack()
+        select_button.pack(pady=0)
 
         # back button
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
     def edit_user(self):
-        selected_user_id = self.selected_user_id.get()
-        if selected_user_id != -1:
+        selected_item = self.tree.selection()
+        if selected_item:
+            self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = UserEditApp(selected_user_id, self)
+            if self.user_type == "Patient":
+                app = PatientEditApp(self.selected_user_id, self)
+            else:
+                app = MHWPEditApp(self.selected_user_id, self)
         else:
-            messagebox.showinfo("No {self.user_type} Selected", f"Please select a {self.user_type} to continue.")
+            messagebox.showinfo(f"No {self.user_type} Selected", f"Please select a {self.user_type} to continue.")
 
     def go_back(self): 
         self.destroy()
@@ -323,10 +526,11 @@ class AllocationSelection(UserSelectionApp):
         super().__init__(user_type, parent)
 
     def edit_user(self):
-        selected_user_id = self.selected_user_id.get()
-        if selected_user_id != -1:
+        selected_item = self.tree.selection()
+        if selected_item:
+            self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = AllocationEdit(selected_user_id, self)
+            app = AllocationEdit(self.selected_user_id, self)
         else:
             messagebox.showinfo("No Patient Selected", "Please select a patient to continue.")
 
@@ -338,28 +542,55 @@ class AllocationSelection(UserSelectionApp):
         h1_label.pack()
         
         # instruction label
-        docToUser = tk.Label(self, text=f"Choose the Patient to edit:", font=("Arial", 12, "bold"))
-        docToUser.pack()
+        doc_to_user = tk.Label(self, text=f"Choose the Patient to edit:", font=("Arial", 12, "bold"))
+        doc_to_user.pack()
 
-        # Fetch current MHWP assigned to the patient
-        
+        # treeview frame
+        tree_frame = tk.Frame(self)
+        tree_frame.pack(pady=10, fill="both", expand=True)
+
+        # create a scrollbar for tree view
+        scrollbar = ttk.Scrollbar(tree_frame)
+        scrollbar.pack(side="right", fill="y")
+
+        # create a treeview widget for displaying users
+        self.tree = ttk.Treeview(tree_frame, yscrollcommand=scrollbar.set, selectmode="browse")
+        self.tree.pack(fill="both", expand=True)
+
+        # connect the scrollbar to the tree view
+        scrollbar.config(command=self.tree.yview)
+
+        # define the column for the tree view
+        self.tree["columns"] = ("ID", "Patient Name", "Assigned MHWP")
+
+        # define the width and alignment for each column
+        self.tree.column("#0", width=0, stretch=tk.NO)
+        self.tree.column("ID", anchor=tk.CENTER, width=50)
+        self.tree.column("Patient Name", anchor=tk.CENTER, width=150)
+        self.tree.column("Assigned MHWP", anchor=tk.CENTER, width=200)
+
+        # set the heading for each column
+        self.tree.heading("#0", text="", anchor=tk.W)
+        self.tree.heading("ID", text="ID", anchor=tk.W)
+        self.tree.heading("Patient Name", text="Patient Name", anchor=tk.W)
+        self.tree.heading("Assigned MHWP", text="Assigned MHWP", anchor=tk.W)
 
         # creating checkbox for each patient
         for user in self.users:
             patient_id = user[0]
-            patient = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
-            assigned_mhwp_id = patient[0][3]
-            self.allocation_id = patient[0][0]
+            patient_name = f"{user[4]} {user[5]}"
 
-            if assigned_mhwp_id:
-                assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", assigned_mhwp_id)
+            mhwp_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
+            mhwp_allocation_id = mhwp_allocation[0][3]
+
+            if mhwp_allocation_id:
+                assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
                 assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
             else:
                 assigned_mhwp_name = "Unassigned"
 
-            user_name = f"{user[4]} {user[5]} - {assigned_mhwp_name}"
-            radio_button = tk.Radiobutton(self, text=user_name, variable=self.selected_user_id, value=user[0])
-            radio_button.pack(padx=10, anchor="w")
+            # insert user and their assigned MHWP into treeview
+            self.tree.insert("", "end", values=(user[0], patient_name, assigned_mhwp_name))
 
         # select button 
         select_button = tk.Button(self, text=f"Select {self.user_type}", command=self.edit_user)  
@@ -368,14 +599,6 @@ class AllocationSelection(UserSelectionApp):
         # back button
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
-
-        # logout button
-        logout_button = tk.Button(root, text="Logout", command=self.exitUser) 
-        logout_button.pack()
-
-    def exitUser(self):
-        subprocess.Popen(["python3", "login/logout.py"])
-        self.root.destroy()
 
 class KeyStatistics(tk.Toplevel):
     def __init__(self, parent):
@@ -397,8 +620,6 @@ class KeyStatistics(tk.Toplevel):
             mhwp_name = f"{mhwp_user[0][4]} {mhwp_user[0][5]}"
 
             self.total_appointments.update({mhwp_name : mhwp_appointments})
-
-        print(self.total_appointments)
     
     def create_ui(self):
         
@@ -413,15 +634,12 @@ class KeyStatistics(tk.Toplevel):
 
         # Data for the bar chart (categories and values)
         categories = list(self.total_appointments)
-        print(categories)
         no_items = len(categories)
-        print(no_items)
 
         values = []
         for elements in categories:
             length = len(self.total_appointments[elements])
             values.append(length)
-        print(values)
 
         # Dimensions for the bar chart
         bar_width = (600/no_items) - (no_items * 30)
@@ -460,9 +678,8 @@ class KeyStatistics(tk.Toplevel):
         mhwps = self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP')
         mhwp_row_count = len(mhwps)
 
-        # doesn't seem to be working - TO SPEAK TO TIM
         # calculating the number of disabled accounts
-        disabled_accounts = self.db.getRelation('User').getWhereEqual('is_disabled', True)
+        disabled_accounts = self.db.getRelation('User').getRowsWhereEqual('is_disabled', True)
         disabled_accounts_row_count = len(disabled_accounts)
 
         # calculating the number of unalocated patients

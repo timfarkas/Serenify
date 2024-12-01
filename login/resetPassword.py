@@ -9,8 +9,8 @@ import pandas as pd
 import subprocess
 
 
-class ResetPage:
-    def __init__(self, root):
+class ResetPage():
+    def __init__(self, root=None):
         self.root = root
         self.root.title("Reset Password")
         self.root.geometry("400x300")
@@ -76,9 +76,11 @@ class ResetPage:
     def updatePassword(self, id, password):
         db = Database()
         userRelation = db.getRelation('User')
+        print(f"Updating password for user_id: {id}")
         userRelation.editFieldInRow(id, targetAttribute='password', value=password)
+        db.printAll()
         db.close()
-
+        print(f"Password updated and database saved successfully.")        
     def returnToLogin(self):
         exec(open("login/login.py").read())
         self.root.destroy()
@@ -86,7 +88,8 @@ class ResetPage:
 ###### Run the application
 if __name__ == "__main__":
     root = tk.Tk()
-    app = ResetPage(root)
+    app = ResetPage(root=root)
+
     root.mainloop()
 
 ###### Used for debugging 
