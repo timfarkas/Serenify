@@ -11,8 +11,6 @@ from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, J
 
 from sessions import Session
 
-from login.login import LoginPage
-
 ## on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.
 
 class AllocationEdit(tk.Toplevel):
@@ -769,6 +767,7 @@ class AdminMainPage(tk.Tk):
         app = KeyStatistics(self)
 
     def log_out(self):
+        from login.login import LoginPage
         self.destroy()
         root = tk.Tk()
         app = LoginPage(root)
@@ -790,10 +789,10 @@ if __name__ == "__main__":
     isDisabled = sess.get("isDisabled")
     print(isDisabled)
 
-if userRole == "Admin" and isDisabled == False:
-    app = AdminMainPage()
-    app.mainloop()
-else:
-    root = tk.Tk()
-    app = LoginPage(root)
-    root.mainloop()
+    if userRole == "Admin" and isDisabled == False:
+        app = AdminMainPage()
+        app.mainloop()
+    else:
+        root = tk.Tk()
+        app = LoginPage(root)
+        root.mainloop()
