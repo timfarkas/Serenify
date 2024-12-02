@@ -409,4 +409,4 @@ class MHWPAppointmentManager():
 if __name__ == "__main__":
 
    # For testing purposes - in production this would come from login
-   app = MHWPAppointmentManager(mhwp_id=5)
+   app = MHWPAppointmentManager()
