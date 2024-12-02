@@ -5,6 +5,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database  # Import Database
+from mhwp.mhwp_dashboard import openmhwpdashboard
 from database.entities import Appointment  
 from database.dataStructs import Row  
 from sessions import Session
@@ -70,11 +71,13 @@ class LoginPage:
         verified = bool(user_data[3] == password)
 
         if verified:
+
             ### extract user details as session variables
             for key, value in zip(user_data.labels, user_data.values):
                 if key != "password": ## skip password
                     self.session.set(key=key,value=value)
             print(self.session)
+            print(self.session.getId())
             self.session.close()
             self.findMainPage(username, password, role)
         else:
@@ -101,7 +104,8 @@ class LoginPage:
             exec(open("admin/adminFunctions.py").read())
             self.root.destroy()
         elif role == "mhwp":
-            exec(open("mhwp/mhwpMain.py").read())
+            openmhwpdashboard()
+            # exec(open("mhwp/mhwp_dashboard.py").read())
             self.root.destroy()
         elif role == "patient": 
             exec(open("patient/patientMain.py").read())

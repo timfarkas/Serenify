@@ -4,16 +4,30 @@ from tkinter import scrolledtext
 import os
 import sys
 
-import numpy as np
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-# project_root=(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(project_root)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sessions import Session
 from .chatroom import startchatroom
-from .globalvariables import db
+from mhwp.booking import MHWPAppointmentManager
+from database.database import Database
+sess = Session()
+sess.open()
+userID = sess.getId()
+identity=sess.getRole()
 
+# from .mhwp_dashboard import open_review
 
-def opennotification(userID):
+# def sendnotifiation(senderID,recieverID,Content):
+#     newnotify = Notification(
+#                     user_id=recieverID,
+#                     source_id=senderID,
+#                     notifycontent=Content,
+#                     new=True,
+#                     timestamp=datetime.now(),
+#                 )
+#                 db.insert_notification(newnotify)
+
+def opennotification():
+    db = Database()
     def refresh_treeview():
         """Clears and refreshes the Treeview with updated data."""
         # Clear existing rows in the Treeview
@@ -22,15 +36,17 @@ def opennotification(userID):
 
         # Fetch notifications and re-populate
         usernotification = allnotification.getRowsWhereEqual('user_id', userID)
+        # print("all noti",usernotification)
         usernotification.sort(key=lambda x: x[-1], reverse=True)
-
+        print(usernotification)
         # Add rows to Treeview
         counter = 0
         for i in usernotification:
-            if counter == 10:
+            if counter == 30:
                 break
-            sourceuser = db.getRelation('User').getRowsWhereEqual('user_id', i[3])
-            if i[2] == "NM":
+            if i[2] == "Newchat":
+                sourceuser = db.getRelation('User').getRowsWhereEqual('user_id', i[3])
+                # print(sourceuser)
                 tree.insert(
                     "",
                     "end",
@@ -41,8 +57,29 @@ def opennotification(userID):
                             i[0]),
                     tags=("new" if i[4] else "old")
                 )
+            elif i[2] == "Newappointment":
+                tree.insert(
+                    "",
+                    "end",
+                    values=("You have a new appointment",
+                            "System",
+                            i[5].strftime("%Y-%m-%d %H:%M:%S"),
+                            i[3],
+                            i[0]),
+                    tags=("new" if i[4] else "old")
+                )
+            elif i[2] == "Newreview":
+                tree.insert(
+                    "",
+                    "end",
+                    values=("You have a new patient review",
+                            "System",
+                            i[5].strftime("%Y-%m-%d %H:%M:%S"),
+                            i[3],
+                            i[0]),
+                    tags=("new" if i[4] else "old")
+                )
             counter += 1
-
     # Create the main application window
     root = Tk()
     root.title("My message box")
@@ -71,27 +108,33 @@ def opennotification(userID):
     def on_row_selected(event):
         """Handles the double-click event on a Treeview row."""
         # Get the selected item
+
         selected_item = tree.selection()[0]
         item_values = tree.item(selected_item, "values")  # Get the values of the selected item
-        print("Selected item values:", item_values)
-
-        if userID > int(item_values[3]):
-            patientID = item_values[3]
-            identity = "m"
-        elif userID < int(item_values[3]):
-            patientID = userID
-            identity = "p"
-
-        # Update the 'new' field in the Notification relation
+        # print("Selected item values:", item_values)
         messageID = int(item_values[4])  # Extract MessageID
-        print(f"Updating Message ID: {messageID}")
+        # print(f"Updating Message ID: {messageID}")
         allnotification.editFieldInRow(messageID, 'new', False)
 
         # Refresh the Treeview after the update
         refresh_treeview()
+        if item_values[0]=="You have a new chat":
+            if identity == "MHWP":
+                patientID = item_values[3]
+            elif identity == "Patient":
+                patientID = userID
+            print(patientID)
+            startchatroom(int(patientID), identity)
+        elif item_values[0] == "You have a new appointment":
+            MHWPAppointmentManager(userID)
+        elif item_values[0] == "You have a new patient review":
+            pass
+            # opeen(userID)
+            # Update the 'new' field in the Notification relation
+
 
         # Start the chatroom
-        startchatroom(int(patientID), identity)
+
 
     # Configure tag styles
     tree.tag_configure("old", foreground="gray")
@@ -104,7 +147,10 @@ def opennotification(userID):
     tree.pack(fill="both", expand=True)
 
     def on_close():
+        # db.close()
         root.destroy()
-
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
+
+if __name__ == "__main__":
+    opennotification()

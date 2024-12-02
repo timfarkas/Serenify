@@ -106,10 +106,12 @@ class Patient:
         self.exercises_page = tk.Button(root, text="Exercises", command = self.exercises)
         self.edit_into = tk.Button(root, text="Edit personal info", command = self.edit_information)
         self.appointments = tk.Button(root, text="Book or cancel an appointment", command = self.book)
+        self.opendashboard = tk.Button(root, text="Open my dashboard", command=self.patientdashboard)
+
         self.exercises_page.grid(row=7, column=0, columnspan = 6, pady=5)
         self.edit_into.grid(row=8, column=0, columnspan = 6, pady=5)
         self.appointments.grid(row=9, column=0, columnspan=6, pady=5)
-
+        self.opendashboard.grid(row=10, column=0, columnspan=6, pady=5)
         # Logging out
         self.logout_button = tk.Button(root, text="Logout", command=self.exitUser)
         self.logout_button.grid(row=11, column=0, columnspan = 6, pady=5)
@@ -302,7 +304,10 @@ class Patient:
         # Book an appointement
         subprocess.Popen(["python3", "patient/booking.py"])
         self.root.destroy()
-
+    def patientdashboard(self):
+        # Edit information
+        subprocess.Popen(["python3", "patient/patient_dashboard.py"])
+        self.root.destroy()
 
 # Run the application
 if __name__ == "__main__":

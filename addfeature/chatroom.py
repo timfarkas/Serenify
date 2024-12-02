@@ -4,22 +4,24 @@ import tkinter as tk
 from tkinter import scrolledtext
 import os
 import sys
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-# project_root=(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(project_root)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sessions import Session
+from database.database import Database
 from database.database import ChatContent,Notification
-from .globalvariables import db,userID
+
 
 def startchatroom(patientID,identity):
+    db = Database()
     global ifsent
     ifsent = False
     roominfo = db.getRelation('Allocation').getRowsWhereEqual('patient_id',int(patientID))
+    # print(roominfo)
     roomnumber=roominfo[0][0]
     # roominfo=db.getRelation('Allocation').getRowsWhereEqual('allocation_id',roomnumber)
-    if identity=="p":
+    if identity==("Patient"):
         userME=patientID
         userYOU=roominfo[0][3]
-    elif identity=="m":
+    elif identity=="MHWP":
         userME=roominfo[0][3]
         userYOU=patientID
     userYOUinfo=db.getRelation("User").getRowsWhereEqual('user_id',int(userYOU))
@@ -93,16 +95,17 @@ def startchatroom(patientID,identity):
         if ifsent:
             newnotify = Notification(
                 user_id=userYOU,
-                notifycontent="NM",
+                notifycontent="Newchat",
                 source_id=userME,
                 new=True,
                 timestamp=datetime.now(),
             )
             db.insert_notification(newnotify)
+        # db.close()
         root.destroy()
+
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
 
 if __name__ == "__main__":
-    patientID = 2
-    startchatroom(patientID,"p")
+    startchatroom()

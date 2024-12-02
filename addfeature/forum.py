@@ -5,12 +5,15 @@ from datetime import datetime
 import os
 import sys
 
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-sys.path.append(project_root)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sessions import Session
+from database.database import Database, Forum
 
-from .globalvariables import db,userID
-
-def openforsum(userID):
+sess = Session()
+sess.open()
+userID = sess.getId()
+def openforsum():
+    db = Database()
     root = tk.Tk()
     forumdata= db.getRelation('Forum')
     parent_threads=forumdata.getRowsWhereEqual('thread_id',0)
@@ -178,7 +181,8 @@ def openforsum(userID):
         # db.close()
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_close)
-
     root.mainloop()
+if __name__ == "__main__":
+    openforsum()
 
 #note: need to tell which user is logged in when show user name

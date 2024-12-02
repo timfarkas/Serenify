@@ -2,22 +2,24 @@ import tkinter as tk
 import datetime
 import os
 import sys
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'database'))
-sys.path.append(project_root)
-from database.database import Database
-from database.database import MHWPReview
-from .globalvariables import db
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sessions import Session
+from database.database import Database,MHWPReview
+from sessions import Session
 
 
-def openrating(userID):
-
+def openrating():
+    db = Database()
+    sess = Session()
+    sess.open()
+    userID = sess.getId()
     root = tk.Tk()
     root.title("Patient info")
     mhwprelation = db.getRelation('Allocation').getRowsWhereEqual('patient_id',userID)
     MHWPID=mhwprelation[0][3]
     mhwpdata=db.getRelation('User').getRowsWhereEqual('user_id',MHWPID)
     username = str(mhwpdata[0][4]) + ' ' + str(mhwpdata[0][5])
-    specialization = mhwpdata[0][-2]
+    specialization = str(mhwpdata[0][-2])
     email = mhwpdata[0][2]
 
     def submit_review():
@@ -83,7 +85,11 @@ def openrating(userID):
     button = tk.Button(root, text="Submit my review", command=submit_review)
     button.pack()
 
-
-
+    def on_close():
+        # db.close()
+        root.destroy()
+    root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
 
+if __name__ == "__main__":
+    openrating()
