@@ -9,6 +9,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.database import Database
 from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
+from sessions import Session
+
+## on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.
 
 class AllocationEdit(tk.Toplevel):
     def __init__(self, patient_id, parent):
@@ -719,7 +722,7 @@ class AdminMainPage(tk.Tk):
         super().__init__()
         self.db = Database()
         self.title("Admin Dashboard")
-        self.geometry("310x280")
+        self.geometry("310x300")
         self.create_ui()
 
     def create_ui(self):
@@ -744,6 +747,9 @@ class AdminMainPage(tk.Tk):
         tk.Button(text="Key Statistics", command=self.key_stats, width=20
         ).pack(pady=5)
 
+        tk.Button(text="Log Out", command=self.log_out, width=20
+        ).pack(pady=5)
+
     def patient_allocations(self):
         self.withdraw()
         app = AllocationSelection("Patient", self)
@@ -760,6 +766,31 @@ class AdminMainPage(tk.Tk):
         self.withdraw()
         app = KeyStatistics(self)
 
+    def log_out(self):
+        from login.login import LoginPage
+        self.destroy()
+        root = tk.Tk()
+        app = LoginPage(root)
+        root.mainloop()
 
-app = AdminMainPage()
-app.mainloop()
+
+if __name__ == "__main__":
+    
+    ## open session
+    sess = Session()
+    sess.open()
+
+    ## get id and role from session
+    userId = sess.getId()
+    userRole = sess.getRole()
+
+    ## get any other details
+    isDisabled = sess.get("isDisabled")
+
+    if userRole == "Admin" and isDisabled == False:
+        app = AdminMainPage()
+        app.mainloop()
+    else:
+        root = tk.Tk()
+        app = LoginPage(root)
+        root.mainloop()
