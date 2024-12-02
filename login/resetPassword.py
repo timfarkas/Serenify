@@ -44,9 +44,24 @@ class ResetPage():
 
 
         # This DEBUG's the DB
+        # db = Database()
+        # db.printAll()
+        # db.close()
+
+    def changePassword(self, username, password):
         db = Database()
-        db.printAll()
-        db.close()
+        print('This should only execute once the user clicks submit...')
+        if self.match_in_database(username):
+            matching_ids = self.match_in_database(username)
+            if matching_ids:  # Check if any IDs matched
+                self.updatePassword(matching_ids[0], password)
+            db.close()
+            print("Password successfully changed")
+            messagebox.showinfo("Success", "Password successfully changed")
+        else:
+            print("No information found under the chosen username")
+            messagebox.showerror("Reset failed", "No information found under the chosen username")
+            db.close()
     
     def match_in_database(self, username):
         # Check if the provided details match the database
@@ -66,20 +81,6 @@ class ResetPage():
         db.printAll()
         db.close()
         print(f"Password updated and database saved successfully.")        
-
-    def changePassword(self, username, password):
-        print('This should only execute once the user clicks submit...')
-        if self.match_in_database(username):
-            matching_ids = self.match_in_database(username)
-            if matching_ids:  # Check if any IDs matched
-                self.updatePassword(matching_ids[0], password)
-            print("Password successfully changed")
-            messagebox.showinfo("Success", "Password successfully changed")
-        else:
-            print("No information found under the chosen username")
-            messagebox.showerror("Reset failed", "No information found under the chosen username")
-            
-   
     def returnToLogin(self):
         exec(open("login/login.py").read())
         self.root.destroy()
