@@ -65,11 +65,15 @@ class AllocationEdit(tk.Toplevel):
         new_mhwp_name = self.mhwp_var.get()
         new_mhwp_id = self.mhwp_dict.get(new_mhwp_name)
 
-        # Update the patient's MHWP in the database
-        userRelation = self.db.getRelation('Allocation')
-        userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
+        try:
+            # Update the patient's MHWP in the database
+            userRelation = self.db.getRelation('Allocation')
+            userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
 
-        messagebox.showinfo("Success", "MHWP updated successfully.")
+            messagebox.showinfo("Success", "MHWP updated successfully.")
+        
+        except Exception as e:
+            messagebox.showerror("Error", str(e)) 
 
     def go_back(self):
         self.destroy()
@@ -239,11 +243,17 @@ class PatientEditApp(tk.Toplevel):
             'is_disabled': self.is_disabled_var.get()
         }
         
-        for field, new_value in updated_data.items():
-            if self.original_data[field] != new_value:
-                user_relation.editFieldInRow(self.user_id, field, new_value)
+        try:
+            for field, new_value in updated_data.items():
+                if self.original_data[field] != new_value:
+                    user_relation.editFieldInRow(self.user_id, field, new_value)
+
+            messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
         
-        messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
+        except Exception as e:
+            messagebox.showerror("Error", str(e)) 
+        
+        
 
     def delete_user(self):
         user_relation = self.db.getRelation('User')
