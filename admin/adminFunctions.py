@@ -14,9 +14,9 @@ from sessions import Session
 ## on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.
 
 class AllocationEdit(tk.Toplevel):
-    def __init__(self, patient_id, parent):
+    def __init__(self, patient_id, parent, db):
         super().__init__()
-        self.db = Database()
+        self.db = db
         self.patient_id = patient_id
         self.parent = parent
         self.create_ui()
@@ -69,20 +69,20 @@ class AllocationEdit(tk.Toplevel):
         userRelation = self.db.getRelation('Allocation')
         userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
 
-        self.db.close()
         messagebox.showinfo("Success", "MHWP updated successfully.")
 
     def go_back(self):
         self.destroy()
+        self.parent.refresh_treeview()
         self.parent.deiconify()
 
     def on_close(self):
         self.destroy()
 
 class PatientEditApp(tk.Toplevel):
-    def __init__(self, user_id, parent):
+    def __init__(self, user_id, parent, db):
         super(PatientEditApp, self).__init__()
-        self.db = Database()
+        self.db = db
         self.parent = parent
         self.user_id = user_id
         self.user_type = self.db.getRelation('User').getRowsWhereEqual("user_id", user_id)[0][6]
@@ -243,7 +243,6 @@ class PatientEditApp(tk.Toplevel):
             if self.original_data[field] != new_value:
                 user_relation.editFieldInRow(self.user_id, field, new_value)
         
-        self.db.close()
         messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
 
     def delete_user(self):
@@ -254,11 +253,12 @@ class PatientEditApp(tk.Toplevel):
             self.db.delete_patient(patientId=self.user_id)
             messagebox.showinfo("Success", f"{self.user_type} deleted successfully.")
             
-            self.db.close()
+            self.parent.refresh_treeview()
             self.destroy()
             self.parent.deiconify()
 
     def go_back(self):
+        self.parent.refresh_treeview()
         self.destroy()
         self.parent.deiconify()
         
@@ -267,8 +267,8 @@ class PatientEditApp(tk.Toplevel):
         self.destroy()
 
 class MHWPEditApp(PatientEditApp):
-    def __init__(self, user_id, parent):
-        super().__init__(user_id, parent)
+    def __init__(self, user_id, parent, db):
+        super().__init__(user_id, parent, db)
 
     def create_ui(self):
         self.title("Edit User Information")
@@ -435,7 +435,6 @@ class MHWPEditApp(PatientEditApp):
             if self.original_data[field] != new_value:
                 user_relation.editFieldInRow(self.user_id, field, new_value)
         
-        self.db.close()
         messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
 
 class UserSelectionApp(tk.Toplevel):
@@ -504,19 +503,29 @@ class UserSelectionApp(tk.Toplevel):
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
+    def refresh_treeview(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        self.users = self.db.getRelation('User').getRowsWhereEqual('type', self.user_type)
+
+        for user in self.users:
+            self.tree.insert("", "end", values=(user[0], user[4], user[5]))
+
     def edit_user(self):
         selected_item = self.tree.selection()
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
             if self.user_type == "Patient":
-                app = PatientEditApp(self.selected_user_id, self)
+                app = PatientEditApp(self.selected_user_id, self, db=self.db)
             else:
-                app = MHWPEditApp(self.selected_user_id, self)
+                app = MHWPEditApp(self.selected_user_id, self, db=self.db)
         else:
             messagebox.showinfo(f"No {self.user_type} Selected", f"Please select a {self.user_type} to continue.")
 
     def go_back(self): 
+        self.db.close()
         self.destroy()
         self.parent.deiconify()
 
@@ -528,12 +537,34 @@ class AllocationSelection(UserSelectionApp):
     def __init__(self, user_type, parent):
         super().__init__(user_type, parent)
 
+    def refresh_treeview(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        self.users = self.db.getRelation('User').getRowsWhereEqual('type', self.user_type)
+
+        for user in self.users:
+            patient_id = user[0]
+            patient_name = f"{user[4]} {user[5]}"
+
+            mhwp_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
+            mhwp_allocation_id = mhwp_allocation[0][3] if mhwp_allocation else None
+
+            if mhwp_allocation_id:
+                assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
+                assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
+                print(assigned_mhwp_name)
+            else:
+                assigned_mhwp_name = "Unassigned"
+
+            self.tree.insert("", "end", values=(user[0], patient_name, assigned_mhwp_name))
+
     def edit_user(self):
         selected_item = self.tree.selection()
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = AllocationEdit(self.selected_user_id, self)
+            app = AllocationEdit(self.selected_user_id, self, db=self.db)
         else:
             messagebox.showinfo("No Patient Selected", "Please select a patient to continue.")
 
