@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import traceback
 import smtplib
 from email.mime.text import MIMEText
+from sessions import Session
+import subprocess
 
 
 
@@ -21,11 +23,25 @@ from patient.custom_calendar import Calendar
 
 
 class AppointmentBooking:
-   def __init__(self, root, patient_id, mhwp_id):
+
+   def __init__(self, root):
        self.root = root
        self.root.title("Appointment Booking System")
-       self.patient_id = patient_id
-       self.mhwp_id = mhwp_id
+
+       # Get ids from session
+       sess = Session()
+       sess.open()
+       self.patient_id = sess.getId()
+
+       # Get MHWP ID from allocation using patient_id
+       try:
+           self.db = Database()
+           allocation = self.db.getRelation("Allocation").getRowsWhereEqual("patient_id", self.patient_id)[0]
+           self.mhwp_id = allocation[3]
+       except Exception as e:
+           messagebox.showerror("Error", f"Failed to get allocation: {str(e)}")
+           self.root.destroy()
+           return
 
        # Initialise database connection
        try:
@@ -438,8 +454,8 @@ class AppointmentBooking:
 
    def back_to_main(self):
        """Return to main patient screen"""
-       import subprocess
-       subprocess.Popen(["python3", "patientMain.py"])
+       self.db.close()
+       subprocess.Popen(["python3", "patient/patientMain.py"])
        self.root.destroy()
 
 
@@ -458,9 +474,7 @@ class AppointmentBooking:
 
 
 if __name__ == "__main__":
-   root = tk.Tk()
-   db = Database()
-   allocation = db.getRelation("Allocation").getRowsWhereEqual("patient_id", 4)[0]
-   app = AppointmentBooking(root, patient_id=4, mhwp_id=allocation[3])
-   root.mainloop()
+    root = tk.Tk()
+    app = AppointmentBooking(root)
+    root.mainloop()
    
