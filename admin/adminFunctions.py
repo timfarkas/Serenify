@@ -151,7 +151,7 @@ class PatientEditApp(tk.Toplevel):
         self.emergency_name_entry.config(state='disabled')
         self.emergency_name_entry.grid(row=7, column=1)
 
-        tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
+        tk.Label(user_frame, text="Disable User:").grid(row=10, column=0)
         self.is_disabled_var = tk.BooleanVar(value=bool(user['is_disabled']))
         self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
         self.is_disabled_check.config(state='disabled')
@@ -343,7 +343,7 @@ class MHWPEditApp(PatientEditApp):
         self.specialization_entry.config(state='disabled')
         self.specialization_entry.grid(row=8, column=1)
 
-        tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
+        tk.Label(user_frame, text="Disable User:").grid(row=10, column=0)
         self.is_disabled_var = tk.BooleanVar(value=bool(user['is_disabled']))
         self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
         self.is_disabled_check.config(state='disabled')
