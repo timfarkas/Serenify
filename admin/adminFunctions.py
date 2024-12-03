@@ -670,7 +670,7 @@ class KeyStatistics(tk.Toplevel):
         self.title("Bar Chart with Tkinter Canvas")
 
         # Create a Canvas widget
-        canvas = tk.Canvas(self, width=600, height=582)
+        canvas = tk.Canvas(self, width=600, height=550)
         canvas.pack()
 
         # Graph title
@@ -722,6 +722,9 @@ class KeyStatistics(tk.Toplevel):
         mhwps = self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP')
         mhwp_row_count = len(mhwps)
 
+        # calculating the number of patients per MHWPs
+        patient_per_MHWP = patient_row_count / mhwp_row_count
+
         # calculating the number of disabled accounts
         disabled_accounts = self.db.getRelation('User').getRowsWhereEqual('is_disabled', True)
         disabled_accounts_row_count = len(disabled_accounts)
@@ -738,17 +741,33 @@ class KeyStatistics(tk.Toplevel):
         patient_records = self.db.getRelation('PatientRecord')
         no_patient_records = len(patient_records)
 
+        # calculating the number of active appointments
+        active_appointments = self.db.getRelation('Appointment').getRowsWhereEqual('status', 'active')
+        no_active_appointments = len(active_appointments)
+
+        # calculating the number of confirmed appointments
+        confirmed_appointments = self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Confirmed')
+        no_confirmed_appointments = len(confirmed_appointments)
+
+        # calculating the number of declined appointments
+        declined_appointments = self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Declined')
+        no_declined_appointments = len(declined_appointments)
+
         key_stats_x_position = 427
         key_stats_gap = 22
 
         # Create the summary of key statistics on the canvas
         canvas.create_text(300, (key_stats_x_position - 10), text="Key Statistics", font=("Arial", 16, "bold"))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 1), text=f"No. Patients: {patient_row_count}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 2), text=f"No. MHWP: {mhwp_row_count}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 3), text=f"No. Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 4), text=f"No. Unallocated Patients: {unalocated_patients_row_count}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 5 + 10), text=f"No. Journal Entries: {no_journal_entries}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 6 + 10), text=f"No. of Patient Records: {no_patient_records}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 1), text=f"No. Patients: {patient_row_count}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 2), text=f"No. MHWP: {mhwp_row_count}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 3), text=f"Patients Per MHWP: {patient_per_MHWP}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 4), text=f"Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 5), text=f"Unallocated Patients: {unalocated_patients_row_count}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 1), text=f"No. Journal Entries: {no_journal_entries}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 2), text=f"No. Patient Records: {no_patient_records}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 3), text=f"Active Appointments: {no_active_appointments}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 4), text=f"Confirmed Appointments: {no_confirmed_appointments}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 5), text=f"Declined Appointments: {no_declined_appointments}", font=("Arial", 14))
 
         # Back button
         back_button = tk.Button(self, text="Back", command=self.go_back)
