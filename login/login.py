@@ -6,6 +6,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database  # Import Database
 from mhwp.mhwp_dashboard import openmhwpdashboard
+from patient.patientMain import Patient
 from database.entities import Appointment  
 from database.dataStructs import Row  
 from sessions import Session
@@ -103,12 +104,13 @@ class LoginPage:
         if role == "admin":
             exec(open("admin/adminFunctions.py").read())
             self.root.destroy()
+            self.db.close()
         elif role == "mhwp":
             openmhwpdashboard()
             # exec(open("mhwp/mhwp_dashboard.py").read())
             self.root.destroy()
         elif role == "patient": 
-            exec(open("patient/patientMain.py").read())
+            Patient()
             self.root.destroy()
         else:
             messagebox.showerror("Error", "Role not recognised.")

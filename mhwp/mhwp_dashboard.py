@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
-from addfeature.patientMoodDisplay import displaymood
+import subprocess
+
+
 import os
 import sys
 from datetime import datetime
@@ -10,13 +12,20 @@ from sessions import Session
 from database.database import Database
 from addfeature.notificationbox import opennotification
 from addfeature.forum import openforsum
+from addfeature.patientMoodDisplay import displaymood
+from addfeature.globaldb import global_db
 from mhwp.booking import MHWPAppointmentManager
 from mhwp.patientInfo import PatientRecords
-
+from addfeature.globaldb import global_db
 
 def open_review():
+    global global_db
+    db = global_db
     # Create the main application window
-    db = Database()
+    sess = Session()
+    sess.open()
+    userID = sess.getId()
+    identity = sess.getRole()
     root = tk.Tk()
     root.title("My Patient Review")
     root.geometry("600x200")  # Set window size (optional)
@@ -49,7 +58,8 @@ def open_review():
     root.mainloop()
 
 def openmhwpdashboard():
-    db = Database()
+    global global_db
+    db = global_db
     sess = Session()
     sess.open()
     userID = sess.getId()
@@ -117,8 +127,6 @@ def openmhwpdashboard():
     main_frame.grid(row=0, column=0, sticky="nsew")
     main_frame.grid_columnconfigure(0, weight=0, uniform="group")  # Left fieldset
     main_frame.grid_columnconfigure(1, weight=0, uniform="group")  # Right fieldset
-
-
     # Left fieldset
     fieldset1 = tk.LabelFrame(main_frame, text="MHWP Key Feature", padx=10, pady=10)
     fieldset1.grid(row=0, column=0, padx=10, pady=10)
@@ -132,8 +140,6 @@ def openmhwpdashboard():
     btn.grid(row=4, column=0, sticky="w")
     label3 = tk.Label(fieldset1, text=f"You have {messagecounter} new massages")
     label3.grid(row=5, column=0, sticky="w")
-
-
     # Right fieldset
     fieldset2 = tk.LabelFrame(main_frame, text="MHWP Data", padx=10, pady=10)
     fieldset2.grid(row=0, column=1, padx=10, pady=10)
@@ -181,11 +187,16 @@ def openmhwpdashboard():
     w2 = Label(root, text="  Note: Double click to show mood tracker", anchor="e")
     w2.grid()
 
+    # def openappointment():
+    #     # db.close()
+    #     # root.destroy()
+    #     MHWPAppointmentManager()
+
 
 
     # Run the Tkinter event loop
     def on_close():
-        db.close
+        db.close()
         root.destroy()
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()

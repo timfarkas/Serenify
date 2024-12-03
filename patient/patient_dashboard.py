@@ -4,7 +4,6 @@ import os
 import sys
 from datetime import datetime
 import datetime
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database
@@ -12,10 +11,11 @@ from addfeature.notificationbox import opennotification
 from addfeature.forum import openforsum
 from addfeature.chatroom import startchatroom
 from patient.mhwp_rating import openrating
-
+from addfeature.globaldb import global_db
+global global_db
+db=global_db
 
 def openpatientdashboard():
-    db=Database()
     sess = Session()
     sess.open()
     userID = sess.getId()
@@ -89,19 +89,66 @@ def openpatientdashboard():
     main_frame.grid_columnconfigure(1, weight=1)
 
     # Left fieldset
-    fieldset1 = tk.LabelFrame(main_frame, text="Patient Key Feature", padx=10, pady=10)
+    fieldset1 = tk.LabelFrame(main_frame, text="My exercises", padx=10, pady=10,labelanchor="n")
     fieldset1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
-    btn = Button(fieldset1, text="Rate my MHWP", command=lambda:openrating(), width=15)
-    btn.grid(row=1, column=0, sticky="w")
-    btn = Button(fieldset1, text="Chat with MHWP", command=lambda:startchatroom(userID,"Patient"), width=15)
-    btn.grid(row=2, column=0, sticky="w")
-    btn = Button(fieldset1, text="Enter Forum", command=lambda: openforsum(), width=15)
-    btn.grid(row=3, column=0, sticky="w")
-    btn = Button(fieldset1, text="Open Message", command=lambda: clickbutton(), width=15)
-    btn.grid(row=4, column=0, sticky="w")
-    label3 = tk.Label(fieldset1, text=f"You have {messagecounter} new messages")
-    label3.grid(row=5, column=0, sticky="w")
+    # btn = Button(fieldset1, text="Rate my MHWP", command=lambda:openrating(), width=15)
+    # btn.grid(row=1, column=0, sticky="w")
+    # btn = Button(fieldset1, text="Chat with MHWP", command=lambda:startchatroom(userID,"Patient"), width=15)
+    # btn.grid(row=2, column=0, sticky="w")
+    # btn = Button(fieldset1, text="Enter Forum", command=lambda: openforsum(), width=15)
+    # btn.grid(row=3, column=0, sticky="w")
+    # btn = Button(fieldset1, text="Open Message", command=lambda: clickbutton(), width=15)
+    # btn.grid(row=4, column=0, sticky="w")
+    # label3 = tk.Label(fieldset1, text=f"You have {messagecounter} new messages")
+    # label3.grid(row=5, column=0, sticky="w")
 
+    userexerdata = db.getRelation('ExerRecord').getRowsWhereEqual("user_id", userID)
+    exercisedata = []
+    exerdict=dict()
+    colorset=["red", "blue", "green", "yellow"]
+
+    for i in userexerdata:
+        if i[2] in exerdict:
+            exerdict[i[2]]+=1
+        else:
+            exerdict[i[2]] =1
+        exercisedata.append(i[2])
+    canwidth=250
+    canheight=120
+    execanv = Canvas(fieldset1, width=canwidth, height=canheight, bg="white")
+    exercisedata = list(exerdict.values())[::-1]
+    labels = list(exerdict.keys())[::-1]
+    colors = ["Lemonchiffon","Coral", "Turquoise", "Lawngreen","yellow","violet","RoyalBlue"]
+
+    x = canwidth/2-60
+    y = canheight/2
+    radius = canheight/2*0.8
+    total = sum(exercisedata)
+    start_angle = 0
+
+    for i, value in enumerate(exercisedata):
+        # Calculate the extent of the slice
+        extent = (value / total) * 360
+        # Draw the slice
+        execanv.create_arc(x-radius, y - radius, x + radius, y + radius,start=start_angle, extent=extent,fill=colors[i], outline="black")
+        start_angle += extent
+    execanv.pack()
+
+    box_size = 10  # Size of the color box
+    padding = 5  # Spacing between items
+    legendx=canwidth-130
+    legendy=20
+    for i, (label, color) in enumerate(zip(labels, colors)):
+        execanv.create_rectangle(
+            legendx, legendy + i * (box_size + padding),
+               legendx + box_size, legendy + i * (box_size + padding) + box_size,
+            fill=color, outline="black"
+        )
+        execanv.create_text(
+            legendx + box_size + 10, legendy + i * (box_size + padding) + box_size // 2,
+            text=label, anchor="w", font=("Arial", 10)
+        )
+    execanv.pack()
 
     exerrecords = db.getRelation('ExerRecord').getRowsWhereEqual('user_id',userID)
     exercount=0
@@ -109,7 +156,6 @@ def openpatientdashboard():
     thirty_days_ago = nowtime - datetime.timedelta(days=30)
     for i in exerrecords:
         if i[3]>thirty_days_ago:
-            print(i)
             exercount+=1
 
     userdata = db.getRelation('User').getRowsWhereEqual('user_id', userID)
@@ -123,13 +169,12 @@ def openpatientdashboard():
     seven_days_ago = nowtime - datetime.timedelta(days=7)
     for i in usermood:
         if i[4] > seven_days_ago:
-            print(i[4])
             pastscore.append(i[2])
 
-    averagescore=(sum(pastscore)/len(pastscore) if len(pastscore)>0 else "")
+    averagescore=(round((sum(pastscore)/len(pastscore)),1) if len(pastscore)>0 else "")
 
 
-    fieldset2 = tk.LabelFrame(main_frame, text="Patient Data", padx=10, pady=10)
+    fieldset2 = tk.LabelFrame(main_frame, text="Key Statistics", padx=10, pady=10, labelanchor="n")
     fieldset2.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
     label1 = tk.Label(fieldset2, text=f"Exercises in 30 days: {exercount}")
     label1.grid(row=0, column=0, sticky="w")
@@ -173,7 +218,7 @@ def openpatientdashboard():
                              font=("Arial", 10))
             canv.create_text(dotdata[i][0], dotdata[i][1] - 20, text=usermood[i][2], fill="gray", font=("Arial", 10))
         canv.create_rectangle(15, 40, winwidth - 15, winheight - 15, outline="gray")
-        canv.create_text(120, 20, text=f"Name: {userName}", fill="dark blue", font=("Arial", 14, "bold"))
+        canv.create_text(80, 20, text=f"Name: {userName}", fill="Lightseagreen", font=("Arial", 14, "bold"))
     else:
         canv.create_text(winwidth / 2, winheight / 2, text="No Record", fill="Gray", font=("Arial", 20, "bold"))
     canv.grid(row=1, column=0, columnspan=2, pady=10)
@@ -184,6 +229,6 @@ def openpatientdashboard():
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
 
-openpatientdashboard()
+
 # if __name__ == "__main__":
 #     openpatientdashboard()

@@ -8,12 +8,14 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database, Forum
+from addfeature.globaldb import global_db
+global global_db
+db=global_db
 
-sess = Session()
-sess.open()
-userID = sess.getId()
 def openforsum():
-    db = Database()
+    sess = Session()
+    sess.open()
+    userID = sess.getId()
     root = tk.Tk()
     forumdata= db.getRelation('Forum')
     parent_threads=forumdata.getRowsWhereEqual('thread_id',0)
@@ -184,5 +186,4 @@ def openforsum():
     root.mainloop()
 if __name__ == "__main__":
     openforsum()
-
 #note: need to tell which user is logged in when show user name

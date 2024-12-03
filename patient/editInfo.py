@@ -21,7 +21,7 @@ class EditInfo:
         self.session.open()
         self.current_user_id = self.session.getId()
 
-        self.root = root
+        self.root =tk.Tk()
         self.root.title("Patient")
         self.root.geometry("500x700")
 
@@ -36,6 +36,7 @@ class EditInfo:
         self.create_widgets()
         self.load_current_info()
 
+        self.root.mainloop()
     def create_widgets(self):
         # Create entry fields and labels for name, email, passwords, first name, last name, emergency contact email
         self.username_label = tk.Label(self.root, text="Username:")
@@ -196,9 +197,10 @@ class EditInfo:
         self.root.destroy()
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = EditInfo(root, current_user_id)
-    root.mainloop()
+
+
+    app = EditInfo()
+
 # db = Database()
 # print("Getting and printing relation 'User':")
 # userRelation = db.getRelation('User')

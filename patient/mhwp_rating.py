@@ -6,10 +6,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database,MHWPReview
 from sessions import Session
-
+from addfeature.globaldb import global_db
+global global_db
+db=global_db
 
 def openrating():
-    db = Database()
     sess = Session()
     sess.open()
     userID = sess.getId()

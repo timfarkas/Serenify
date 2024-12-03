@@ -7,11 +7,13 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database
+from addfeature.globaldb import global_db
 from database.database import ChatContent,Notification
 
 
 def startchatroom(patientID,identity):
-    db = Database()
+    global global_db
+    db = global_db
     global ifsent
     ifsent = False
     roominfo = db.getRelation('Allocation').getRowsWhereEqual('patient_id',int(patientID))

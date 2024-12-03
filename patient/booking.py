@@ -15,28 +15,37 @@ from database import Database
 from database.entities import Appointment
 from database.dataStructs import Row
 from patient.custom_calendar import Calendar
+from sessions import Session
 
+from addfeature.globaldb import global_db
+global global_db
+db=global_db
 
 
 
 
 class AppointmentBooking:
-   def __init__(self, root, patient_id, mhwp_id):
-       self.root = root
+   def __init__(self):
+       sess = Session()
+       sess.open()
+       patient_id = sess.getId()
+       self.root = tk.Tk()
        self.root.title("Appointment Booking System")
+       self.db=db
+       # try:
+       #     self.db = Database()
+       #     self.db.printAll()
+       # except Exception as e:
+       #     messagebox.showerror("Database Error",
+       #                          f"Failed to connect to database: {str(e)} {str(traceback.format_exception(e))}")
+       #     self.root.destroy()
+       #     return
+
        self.patient_id = patient_id
-       self.mhwp_id = mhwp_id
+       self.mhwp_id = self.db.getRelation('Allocation').getRowsWhereEqual('patient_id',int(patient_id))[0][3]
 
        # Initialise database connection
-       try:
-           self.db = Database()
-           self.db.printAll()
-       except Exception as e:
 
-
-           messagebox.showerror("Database Error", f"Failed to connect to database: {str(e)} {str(traceback.format_exception(e))}")
-           self.root.destroy()
-           return
 
        # Available rooms list
        self.available_rooms = ["Room A", "Room B", "Room C"]  # You can modify this list as needed
@@ -49,7 +58,7 @@ class AppointmentBooking:
 
        # Ensure database is closed when window is closed
        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-
+       self.root.mainloop()
 
    def setup_ui(self):
        # Title
@@ -445,8 +454,8 @@ class AppointmentBooking:
 
    def on_closing(self):
        """Handle window closing"""
-       self.db.close()
-       root.destroy()
+       # self.db.close()
+       self.root.destroy()
        # try:
        #     if hasattr(self, 'db'):
        #         self.db.close()
@@ -458,9 +467,8 @@ class AppointmentBooking:
 
 
 if __name__ == "__main__":
-   root = tk.Tk()
-   db = Database()
+   # db = Database()
    allocation = db.getRelation("Allocation").getRowsWhereEqual("patient_id", 4)[0]
-   app = AppointmentBooking(root, patient_id=4, mhwp_id=allocation[3])
-   root.mainloop()
+   app = AppointmentBooking()
+
    

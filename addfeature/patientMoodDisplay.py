@@ -3,14 +3,16 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
+
 from database.database import Database
 from .chatroom import startchatroom
 
 sess = Session()
 sess.open()
 userID = sess.getId()
-
-
+from addfeature.globaldb import global_db
+global global_db
+db=global_db
 
 def startchat():
 
@@ -19,7 +21,6 @@ def startchat():
 
 
 def displaymood(patientID,identity):
-    db = Database()
     userdata = db.getRelation('User').getRowsWhereEqual('user_id', patientID)
     userName = str(userdata[0][4]) + ' ' + str(userdata[0][5])
     Moodrecord = db.getRelation('MoodEntry')
@@ -34,6 +35,7 @@ def displaymood(patientID,identity):
     for i in usermood:
         dotdata.append([cord, 260-i[2]*30])
         cord+=interval
+
 
     root = Tk()
     root.title("My mood score")
@@ -59,7 +61,6 @@ def displaymood(patientID,identity):
     def on_close():
         # db.close()
         root.destroy()
-        open()
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
 #
