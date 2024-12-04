@@ -214,6 +214,17 @@ class TestRelation(unittest.TestCase):
         attributeLabels = ['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled']
         attributeTypes = [int, str, str, str, str, str, str, str, str, str, bool]
         relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True)
+        
+        ### Test valid relation fields
+        relation.insertRow(attributeList=[1, 'mhwp1', 'mhwp1@example.com', 'password', 'Jane', 'Doe', 'MHWP', None, None, 'Psychology', False])
+        
+        relation.insertRow(attributeList=[2, 'admin1', 'admin1@example.com', 'password', 'Alice', 'Smith', 'Admin', None, None, None, False])
+        
+        relation.insertRow(attributeList=[3, 'patient1', 'patient1@example.com', 'password', 'Bob', 'Brown', 'Patient', 'emergency@example.com', 'Emergency Contact', None, False])
+        
+        ### reset relation
+        del relation 
+        relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True)
 
         # Test inserting a row with an invalid email
         with self.assertRaises(InvalidDataError):
@@ -232,8 +243,10 @@ class TestRelation(unittest.TestCase):
             relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'InvalidType', None, None, None, False])
 
         # # Test inserting a row with an invalid specialization
-        # with self.assertRaises(InvalidDataError):
-        #     relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'MHWP', None, None, '123', False])
+        with self.assertRaises(InvalidDataError):
+             relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'MHWP', None, None, '123', False])
+
+
 
     def test_insert_row_invalid_appointment(self):
         relationName = "Appointment"
@@ -580,10 +593,10 @@ class TestRelation(unittest.TestCase):
         with self.assertRaises(TypeError):
             relation.editRow(1, newValues=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'InvalidType', None, None, None, False])
         
-        # TODO
-        # # Test InvalidDataError for invalid specialization
-        # with self.assertRaises(InvalidDataError):
-        #     relation.editRow(1, newValues=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, 'InvalidSpecialization', False])
+        
+        # Test InvalidDataError for invalid specialization
+        with self.assertRaises(InvalidDataError):
+            relation.editRow(1, newValues=['user1', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, 'InvalidSpecialization', False])
         
         # Test TypeError for incorrect type
         with self.assertRaises(TypeError):
@@ -673,7 +686,7 @@ class TestRelation(unittest.TestCase):
         
         # Populate the relation with users
         user_relation.insertRow(attributeList=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
-        user_relation.insertRow(attributeList=['user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, None, False])
+        user_relation.insertRow(attributeList=['user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, 'Psychology', False])
         user_relation.insertRow(attributeList=['user3', 'user3@example.com', 'password', 'Alice', 'Johnson', 'Admin', None, None, None, False])
         
         # Edit field with valid data
@@ -721,7 +734,7 @@ class TestRelation(unittest.TestCase):
         
         # Populate the relation with users
         user_relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
-        user_relation.insertRow(attributeList=[2, 'user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, None, False])
+        user_relation.insertRow(attributeList=[2, 'user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, 'Psychology', False])
         user_relation.insertRow(attributeList=[3, 'user3', 'user3@example.com', 'password', 'Alice', 'Johnson', 'Admin', None, None, None, False])
         
         # Edit field with valid data

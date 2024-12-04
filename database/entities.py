@@ -200,7 +200,8 @@ class MHWP(User):
                  fName: str = '',
                  lName: str = '',
                  specialization: str = '',
-                 is_disabled: bool = False):
+                 is_disabled: bool = False,
+                 specializations_file = 'specializations.txt'):
         """
         Initialize an MHWP object.
 
@@ -224,6 +225,17 @@ class MHWP(User):
         self.lName = lName
         self.email = email
         self.specialization = specialization
+
+        app_directory = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+        specializations_file = os.path.join(app_directory, specializations_file)
+
+        try:
+            with open(specializations_file, 'r') as file:
+                self.valid_specializations_list = [re.sub(r'\(.*?\)', '', line).strip() for line in file.readlines()]
+        except FileNotFoundError:
+            raise InvalidDataError(f"Conditions file '{specializations_file}' not found.")
+        except Exception as e:
+            raise InvalidDataError(f"An error occurred while loading conditions file: {str(e)}")
 
         success = self.checkValidData()
 
@@ -255,11 +267,18 @@ class MHWP(User):
 
         return True
 
+    def checkValidSpecialization(self, specialization : str):
+        if specialization not in self.valid_specializations_list:
+            raise InvalidDataError(f"Specialization {specialization} is not a valid specialization.")
+        else:
+            return True
+        
     def checkValidData(self):
-        return MHWP.checkValidDataStatic(self.user_id, self.username, self.email, self.password, self.fName, self.lName,
-                                         self.type, self.specialization, self.is_disabled)
-
-
+        success = MHWP.checkValidDataStatic(self.user_id, self.username, self.email, self.password, self.fName, self.lName,
+                                         self.type, self.specialization, self.is_disabled) 
+        success = success and self.checkValidSpecialization(self.specialization) ## check if specialization is valid
+        return success 
+    
 class JournalEntry:
     """A class to represent a journal entry."""
 
