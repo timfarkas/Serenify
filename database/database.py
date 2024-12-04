@@ -484,6 +484,7 @@ class Database:
         for id in patientIds:
             self.delete_patient(id)
 
+
     @ensure_open
     def insert_mhwp(self, mhwp: MHWP):
         """
@@ -497,6 +498,18 @@ class Database:
         self.insert("User",
                     Row([mhwp.username, mhwp.email, mhwp.password, mhwp.fName, mhwp.lName, mhwp.type, None, None,
                          mhwp.specialization, mhwp.is_disabled]))
+
+    @ensure_open
+    def delete_mhwp(self, mhwp_id):
+        """
+        Deletes an MHWP user from the User relation.
+
+        Parameters
+        ----------
+        mhwp_id : int
+            The unique identifier of the MHWP user to be deleted.
+        """
+        self.getRelation("User").deleteRow(mhwp_id)
 
     @ensure_open
     def insert_allocation(self, allocation: Allocation):
