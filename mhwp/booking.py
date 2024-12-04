@@ -5,6 +5,8 @@ from tkinter import ttk, messagebox
 from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
+from datetime import datetime, timedelta
+from patient.custom_calendar import Calendar
 
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,8 +26,6 @@ class MHWPAppointmentManager():
        self.root.title("MHWP Appointment Management")
        self.mhwp_id = mhwp_id
 
-
-
        # Initialise database connection
        try:
            self.db = Database()
@@ -36,19 +36,10 @@ class MHWPAppointmentManager():
            self.root.destroy()
            return
 
-############# Not sure if this is correct so only commented it out
-#     # Back button
-#     self.back_button = tk.Button(root, text="Back", command=self.backButton)
-#     self.back_button.pack()
-
-#     def backButton(self):
-#         subprocess.Popen(["python3", "mhwpMain.py"])
-#         self.root.destroy()
-
        self.setup_ui()
        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-
        self.root.mainloop()
+
    def setup_ui(self):
        # Title
        h1_label = ttk.Label(
@@ -58,11 +49,24 @@ class MHWPAppointmentManager():
        )
        h1_label.pack(pady=10)
 
+       # Calendar Frame
+       calendar_frame = ttk.Frame(self.root)
+       calendar_frame.pack(pady=10, padx=10)
+
+       min_date = datetime.now()
+       max_date = min_date + timedelta(days=30)
+       self.calendar = Calendar(
+           calendar_frame,
+           mindate=min_date,
+           maxdate=max_date,
+           date_pattern='yyyy-mm-dd'
+       )
+       self.calendar.pack()
+       self.calendar.bind('<<CalendarSelected>>', lambda e: self.show_day_appointments())
 
        # Create notebook for different appointment views
        self.notebook = ttk.Notebook(self.root)
        self.notebook.pack(padx=10, pady=5, fill="both", expand=True)
-
 
        # Create tabs for different appointment statuses
        self.pending_frame = ttk.Frame(self.notebook)
@@ -70,24 +74,20 @@ class MHWPAppointmentManager():
        self.declined_frame = ttk.Frame(self.notebook)
        self.cancelled_frame = ttk.Frame(self.notebook)
 
-
        self.notebook.add(self.pending_frame, text="Pending Requests")
        self.notebook.add(self.confirmed_frame, text="Confirmed Appointments")
        self.notebook.add(self.declined_frame, text="Declined Requests")
        self.notebook.add(self.cancelled_frame, text="Cancelled Appointments")
 
-
-       # Create appointment lists for each tab
+       # Setup appointment lists
        self.setup_appointment_list(self.pending_frame, "Pending")
        self.setup_appointment_list(self.confirmed_frame, "Confirmed")
        self.setup_appointment_list(self.declined_frame, "Declined")
        self.setup_appointment_list(self.cancelled_frame, "Cancelled")
 
-
        # Button Frame
        button_frame = ttk.Frame(self.root)
        button_frame.pack(pady=10)
-
 
        ttk.Button(
            button_frame,
@@ -95,13 +95,11 @@ class MHWPAppointmentManager():
            command=lambda: self.update_appointment_status("Confirmed")
        ).pack(side='left', padx=5)
 
-
        ttk.Button(
            button_frame,
            text="Decline Selected",
            command=lambda: self.update_appointment_status("Declined")
        ).pack(side='left', padx=5)
-
 
        ttk.Button(
            button_frame,
@@ -109,26 +107,86 @@ class MHWPAppointmentManager():
            command=self.refresh_lists
        ).pack(side='left', padx=5)
 
-
        ttk.Button(
            button_frame,
            text="Back to Dashboard",
            command=self.back_to_dashboard
        ).pack(side='left', padx=5)
 
+   def show_day_appointments(self):
+       selected_date = self.calendar.get_date()
+       try:
+           appointments_relation = self.db.getRelation("Appointment")
+           day_appointments = appointments_relation.getRowsWhereEqual("mhwp_id", self.mhwp_id)
+
+           # Clear all trees
+           for status in ["Pending", "Confirmed", "Declined", "Cancelled"]:
+               tree = getattr(self, f"{status.lower()}_tree")
+               tree.delete(*tree.get_children())
+
+           # Process appointments for selected date
+           for row in day_appointments:
+               apt_date = row[3]
+               if isinstance(apt_date, datetime):
+                   if apt_date.strftime('%Y-%m-%d') == selected_date:
+                       apt = Appointment(
+                           appointment_id=row[0],
+                           patient_id=row[1],
+                           mhwp_id=row[2],
+                           date=row[3],
+                           status=row[5],
+                           room_name=row[4]
+                       )
+
+                       # Get patient name
+                       users_relation = self.db.getRelation("User")
+                       patient_rows = users_relation.getRowsWhereEqual("user_id", apt.patient_id)
+                       patient_name = patient_rows[0][1] if patient_rows else "Unknown"
+
+                       # Format date and time
+                       date_str = apt.date.strftime('%Y-%m-%d')
+                       time_str = apt.date.strftime('%H:%M')
+
+                       # Add to appropriate tree based on status
+                       tree = getattr(self, f"{apt.status.lower()}_tree")
+                       tree.insert(
+                           "",
+                           "end",
+                           values=(apt.appointment_id, patient_name, date_str, time_str, apt.status)
+                       )
+
+       except Exception as e:
+           print(f"Error loading appointments: {str(e)}")
+
+   def get_day_appointments(self, date_str):
+       appointments = []
+       try:
+           appointments_relation = self.db.getRelation("Appointment")
+           all_appointments = appointments_relation.getRowsWhereEqual("mhwp_id", self.mhwp_id)
+
+           for row in all_appointments:
+               apt_date = row[3]
+               if isinstance(apt_date, datetime):
+                   if apt_date.strftime('%Y-%m-%d') == date_str:
+                       appointments.append(row)
+       except Exception as e:
+           print(f"Error getting appointments: {str(e)}")
+       return appointments
 
    def setup_appointment_list(self, parent, status):
-       frame = ttk.Frame(parent)
-       frame.pack(fill="both", expand=True)
+       main_frame = ttk.Frame(parent)
+       main_frame.pack(fill="both", expand=True)
 
+       # Calendar frame removed since it's now in setup_ui
 
-       # Create Treeview
+       list_frame = ttk.Frame(main_frame)
+       list_frame.pack(side="right", fill="both", expand=True)
+
        tree = ttk.Treeview(
-           frame,
+           list_frame,
            columns=("ID", "Patient", "Date", "Time", "Status"),
            show="headings"
        )
-
 
        # Configure columns
        tree.heading("ID", text="ID")
@@ -137,7 +195,6 @@ class MHWPAppointmentManager():
        tree.heading("Time", text="Time")
        tree.heading("Status", text="Status")
 
-
        # Configure column widths
        tree.column("ID", width=50)
        tree.column("Patient", width=150)
@@ -145,22 +202,18 @@ class MHWPAppointmentManager():
        tree.column("Time", width=100)
        tree.column("Status", width=100)
 
-
        # Add scrollbar
-       scrollbar = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+       scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=tree.yview)
        tree.configure(yscrollcommand=scrollbar.set)
-
 
        # Pack elements
        tree.pack(side="left", fill="both", expand=True)
        scrollbar.pack(side="right", fill="y")
 
-
        # Store reference to tree
        setattr(self, f"{status.lower()}_tree", tree)
 
-
-       # Load appointments
+       # Load appointments initially
        self.load_appointments(tree, status)
 
 
@@ -252,8 +305,9 @@ class MHWPAppointmentManager():
            tree.insert("", "end", values=("", "Error loading appointments", "", "", ""))
 
    def update_appointment_status(self, new_status):
-       current_tree = \
-       self.notebook.children[self.notebook.select().split('.')[-1]].winfo_children()[0].winfo_children()[0]
+       current_tab = self.notebook.select()
+       status = "pending" if new_status in ["Confirmed", "Declined"] else new_status.lower()
+       current_tree = getattr(self, f"{status}_tree")
        selected_item = current_tree.selection()
 
        if not selected_item:
