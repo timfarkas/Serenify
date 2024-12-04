@@ -7,7 +7,7 @@ import smtplib
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from patient.custom_calendar import Calendar
-
+from database.database import Database, Notification
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
@@ -378,6 +378,7 @@ class MHWPAppointmentManager():
            patient = users_relation.getRowsWhereEqual("user_id", patient_id)[0]
            mhwp = users_relation.getRowsWhereEqual("user_id", self.mhwp_id)[0]
 
+
            # Gmail configuration
            smtp_server = "smtp.gmail.com"
            smtp_port = 587
@@ -388,16 +389,29 @@ class MHWPAppointmentManager():
            # Get appointment date for the message
            appointment_date = appointment_row[3].strftime('%Y-%m-%d %H:%M')
 
+
+
            if notification_type == 'accept':
                subject = "Appointment Confirmed"
+               notifyinfo = "AppointmentConfirmed"
                message = f"The appointment request for {appointment_date} has been confirmed. Please check your dashboard for more details."
            elif notification_type == 'decline':
                subject = "Appointment Declined"
+               notifyinfo = "AppointmentDeclined"
                message = f"The appointment request for {appointment_date} has been declined. Please check your dashboard for more details."
            else:
                subject = "Appointment Update"
+               notifyinfo = "AppointmentUpated"
                message = f"The appointment status for {appointment_date} has been updated. Please check your dashboard for more details."
 
+           newnotify = Notification(
+               user_id=patient_id,
+               notifycontent=notifyinfo,
+               source_id=0,
+               new=True,
+               timestamp=datetime.now(),
+           )
+           self.db.insert_notification(newnotify)
            # Send emails using SMTP
            with smtplib.SMTP(smtp_server, smtp_port) as server:
                server.starttls()  # Enable TLS
@@ -443,9 +457,10 @@ class MHWPAppointmentManager():
 
    def back_to_dashboard(self):
        """Return to main MHWP dashboard"""
-       import subprocess
-       subprocess.Popen(["python3", "mhwpMain.py"])
+       self.db.close()
        self.root.destroy()
+       import subprocess
+       subprocess.Popen(["python3", "mhwp/mhwp_dashboard.py"])
 
 
    def on_closing(self):
@@ -456,7 +471,8 @@ class MHWPAppointmentManager():
        except Exception as e:
            print(f"Error closing database: {str(e)}")
        self.root.destroy()
-
+       import subprocess
+       subprocess.Popen(["python3", "mhwp/mhwp_dashboard.py"])
 
 
 

@@ -124,6 +124,7 @@ class Database:
         """
         self.__save_database()
         self.logger.info("Successfully saved database, exiting")
+
         self.__dict__.clear()
         self._is_closed = True
 

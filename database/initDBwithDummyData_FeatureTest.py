@@ -20,7 +20,7 @@ def initDummyDatabase(db: Database):
         admin_user0 = Admin(user_id=0, username='System', password='pass123456')
         admin_user1 = Admin(user_id=1, username='admin1', password='pass123456')
         patient_user1 = Patient(
-            username='Sunflower',
+            username='patient1',
             password='pass123456',
             fName='John',
             lName='Doe',
@@ -29,8 +29,8 @@ def initDummyDatabase(db: Database):
             is_disabled=False,
         )
         patient_user2 = Patient(
-            username='Lavender',
-            password='pass456789',
+            username='patient2',
+            password='pass123456',
             fName='Jane',
             lName='Smith',
             email='janesmith@example.com',
@@ -38,8 +38,8 @@ def initDummyDatabase(db: Database):
             is_disabled=False,
         )
         patient_user3 = Patient(
-            username='Orchid',
-            password='pass456789',
+            username='patient3',
+            password='pass123456',
             fName='Tony',
             lName='Wills',
             email='tonywills@example.com',
@@ -47,16 +47,16 @@ def initDummyDatabase(db: Database):
             is_disabled=False,
         )
         mhwp_user1 = MHWP(
-            username='Elephant',
-            password='pass456789',
+            username='mhwp1',
+            password='pass123456',
             fName='DrMartin',
             lName='Smith',
             email='drsmith@example.com',
             specialization='Psychology'
         )
         mhwp_user2 = MHWP(
-            username='Whale',
-            password='pass456789',
+            username='mhwp2',
+            password='pass123456',
             fName='Dr',
             lName='Brown',
             email='drbrown@example.com',
@@ -201,6 +201,20 @@ def initDummyDatabase(db: Database):
             timestamp=datetime.datetime(year=2024, month=11, day=5, hour=12, minute=0, second=0)
         )
 
+        mood_entry12 = MoodEntry(
+            patient_id=4,
+            moodscore=1,
+            comment='Feel Bad',
+            timestamp=datetime.datetime(year=2024, month=11, day=28, hour=12, minute=0, second=0)
+        )
+
+        mood_entry13 = MoodEntry(
+            patient_id=4,
+            moodscore=1,
+            comment='Still bad.',
+            timestamp=datetime.datetime(year=2024, month=11, day=29, hour=12, minute=0, second=0)
+        )
+
         # Insert into database
         db.insert_mood_entry(mood_entry1)
         db.insert_mood_entry(mood_entry2)
@@ -213,6 +227,8 @@ def initDummyDatabase(db: Database):
         db.insert_mood_entry(mood_entry9)
         db.insert_mood_entry(mood_entry10)
         db.insert_mood_entry(mood_entry11)
+        db.insert_mood_entry(mood_entry12)
+        db.insert_mood_entry(mood_entry13)
 
         # Create PatientRecord object and insert
         patient_record1 = PatientRecord(
@@ -382,7 +398,41 @@ def initDummyDatabase(db: Database):
             exercise="Mindfulness",
             timestamp=datetime.datetime(year=2024, month=11, day=21, hour=10, minute=0, second=0),
         )
+        exer2 = ExerRecord(
+            user_id=3,
+            exercise="Mindfulness",
+            timestamp=datetime.datetime(year=2024, month=11, day=22, hour=10, minute=0, second=0),
+        )
+
+        exer3 = ExerRecord(
+            user_id=3,
+            exercise="Mindfulness",
+            timestamp=datetime.datetime(year=2024, month=11, day=23, hour=10, minute=0, second=0),
+        )
+        exer4 = ExerRecord(
+            user_id=3,
+            exercise="Body Scan",
+            timestamp=datetime.datetime(year=2024, month=11, day=24, hour=10, minute=0, second=0),
+        )
+        exer5 = ExerRecord(
+            user_id=3,
+            exercise="Body Scan",
+            timestamp=datetime.datetime(year=2024, month=11, day=25, hour=10, minute=0, second=0),
+        )
+        exer6 = ExerRecord(
+            user_id=3,
+            exercise="Self Guided Mindfulness",
+            timestamp=datetime.datetime(year=2024, month=11, day=26, hour=10, minute=0, second=0),
+        )
         db.insert_exerrecord(exer1)
+        db.insert_exerrecord(exer2)
+        db.insert_exerrecord(exer3)
+        db.insert_exerrecord(exer4)
+        db.insert_exerrecord(exer5)
+        db.insert_exerrecord(exer6)
+
+
+
 if __name__ == "__main__":
     db = Database(overwrite=True)
     initDummyDatabase(db)

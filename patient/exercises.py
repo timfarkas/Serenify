@@ -7,21 +7,22 @@ import sys
 import os
 import datetime
 from database.database import Database,ExerRecord
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
+from database.entities import ExerRecord
+
 
 class Exercises:
-    def __init__(self,userID):
-        self.root = tk.Tk()
-        self.root.title("Mental Health Exercises")
-        self.root.geometry("1000x800")
-        self.userID=userID
-
-        # Initialize the session instance
+    def __init__(self):
+        root = tk.Tk()
+        self.db=Database()
+        self.root = root
         self.session = Session()
         self.session.open()
-        self.current_user_id = self.session.getId()
+        self.userID = self.session.getId()
+        self.root.title("Mental Health Exercises")
+        self.root.geometry("1000x800")
+        # Initialize the session instance
 
         # Search Bar and Clear Button
         self.search_frame = tk.Frame(self.root)
@@ -29,13 +30,13 @@ class Exercises:
         self.search_var = tk.StringVar()  # For holding the search input
         self.search_entry = tk.Entry(self.search_frame, textvariable=self.search_var, font=('Arial', 14))
         self.search_entry.grid(row=0, column=0, pady=10)
-        self.search_button = tk.Button(self.search_frame, text="Search", command=self.search_exercises) 
+        self.search_button = tk.Button(self.search_frame, text="Search", command=lambda:self.search_exercises())
         self.search_button.grid(row=0, column=1, pady=5)
         # self.clear_button = tk.Button(self.search_frame, text="Clear") #command=self.clear_search,
         # self.clear_button.grid(row=1, column=1)
 
         #Back button
-        self.back_button = tk.Button(self.root, text="Back to the main page", command=self.backButton)
+        self.back_button = tk.Button(self.root, text="Back to the main page", command= self.backButton)
         self.back_button.grid(row=0, column=0, pady=10)
         
         # H1 equivalent
@@ -89,12 +90,12 @@ class Exercises:
         }
         self.create_exercise_buttons()
 
-
     #Call 999 in an Emergency
         self.emergency_label = tk.Label(self.root, text="Call 999 in an Emergency", font=("Arial", 14), fg = "red")
         self.emergency_label.grid(row=17, column=0, pady=5)
-
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.mainloop()
+
     def feedback_window(self, link,category):
         webbrowser.open(link)
         # self.open_link()
@@ -122,8 +123,8 @@ class Exercises:
             exercise=cate,
             timestamp=datetime.datetime.now(),
         )
-        db.insert_exerrecord(newrecord)
-        room1 = db.getRelation('ExerRecord')
+        self.db.insert_exerrecord(newrecord)
+        room1 = self.db.getRelation('ExerRecord')
         print(room1)
         self.root3.destroy()
 
@@ -156,8 +157,11 @@ class Exercises:
         webbrowser.open(url)
     
     def backButton(self):
+        import subprocess
         subprocess.Popen(["python3", "patient/patientMain.py"])
+        self.db.close()
         self.root.destroy()
+
 
 
     def display_search_results(self,searchresults):
@@ -176,11 +180,13 @@ class Exercises:
             label.grid(row=0, pady=5)
 
     def on_close(self):
-        # db.close()
+        import subprocess
+        subprocess.Popen(["python3", "patient/patientMain.py"])
+        self.db.close()
         self.root.destroy()
-
     def search_exercises(self):
-        search_term = self.search_var.get().lower()
+        search_term = self.search_var.get() # Normalize input
+        print(f"Search Term: {search_term}")  # Debugging
         if search_term:
             matching_exercises = []
             for category, exercises in self.exercises.items():
@@ -198,8 +204,7 @@ class Exercises:
             messagebox.showwarning("Empty Search", "Please enter a term to search.")
         self.search_var.set("")  # Clear the search bar
 
-
-# Run the application
-if __name__ == "__main__":
-    app = Exercises(2)
+# # Run the application
+# if __name__ == "__main__":
+#     Exercises()
 

@@ -15,27 +15,29 @@ from database.initDBwithDummyData import initDummyDatabase
 # # db.close()
 
 class EditInfo:
-    def __init__(self, root):
+    def __init__(self):
         # Initialize the session instance 
         self.session = Session()
         self.session.open()
         self.current_user_id = self.session.getId()
-
-        self.root = root
+        self.db = Database()
+        self.root =tk.Tk()
         self.root.title("Patient")
         self.root.geometry("500x700")
 
         # Title label
-        self.title_label = tk.Label(root, text="Personal Information", font=("Arial", 24, "bold"))
+        self.title_label = tk.Label(self.root, text="Personal Information", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=6, pady=10)
 
-        self.t_label = tk.Label(root, text="Edit your personal information here:", font=("Arial", 12))
+        self.t_label = tk.Label(self.root, text="Edit your personal information here:", font=("Arial", 12))
         self.t_label.grid(row=1, column=0, columnspan = 6, pady=10)
 
         # UI components
         self.create_widgets()
         self.load_current_info()
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        self.root.mainloop()
     def create_widgets(self):
         # Create entry fields and labels for name, email, passwords, first name, last name, emergency contact email
         self.username_label = tk.Label(self.root, text="Username:")
@@ -48,19 +50,19 @@ class EditInfo:
         self.email_entry = tk.Entry(self.root)
         self.email_entry.grid(row=3, column=1, padx=10, pady=10)
 
-        self.old_password_label = tk.Label(root, text="Old Password")
+        self.old_password_label = tk.Label(self.root, text="Old Password")
         self.old_password_label.grid(row=4, column=0, padx=10, pady=10)
-        self.old_password_entry = tk.Entry(root, show="*")
+        self.old_password_entry = tk.Entry(self.root, show="*")
         self.old_password_entry.grid(row=4, column=1, padx=10, pady=10)
 
-        self.new_password_label = tk.Label(root, text="New Password")
+        self.new_password_label = tk.Label(self.root, text="New Password")
         self.new_password_label.grid(row=5, column=0, padx=10, pady=10)
-        self.new_password_entry = tk.Entry(root, show="*")
+        self.new_password_entry = tk.Entry(self.root, show="*")
         self.new_password_entry.grid(row=5, column=1, padx=10, pady=10)
 
-        self.confirm_password_label = tk.Label(root, text="Confirm New Password")
+        self.confirm_password_label = tk.Label(self.root, text="Confirm New Password")
         self.confirm_password_label.grid(row=6, column=0, padx=10, pady=10)
-        self.confirm_password_entry = tk.Entry(root, show="*")
+        self.confirm_password_entry = tk.Entry(self.root, show="*")
         self.confirm_password_entry.grid(row=6, column=1, padx=10, pady=10)
 
         self.fname_label = tk.Label(self.root, text="First Name:")
@@ -89,7 +91,7 @@ class EditInfo:
         self.update_button.grid(row=11, column=0, columnspan=2, pady=20)
 
         #Back button
-        self.back_button = tk.Button(root, text="Back to the main page", command=self.backButton)
+        self.back_button = tk.Button(self.root, text="Back to the main page", command=self.backButton)
         self.back_button.grid(row=12, column=0, columnspan=2, pady=5)
 
 
@@ -98,8 +100,8 @@ class EditInfo:
         self.root.destroy()
     
     def load_current_info(self):
-        db = Database()
-        user_info = db.getRelation("User")
+        # db = Database()
+        user_info = self.db .getRelation("User")
         user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
         user_info = pd.DataFrame(user_info)
         if not user_info.empty:
@@ -118,8 +120,8 @@ class EditInfo:
 
     def match_in_database(self, username, email, new_password, fname, lname, emergency_contact_name, emergency_contact_email):
         # Check if the provided details match the database
-        db = Database()
-        user_info = db.getRelation("User")
+        # db = Database()
+        user_info = self.db.getRelation("User")
         user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
         user_info = pd.DataFrame(user_info)
 
@@ -151,8 +153,8 @@ class EditInfo:
         emergency_contact_email = self.emergency_contact_email_entry.get()
         emergency_contact_name = self.emergency_contact_name_entry.get()
 
-        db = Database()
-        user = db.getRelation("User")
+        # db = Database()
+        user = self.db.getRelation("User")
         user = user.getRowsWhereEqual('user_id', self.current_user_id)
         user = pd.DataFrame(user)
         current_password = user.iloc[0][3]
@@ -176,9 +178,9 @@ class EditInfo:
             newValues =(username, email, new_password if new_password else current_password, fname, lname, x, emergency_contact_email, emergency_contact_name, y, False)
             try:
                 # Try to perform the update
-                user = db.getRelation("User")
+                user = self.db.getRelation("User")
                 user.editRow(primaryKey=self.current_user_id, newValues=list(newValues))
-                db.close() #to save the database
+                # self.db.close() #to save the database
                 # Mask the password with asterisks
                 masked_password = '*' * len(new_password)
                 messagebox.showinfo(
@@ -192,13 +194,23 @@ class EditInfo:
             messagebox.showerror("Update Failed", "No new information found.")
 
     def backButton(self):
-        subprocess.Popen(["python3", "patient/patientMain.py"])
         self.root.destroy()
+        self.db.close()
+        import subprocess
+        subprocess.Popen(["python3", "patient/patientMain.py"])
+    def on_close(self):
+        self.root.destroy()
+        self.db.close()
+        import subprocess
+        subprocess.Popen(["python3", "patient/patientMain.py"])
+
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = EditInfo(root)
-    root.mainloop()
+
+
+    app = EditInfo()
+
+
 # db = Database()
 # print("Getting and printing relation 'User':")
 # userRelation = db.getRelation('User')

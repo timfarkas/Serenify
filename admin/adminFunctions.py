@@ -57,7 +57,7 @@ class AllocationEdit(tk.Toplevel):
         save_button.pack(pady=0)
 
         # Back Button
-        self.back_button = tk.Button(self, text="Back", command=self.go_back)
+        self.back_button = tk.Button(self, text="Back", command=selfç)
         self.back_button.pack(pady=0)
 
     def save_mhwp(self):

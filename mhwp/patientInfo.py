@@ -11,11 +11,12 @@ import pandas as pd
 
 class PatientRecords:
     def __init__(self, user_id=None):
-        # Initialize the session instance 
-        # self.session = Session()
-        # self.session.open()
-        # self.current_user_id = self.session.getId()
-        self.current_user_id = 3
+
+        # Initialize the session instance
+        self.session = Session()
+        self.session.open()
+        self.current_user_id = self.session.getId()
+        self.db = Database()
         self.root =  tk.Tk()
         self.root.title("Patient Records")
         self.root.geometry("700x700")
@@ -41,8 +42,8 @@ class PatientRecords:
         self.scrollbar.config(command=self.patient_listbox.yview)
 
         # Populate List with Patients
-        db = Database()
-        self.patients = db.getRelation("User")
+        # db = Database()
+        self.patients = self.db.getRelation("User")
         self.patients = self.patients.getRowsWhereEqual('type', 'Patient')
         self.patients = pd.DataFrame(self.patients)
         for _, row in self.patients.iterrows():
@@ -78,7 +79,7 @@ class PatientRecords:
 
         self.save_button = tk.Button(self.note_frame, text="Save", command=self.save_diagnosis_and_notes)
         self.save_button.grid(row=2, column=1, pady=10, sticky="e")
-
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.mainloop()
 
     def load_conditions(self, filename):
@@ -100,9 +101,10 @@ class PatientRecords:
         selected_patient = self.patients.iloc[selected_index[0]]
         patient_id = selected_patient[0]
 
-        # Loading patient data
-        db = Database()
-        self.record = db.getRelation("PatientRecord")
+
+        #Loading patient data
+        # db = Database()
+        self.record = self.db.getRelation("PatientRecord")
         self.record = self.record.getRowsWhereEqual('patient_id', patient_id)
         self.record = pd.DataFrame(self.record)
         db.close()
@@ -134,13 +136,75 @@ class PatientRecords:
             else:
                 self.record_text.insert(tk.END, "No notes available.\n")
 
+
+                # Displaying the extracted data
+                self.record_text.insert(tk.END, f"Notes: {notes}\n")
+                self.record_text.insert(tk.END, f"Diagnosis: {diagnosis}\n\n")
+
             self.record_text.config(state=tk.DISABLED)
         else:
             # If no records are found
-            self.record_text.config(state=tk.NORMAL)
-            self.record_text.delete("1.0", tk.END)
-            self.record_text.insert(tk.END, "No records found for the selected patient.\n")
-            self.record_text.config(state=tk.DISABLED)
+            messagebox.showerror("Error", "User not found in the database.")
+
+    def save_note(self):
+        """Saves the notes for the selected patient."""
+        # Get selected patient index and validate selection
+        selected_index = self.patient_listbox.curselection()
+        if not selected_index:
+            messagebox.showwarning("No Patient Selected", "Please select a patient to save notes.")
+            return
+        # Extract patient ID and new note text
+        patient_id = int(self.patients.iloc[selected_index[0]][0]) # manually typecasting as otherwise it throws a type error
+        new_note = self.notes_entry.get()
+        if not new_note:
+            messagebox.showwarning("Incomplete Data", "Please provide notes.")
+            return
+
+        try:
+            # Connect to database and get existing records
+            # db = Database()
+            records_relation = self.db.getRelation("PatientRecord")
+            existing_records = records_relation.getRowsWhereEqual('patient_id', patient_id)
+
+            #Initialise variables for existing data
+            existing_notes = ""
+            conditions = []
+            if existing_records:
+                existing_notes = existing_records[0][3]
+                conditions = existing_records[0][4]
+
+            # Combine existing notes with new note
+            combined_notes = f"{existing_notes}\nDiagnosis: ['Depression']\n\nNotes: {new_note}" if existing_notes else new_note
+
+            # Create and save new patient record
+            new_record = PatientRecord(
+                patient_id=patient_id,
+                mhwp_id=3,
+                notes=combined_notes,
+                conditions=conditions if conditions else []
+            )
+            print("Before save:", self.record)
+            self.db.insert_patient_record(new_record)
+            print("After save:", self.db.getRelation("PatientRecord").getRowsWhereEqual('patient_id', patient_id))
+
+            # Cleanup and refresh display
+            # db.close()
+            # db = Database()
+            self.load_patient_records(None)
+            self.notes_entry.delete(0, tk.END)
+            messagebox.showinfo("Success", "Notes saved successfully")
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save notes: {str(e)}")
+# =======
+#             self.record_text.config(state=tk.DISABLED)
+#         else:
+#             # If no records are found
+#             self.record_text.config(state=tk.NORMAL)
+#             self.record_text.delete("1.0", tk.END)
+#             self.record_text.insert(tk.END, "No records found for the selected patient.\n")
+#             self.record_text.config(state=tk.DISABLED)
+# >>>>>>> main
 
 
     def save_diagnosis_and_notes(self):
@@ -159,9 +223,11 @@ class PatientRecords:
             return
 
         try:
-            # Connect to database and save
-            db = Database()
-            records_relation = db.getRelation("PatientRecord")
+
+            # Connect to database and get existing records
+            # self.db = Database()
+            records_relation = self.db.getRelation("PatientRecord")
+
             existing_records = records_relation.getRowsWhereEqual('patient_id', patient_id)
 
             # Handle existing conditions
@@ -190,10 +256,18 @@ class PatientRecords:
                 notes=new_notes,
                 conditions=conditions
             )
-            db.insert_patient_record(new_record)
-            db.close()
 
-            # Refresh display
+
+            # Save record and refresh display
+            self.db.insert_patient_record(new_record)
+            # db.close()
+            # db = Database()
+# =======
+#             db.insert_patient_record(new_record)
+#             db.close()
+
+#             # Refresh display
+# >>>>>>> main
             self.load_patient_records(None)
             self.notes_entry.delete("1.0", tk.END)
             self.diagnosis_var.set("")
@@ -201,6 +275,12 @@ class PatientRecords:
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save notes and diagnosis: {str(e)}")
+
+    def on_close(self):
+        self.db.close()
+        self.root.destroy()
+        import subprocess
+        subprocess.Popen(["python3", "mhwp/mhwp_dashboard.py"])
 
 
 if __name__ == "__main__":
