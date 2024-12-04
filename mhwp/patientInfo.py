@@ -9,11 +9,6 @@ from database import Database
 from sessions import Session
 import pandas as pd
 
-
-
-# Fix diagnosis --> appends to all records; what if they want to change diagnosis instead of only adding next one
-# Ask if they want to change diagnosis or add diagnosis to preexisting records 
-
 class PatientRecords:
     def __init__(self, user_id=None):
         # Initialize the session instance 
@@ -97,7 +92,7 @@ class PatientRecords:
             return []
 
     def load_patient_records(self, event=None):
-        """Loads selected patient's records into the text box."""
+        """Loads selected patient's most recent diagnosis and all non-empty notes."""
         selected_index = self.patient_listbox.curselection()
         if not selected_index:
             return
@@ -114,21 +109,39 @@ class PatientRecords:
 
         # Check if the record is not empty
         if not self.record.empty:
+            # Sort records by the first column (record_id) in descending order
+            self.record.sort_values(by=self.record.columns[0], ascending=False, inplace=True)  # Use the first column for sorting
+            most_recent_record = self.record.iloc[0]  # Get the most recent record
+
+            # Extract the most recent diagnosis (assumed to be in column 4)
+            most_recent_diagnosis = most_recent_record[4]  # Adjust the index if the diagnosis is in a different column
+
+            # Filter and collect non-empty notes (assumed to be in column 3)
+            non_empty_notes = self.record[self.record[3].str.strip() != ''][3]  # Adjust the index if notes are in a different column
+
+            # Display the data
             self.record_text.config(state=tk.NORMAL)
             self.record_text.delete("1.0", tk.END)
 
-            for _, row in self.record.iterrows():
-                notes = row[3]
-                diagnosis = row[4]
+            # Show most recent diagnosis
+            self.record_text.insert(tk.END, f"Most Recent Diagnosis: {', '.join(most_recent_diagnosis) if most_recent_diagnosis else 'None'}\n\n")
 
-                # Displaying the extracted data
-                self.record_text.insert(tk.END, f"Notes: {notes}\n")
-                self.record_text.insert(tk.END, f"Diagnosis: {', '.join(diagnosis)}\n\n")
+            # Show all non-empty notes
+            if not non_empty_notes.empty:
+                self.record_text.insert(tk.END, "Notes:\n")
+                for note in non_empty_notes:
+                    self.record_text.insert(tk.END, f"- {note}\n")
+            else:
+                self.record_text.insert(tk.END, "No notes available.\n")
 
             self.record_text.config(state=tk.DISABLED)
         else:
             # If no records are found
-            messagebox.showerror("Error", "No records found for the selected patient.")
+            self.record_text.config(state=tk.NORMAL)
+            self.record_text.delete("1.0", tk.END)
+            self.record_text.insert(tk.END, "No records found for the selected patient.\n")
+            self.record_text.config(state=tk.DISABLED)
+
 
     def save_diagnosis_and_notes(self):
         """Save combined notes and diagnosis for the selected patient."""
@@ -161,12 +174,12 @@ class PatientRecords:
                     # Ask the user whether to replace or add
                     response = messagebox.askyesno(
                         "Update Diagnosis",
-                        "Would you like to replace the existing diagnosis with the new one? (Yes to replace, No to add)"
+                        "Would you like to add the diagnosis to the list of conditions? If you click no we will replace the old diagnosis with the new one."
                     )
-                    if response:  # Replace
-                        conditions = [new_diagnosis]
-                    else:  # Add
+                    if response:  # Add
                         conditions.append(new_diagnosis)
+                    else:  # Replace
+                        conditions = [new_diagnosis]
                 else:
                     messagebox.showinfo("Information", "The selected diagnosis already exists.")
                     
