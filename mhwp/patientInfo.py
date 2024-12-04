@@ -12,10 +12,9 @@ import pandas as pd
 class PatientRecords:
     def __init__(self, user_id=None):
         # Initialize the session instance 
-        # self.session = Session()
-        # self.session.open()
-        # self.current_user_id = self.session.getId()
-        self.current_user_id = 3
+        self.session = Session()
+        self.session.open()
+        self.current_user_id = self.session.getId()
         self.root =  tk.Tk()
         self.root.title("Patient Records")
         self.root.geometry("700x700")
@@ -105,7 +104,7 @@ class PatientRecords:
         self.record = db.getRelation("PatientRecord")
         self.record = self.record.getRowsWhereEqual('patient_id', patient_id)
         self.record = pd.DataFrame(self.record)
-        db.close()
+        # db.close()
 
         # Check if the record is not empty
         if not self.record.empty:
