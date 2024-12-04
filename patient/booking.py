@@ -11,7 +11,7 @@ import subprocess
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
-from database.entities import Appointment
+from database.entities import Appointment, InvalidDataError
 from database.dataStructs import Row
 from patient.custom_calendar import Calendar
 from database.database import Database, Notification
@@ -236,14 +236,21 @@ class AppointmentBooking:
                             row[5] != 'Cancelled'):
                         messagebox.showerror("Error", f"{room} is already booked for this time")
                         return
-
-            new_appointment = Appointment(
-                patient_id=self.patient_id,
-                mhwp_id=self.mhwp_id,
-                date=date_time,
-                status="Pending",
-                room_name=room
-            )
+            try:
+                new_appointment = Appointment(
+                    patient_id=self.patient_id,
+                    mhwp_id=self.mhwp_id,
+                    date=date_time,
+                    status="Pending",
+                    room_name=room,
+                    appointmentRelation = self.db.getRelation("Appointment")
+                )
+            except InvalidDataError as e:
+                messagebox.showerror("Error", str(e))
+                return
+            except Exception as e:
+                messagebox.showerror("Error creating new appointment", f"An unexpected error occurred: {str(e)}")
+                return
 
             self.db.insert_appointment(new_appointment)
             self.load_appointments()

@@ -199,6 +199,14 @@ class Relation():
             else:
                 self.__isEntityTyped = False
 
+            ### Sets up entity relation reference validity checking
+            ### I.e. defines entities where a relation must be passed to check for conflicts in relation to other rows in relation
+            ### e.g. Appointment checking for other appointments at same time and place
+            if self.name == "Appointment":
+                self.__needsRelationReferenceChecks = True
+            else:
+                self.__needsRelationReferenceChecks = False
+
 
             ## import and get classes
             module_ = __import__('database.entities', fromlist=classNameList)
@@ -669,9 +677,15 @@ class Relation():
 
             for index in indicesToDrop:
                 list.pop(index)
+        
+        if self.__needsRelationReferenceChecks:
+            list.append(True) ### set relation reference checks to True
+            list.append(self) ### append reference to self to allow relation reference checking
 
         ### instantiate correct class
-        correctEntityClass(*list)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            correctEntityClass(*list)
         
 
     def __str__(self) -> str:
@@ -705,13 +719,15 @@ class Relation():
         Row: The converted Row object.
         """
 
-        #### convert pandas or numpy data types to native python types
+        #### convert pandas or numpy data types to native python types to fix typechecking errors
         converted_values = []
         for value in series.values.tolist():
-            if isinstance(value, (pd.Int64Dtype, pd.UInt64Dtype, np.int64, np.uint64,np.int32,np.uint32)):
+            if isinstance(value, (pd.Int64Dtype, pd.UInt64Dtype, np.int64, np.uint64, np.int32, np.uint32)):
                 converted_values.append(int(value))
             elif isinstance(value, (pd.Float64Dtype, pd.Float32Dtype)):
                 converted_values.append(float(value))
+            elif isinstance(value, pd._libs.tslibs.timestamps.Timestamp):
+                converted_values.append(value.to_pydatetime())
             else:
                 converted_values.append(value)
 

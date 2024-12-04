@@ -8,11 +8,12 @@ from .entities import InvalidDataError, User, Admin, Patient, MHWP, JournalEntry
 from .database import Database
 
 '''
-Disclaimer:
-    This script was written almost entirely by ChatGPT (GPT-o1-Preview).
-    The database, entities, and dataStructs code is almost entirely home-made (with LLM-generated docstrings and boiler plate code snippets in between).
+AI Use Disclaimer:
+    The tests in this script were written almost entirely by ChatGPT (GPT-o1-Preview), based on the code that they are testing.
+    However, the code that they are testing itself - the database, entities, and dataStructs backend - is essentially entirely man-made (with only docstrings and boiler plate code snippets in between being LLM-generated).
     Contact Tim Farkas for questions.
 '''
+logging.getLogger().setLevel(logging.ERROR) ### suppress logger warnings
 
 class TestRow(unittest.TestCase):
     def test_row_initialization(self):
@@ -1159,6 +1160,14 @@ class TestEntities(unittest.TestCase):
             JournalEntry(entry_id=1, patient_id=1, text='Valid text', timestamp='not_a_datetime')
 
     def test_appointment_invalid_data(self):
+        # Set up a temporary database for testing
+        test_db_file = 'test_appointment_database.pkl'
+        if os.path.exists(test_db_file):
+            os.remove(test_db_file)
+        logger = logging.getLogger('TestAppointmentInvalidData')
+        logger.setLevel(logging.CRITICAL)  # Suppress logging output during tests
+        db = Database(data_file=test_db_file, logger=logger, verbose=False, overwrite=True)
+    
         # Test invalid appointment_id
         with self.assertRaises(InvalidDataError):
             Appointment(appointment_id='not_an_int', patient_id=1, mhwp_id=1, date=datetime.now(), room_name='Room A', status='Scheduled')
@@ -1175,6 +1184,27 @@ class TestEntities(unittest.TestCase):
         with self.assertRaises(InvalidDataError):
             Appointment(appointment_id=1, patient_id=1, mhwp_id=1, date='not_a_datetime', room_name='Room A', status='Scheduled')
         
+        # Test time/room collision detection
+        appointmentRelation = db.getRelation('Appointment')
+        
+        # Insert a valid appointment
+        valid_appointment = Appointment(appointment_id=1, patient_id=1, mhwp_id=1, date=datetime.now(), room_name='Room A', status='Scheduled', appointmentRelation=appointmentRelation)
+        db.insert_appointment(valid_appointment)
+        
+        # Attempt to insert another appointment at the same time and room
+        with self.assertRaises(InvalidDataError):
+            Appointment(appointment_id=2, patient_id=2, mhwp_id=2, date=datetime.now(), room_name='Room A', status='Scheduled', appointmentRelation=appointmentRelation)
+        
+        # Attempt to insert another appointment at the same time but different room
+        try:
+            Appointment(appointment_id=3, patient_id=3, mhwp_id=3, date=datetime.now(), room_name='Room B', status='Scheduled', appointmentRelation=appointmentRelation)
+        except InvalidDataError:
+            self.fail("Appointment raised InvalidDataError unexpectedly!")
+
+        # Clean up the database file after the test
+        if os.path.exists(test_db_file):
+            os.remove(test_db_file)
+    
     def test_patient_invalid_data(self):
         # Test invalid username
         with self.assertRaises(InvalidDataError):
