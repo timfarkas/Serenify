@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import traceback
 import smtplib
 from email.mime.text import MIMEText
+from sessions import Session
+import subprocess
 
 
 
@@ -15,37 +17,42 @@ from database import Database
 from database.entities import Appointment
 from database.dataStructs import Row
 from patient.custom_calendar import Calendar
-from sessions import Session
 
-from addfeature.globaldb import global_db
-global global_db
-db=global_db
 
 
 
 
 class AppointmentBooking:
-   def __init__(self):
+
+   def __init__(self, root):
+       self.root = root
+       self.root.title("Appointment Booking System")
+
+       # Get ids from session
        sess = Session()
        sess.open()
-       patient_id = sess.getId()
-       self.root = tk.Tk()
-       self.root.title("Appointment Booking System")
-       self.db=db
-       # try:
-       #     self.db = Database()
-       #     self.db.printAll()
-       # except Exception as e:
-       #     messagebox.showerror("Database Error",
-       #                          f"Failed to connect to database: {str(e)} {str(traceback.format_exception(e))}")
-       #     self.root.destroy()
-       #     return
+       self.patient_id = sess.getId()
 
-       self.patient_id = patient_id
-       self.mhwp_id = self.db.getRelation('Allocation').getRowsWhereEqual('patient_id',int(patient_id))[0][3]
+       # Get MHWP ID from allocation using patient_id
+       try:
+           self.db = Database()
+           allocation = self.db.getRelation("Allocation").getRowsWhereEqual("patient_id", self.patient_id)[0]
+           self.mhwp_id = allocation[3]
+       except Exception as e:
+           messagebox.showerror("Error", f"Failed to get allocation: {str(e)}")
+           self.root.destroy()
+           return
 
        # Initialise database connection
+       try:
+           self.db = Database()
+           self.db.printAll()
+       except Exception as e:
 
+
+           messagebox.showerror("Database Error", f"Failed to connect to database: {str(e)} {str(traceback.format_exception(e))}")
+           self.root.destroy()
+           return
 
        # Available rooms list
        self.available_rooms = ["Room A", "Room B", "Room C"]  # You can modify this list as needed
@@ -58,7 +65,7 @@ class AppointmentBooking:
 
        # Ensure database is closed when window is closed
        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-       self.root.mainloop()
+
 
    def setup_ui(self):
        # Title
@@ -158,22 +165,22 @@ class AppointmentBooking:
 
        self.load_appointments()
 
-
    def update_available_times(self):
-       """Update available time slots based on existing appointments"""
        selected_date = self.calendar.get_date()
        all_times = [f"{hour:02d}:00" for hour in range(9, 17)]
-
 
        # Clear existing time slots
        for widget in self.root.nametowidget(self.root.winfo_children()[2]).winfo_children():
            if isinstance(widget, ttk.Radiobutton):
                widget.destroy()
 
+       # If today, only show future times
+       if selected_date == datetime.now().strftime('%Y-%m-%d'):
+           current_hour = datetime.now().hour
+           all_times = [time for time in all_times if int(time.split(':')[0]) > current_hour]
 
        # Get booked times for selected date
        booked_times = self.get_booked_times(selected_date)
-
 
        # Create new time slots, excluding booked times
        for time in all_times:
@@ -186,21 +193,19 @@ class AppointmentBooking:
                ).pack(anchor='w', padx=5)
 
    def get_booked_times(self, date_str):
-       """Get list of booked times for a specific date"""
        booked_times = set()
        try:
            appointments_relation = self.db.getRelation("Appointment")
-           # Get appointments for this patient instead of MHWP
-           existing_appointments = appointments_relation.getRowsWhereEqual("patient_id", self.patient_id)
+           mhwp_appointments = appointments_relation.getRowsWhereEqual("mhwp_id", self.mhwp_id)
 
-           for row in existing_appointments:
+           for row in mhwp_appointments:
                apt_date = row[3]
                if isinstance(apt_date, datetime):
-                   if apt_date.strftime('%Y-%m-%d') == date_str and row[5] != 'Cancelled':
+                   if (apt_date.strftime('%Y-%m-%d') == date_str and
+                           row[5] in ['Pending', 'Confirmed']):  # Only check active appointments
                        booked_times.add(apt_date.strftime('%H:%M'))
        except Exception as e:
            print(f"Error getting booked times: {str(e)}")
-
        return booked_times
 
 
@@ -231,9 +236,9 @@ class AppointmentBooking:
        try:
            date_time = datetime.strptime(f"{date_str} {time_str}", '%Y-%m-%d %H:%M')
            appointments_relation = self.db.getRelation("Appointment")
-           patient_appointments = appointments_relation.getRowsWhereEqual("patient_id", self.patient_id)
 
-           # Check for existing appointments at same time
+           # Check patient's existing appointments
+           patient_appointments = appointments_relation.getRowsWhereEqual("patient_id", self.patient_id)
            for row in patient_appointments:
                apt_date = row[3]
                if isinstance(apt_date, datetime):
@@ -243,9 +248,9 @@ class AppointmentBooking:
                        messagebox.showerror("Error", "You already have an appointment at this time")
                        return
 
-           # Check if room is available at this time
-           existing_appointments = appointments_relation.getRowsWhereEqual("mhwp_id", self.mhwp_id)
-           for row in existing_appointments:
+           # Check MHWP's schedule
+           mhwp_appointments = appointments_relation.getRowsWhereEqual("mhwp_id", self.mhwp_id)
+           for row in mhwp_appointments:
                apt_date = row[3]
                if isinstance(apt_date, datetime):
                    if (apt_date.date() == date_time.date() and
@@ -447,15 +452,15 @@ class AppointmentBooking:
 
    def back_to_main(self):
        """Return to main patient screen"""
-       import subprocess
-       subprocess.Popen(["python3", "patientMain.py"])
+       self.db.close()
+       subprocess.Popen(["python3", "patient/patientMain.py"])
        self.root.destroy()
 
 
    def on_closing(self):
        """Handle window closing"""
-       # self.db.close()
-       self.root.destroy()
+       self.db.close()
+       root.destroy()
        # try:
        #     if hasattr(self, 'db'):
        #         self.db.close()
@@ -467,8 +472,7 @@ class AppointmentBooking:
 
 
 if __name__ == "__main__":
-   # db = Database()
-   # allocation = db.getRelation("Allocation").getRowsWhereEqual("patient_id", 4)[0]
-   AppointmentBooking()
-
+    root = tk.Tk()
+    app = AppointmentBooking(root)
+    root.mainloop()
    

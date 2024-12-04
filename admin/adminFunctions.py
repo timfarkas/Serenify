@@ -14,9 +14,9 @@ from sessions import Session
 ## on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.
 
 class AllocationEdit(tk.Toplevel):
-    def __init__(self, patient_id, parent):
+    def __init__(self, patient_id, parent, db):
         super().__init__()
-        self.db = Database()
+        self.db = db
         self.patient_id = patient_id
         self.parent = parent
         self.create_ui()
@@ -65,24 +65,28 @@ class AllocationEdit(tk.Toplevel):
         new_mhwp_name = self.mhwp_var.get()
         new_mhwp_id = self.mhwp_dict.get(new_mhwp_name)
 
-        # Update the patient's MHWP in the database
-        userRelation = self.db.getRelation('Allocation')
-        userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
+        try:
+            # Update the patient's MHWP in the database
+            userRelation = self.db.getRelation('Allocation')
+            userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
 
-        self.db.close()
-        messagebox.showinfo("Success", "MHWP updated successfully.")
+            messagebox.showinfo("Success", "MHWP updated successfully.")
+        
+        except Exception as e:
+            messagebox.showerror("Error", str(e)) 
 
     def go_back(self):
         self.destroy()
+        self.parent.refresh_treeview()
         self.parent.deiconify()
 
     def on_close(self):
         self.destroy()
 
 class PatientEditApp(tk.Toplevel):
-    def __init__(self, user_id, parent):
+    def __init__(self, user_id, parent, db):
         super(PatientEditApp, self).__init__()
-        self.db = Database()
+        self.db = db
         self.parent = parent
         self.user_id = user_id
         self.user_type = self.db.getRelation('User').getRowsWhereEqual("user_id", user_id)[0][6]
@@ -147,7 +151,7 @@ class PatientEditApp(tk.Toplevel):
         self.emergency_name_entry.config(state='disabled')
         self.emergency_name_entry.grid(row=7, column=1)
 
-        tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
+        tk.Label(user_frame, text="Disable User:").grid(row=10, column=0)
         self.is_disabled_var = tk.BooleanVar(value=bool(user['is_disabled']))
         self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
         self.is_disabled_check.config(state='disabled')
@@ -239,12 +243,17 @@ class PatientEditApp(tk.Toplevel):
             'is_disabled': self.is_disabled_var.get()
         }
         
-        for field, new_value in updated_data.items():
-            if self.original_data[field] != new_value:
-                user_relation.editFieldInRow(self.user_id, field, new_value)
+        try:
+            for field, new_value in updated_data.items():
+                if self.original_data[field] != new_value:
+                    user_relation.editFieldInRow(self.user_id, field, new_value)
+
+            messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
         
-        self.db.close()
-        messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
+        except Exception as e:
+            messagebox.showerror("Error", str(e)) 
+        
+        
 
     def delete_user(self):
         user_relation = self.db.getRelation('User')
@@ -254,11 +263,12 @@ class PatientEditApp(tk.Toplevel):
             self.db.delete_patient(patientId=self.user_id)
             messagebox.showinfo("Success", f"{self.user_type} deleted successfully.")
             
-            self.db.close()
+            self.parent.refresh_treeview()
             self.destroy()
             self.parent.deiconify()
 
     def go_back(self):
+        self.parent.refresh_treeview()
         self.destroy()
         self.parent.deiconify()
         
@@ -267,8 +277,8 @@ class PatientEditApp(tk.Toplevel):
         self.destroy()
 
 class MHWPEditApp(PatientEditApp):
-    def __init__(self, user_id, parent):
-        super().__init__(user_id, parent)
+    def __init__(self, user_id, parent, db):
+        super().__init__(user_id, parent, db)
 
     def create_ui(self):
         self.title("Edit User Information")
@@ -333,7 +343,7 @@ class MHWPEditApp(PatientEditApp):
         self.specialization_entry.config(state='disabled')
         self.specialization_entry.grid(row=8, column=1)
 
-        tk.Label(user_frame, text="Disabled:").grid(row=10, column=0)
+        tk.Label(user_frame, text="Disable User:").grid(row=10, column=0)
         self.is_disabled_var = tk.BooleanVar(value=bool(user['is_disabled']))
         self.is_disabled_check = tk.Checkbutton(user_frame, variable=self.is_disabled_var)
         self.is_disabled_check.config(state='disabled')
@@ -435,7 +445,6 @@ class MHWPEditApp(PatientEditApp):
             if self.original_data[field] != new_value:
                 user_relation.editFieldInRow(self.user_id, field, new_value)
         
-        self.db.close()
         messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
 
 class UserSelectionApp(tk.Toplevel):
@@ -504,19 +513,29 @@ class UserSelectionApp(tk.Toplevel):
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
+    def refresh_treeview(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        self.users = self.db.getRelation('User').getRowsWhereEqual('type', self.user_type)
+
+        for user in self.users:
+            self.tree.insert("", "end", values=(user[0], user[4], user[5]))
+
     def edit_user(self):
         selected_item = self.tree.selection()
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
             if self.user_type == "Patient":
-                app = PatientEditApp(self.selected_user_id, self)
+                app = PatientEditApp(self.selected_user_id, self, db=self.db)
             else:
-                app = MHWPEditApp(self.selected_user_id, self)
+                app = MHWPEditApp(self.selected_user_id, self, db=self.db)
         else:
             messagebox.showinfo(f"No {self.user_type} Selected", f"Please select a {self.user_type} to continue.")
 
     def go_back(self): 
+        self.db.close()
         self.destroy()
         self.parent.deiconify()
 
@@ -528,12 +547,34 @@ class AllocationSelection(UserSelectionApp):
     def __init__(self, user_type, parent):
         super().__init__(user_type, parent)
 
+    def refresh_treeview(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        self.users = self.db.getRelation('User').getRowsWhereEqual('type', self.user_type)
+
+        for user in self.users:
+            patient_id = user[0]
+            patient_name = f"{user[4]} {user[5]}"
+
+            mhwp_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
+            mhwp_allocation_id = mhwp_allocation[0][3] if mhwp_allocation else None
+
+            if mhwp_allocation_id:
+                assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
+                assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
+                print(assigned_mhwp_name)
+            else:
+                assigned_mhwp_name = "Unassigned"
+
+            self.tree.insert("", "end", values=(user[0], patient_name, assigned_mhwp_name))
+
     def edit_user(self):
         selected_item = self.tree.selection()
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = AllocationEdit(self.selected_user_id, self)
+            app = AllocationEdit(self.selected_user_id, self, db=self.db)
         else:
             messagebox.showinfo("No Patient Selected", "Please select a patient to continue.")
 
@@ -629,7 +670,7 @@ class KeyStatistics(tk.Toplevel):
         self.title("Bar Chart with Tkinter Canvas")
 
         # Create a Canvas widget
-        canvas = tk.Canvas(self, width=600, height=582)
+        canvas = tk.Canvas(self, width=600, height=550)
         canvas.pack()
 
         # Graph title
@@ -681,6 +722,9 @@ class KeyStatistics(tk.Toplevel):
         mhwps = self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP')
         mhwp_row_count = len(mhwps)
 
+        # calculating the number of patients per MHWPs
+        patient_per_MHWP = patient_row_count / mhwp_row_count
+
         # calculating the number of disabled accounts
         disabled_accounts = self.db.getRelation('User').getRowsWhereEqual('is_disabled', True)
         disabled_accounts_row_count = len(disabled_accounts)
@@ -697,17 +741,33 @@ class KeyStatistics(tk.Toplevel):
         patient_records = self.db.getRelation('PatientRecord')
         no_patient_records = len(patient_records)
 
+        # calculating the number of active appointments
+        active_appointments = self.db.getRelation('Appointment').getRowsWhereEqual('status', 'active')
+        no_active_appointments = len(active_appointments)
+
+        # calculating the number of confirmed appointments
+        confirmed_appointments = self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Confirmed')
+        no_confirmed_appointments = len(confirmed_appointments)
+
+        # calculating the number of declined appointments
+        declined_appointments = self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Declined')
+        no_declined_appointments = len(declined_appointments)
+
         key_stats_x_position = 427
         key_stats_gap = 22
 
         # Create the summary of key statistics on the canvas
         canvas.create_text(300, (key_stats_x_position - 10), text="Key Statistics", font=("Arial", 16, "bold"))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 1), text=f"No. Patients: {patient_row_count}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 2), text=f"No. MHWP: {mhwp_row_count}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 3), text=f"No. Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 4), text=f"No. Unallocated Patients: {unalocated_patients_row_count}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 5 + 10), text=f"No. Journal Entries: {no_journal_entries}", font=("Arial", 14))
-        canvas.create_text(300, (key_stats_x_position + key_stats_gap * 6 + 10), text=f"No. of Patient Records: {no_patient_records}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 1), text=f"No. Patients: {patient_row_count}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 2), text=f"No. MHWP: {mhwp_row_count}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 3), text=f"Patients Per MHWP: {patient_per_MHWP}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 4), text=f"Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
+        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 5), text=f"Unallocated Patients: {unalocated_patients_row_count}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 1), text=f"No. Journal Entries: {no_journal_entries}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 2), text=f"No. Patient Records: {no_patient_records}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 3), text=f"Active Appointments: {no_active_appointments}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 4), text=f"Confirmed Appointments: {no_confirmed_appointments}", font=("Arial", 14))
+        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 5), text=f"Declined Appointments: {no_declined_appointments}", font=("Arial", 14))
 
         # Back button
         back_button = tk.Button(self, text="Back", command=self.go_back)
