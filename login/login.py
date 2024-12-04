@@ -106,12 +106,14 @@ class LoginPage:
             self.root.destroy()
             self.db.close()
         elif role == "mhwp":
+            self.root.destroy()
             openmhwpdashboard()
             # exec(open("mhwp/mhwp_dashboard.py").read())
+
+        elif role == "patient":
             self.root.destroy()
-        elif role == "patient": 
             Patient()
-            self.root.destroy()
+
         else:
             messagebox.showerror("Error", "Role not recognised.")
 

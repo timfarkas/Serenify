@@ -11,9 +11,10 @@ from mhwp.mhwp_dashboard import openmhwpdashboard
 # from addfeature.chatroom import startchatroom
 # from addfeature.notificationbox import opennotification
 from patient.patient_dashboard import openpatientdashboard
-# from addfeature.forum import openforsum
-# from patient.exercises import Exercises
 from patient.patientMain import Patient
+# from addfeature.forum import openforsum
+from patient.exercises import Exercises
+
 
 db=Database()
 sess = Session()
@@ -24,18 +25,20 @@ sess.setRole(db.getRelation('User').getRowsWhereEqual("user_id",sess.getId())[0]
 sess.close()
 db.close()
 
+Patient()
+# Exercises()
 # subprocess.Popen(["python3", "mhwp/mhwp_dashboard.py"])
 
 # root = tk.Tk()
 # app = Patient(root)
 # root.mainloop()
-exec(open("patient/patientMain.py").read())
+# exec(open("patient/patientMain.py").read())
 # openmhwpdashboard()
 # openpatientdashboard()
 # openrating()
 # opennotification()
 # openforsum()
-# Exercises()
+#
 # startchatroom(userID,"Patient")
 # MHWPAppointmentManager(root,userID)
 

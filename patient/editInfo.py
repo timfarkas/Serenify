@@ -15,7 +15,7 @@ from database.initDBwithDummyData import initDummyDatabase
 # # db.close()
 
 class EditInfo:
-    def __init__(self, root):
+    def __init__(self):
         # Initialize the session instance 
         self.session = Session()
         self.session.open()
@@ -26,10 +26,10 @@ class EditInfo:
         self.root.geometry("500x700")
 
         # Title label
-        self.title_label = tk.Label(root, text="Personal Information", font=("Arial", 24, "bold"))
+        self.title_label = tk.Label(self.root, text="Personal Information", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=6, pady=10)
 
-        self.t_label = tk.Label(root, text="Edit your personal information here:", font=("Arial", 12))
+        self.t_label = tk.Label(self.root, text="Edit your personal information here:", font=("Arial", 12))
         self.t_label.grid(row=1, column=0, columnspan = 6, pady=10)
 
         # UI components
@@ -49,19 +49,19 @@ class EditInfo:
         self.email_entry = tk.Entry(self.root)
         self.email_entry.grid(row=3, column=1, padx=10, pady=10)
 
-        self.old_password_label = tk.Label(root, text="Old Password")
+        self.old_password_label = tk.Label(self.root, text="Old Password")
         self.old_password_label.grid(row=4, column=0, padx=10, pady=10)
-        self.old_password_entry = tk.Entry(root, show="*")
+        self.old_password_entry = tk.Entry(self.root, show="*")
         self.old_password_entry.grid(row=4, column=1, padx=10, pady=10)
 
-        self.new_password_label = tk.Label(root, text="New Password")
+        self.new_password_label = tk.Label(self.root, text="New Password")
         self.new_password_label.grid(row=5, column=0, padx=10, pady=10)
-        self.new_password_entry = tk.Entry(root, show="*")
+        self.new_password_entry = tk.Entry(self.root, show="*")
         self.new_password_entry.grid(row=5, column=1, padx=10, pady=10)
 
-        self.confirm_password_label = tk.Label(root, text="Confirm New Password")
+        self.confirm_password_label = tk.Label(self.root, text="Confirm New Password")
         self.confirm_password_label.grid(row=6, column=0, padx=10, pady=10)
-        self.confirm_password_entry = tk.Entry(root, show="*")
+        self.confirm_password_entry = tk.Entry(self.root, show="*")
         self.confirm_password_entry.grid(row=6, column=1, padx=10, pady=10)
 
         self.fname_label = tk.Label(self.root, text="First Name:")
@@ -90,7 +90,7 @@ class EditInfo:
         self.update_button.grid(row=11, column=0, columnspan=2, pady=20)
 
         #Back button
-        self.back_button = tk.Button(root, text="Back to the main page", command=self.backButton)
+        self.back_button = tk.Button(self.root, text="Back to the main page", command=self.backButton)
         self.back_button.grid(row=12, column=0, columnspan=2, pady=5)
 
 

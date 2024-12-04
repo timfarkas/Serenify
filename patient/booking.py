@@ -468,7 +468,7 @@ class AppointmentBooking:
 
 if __name__ == "__main__":
    # db = Database()
-   allocation = db.getRelation("Allocation").getRowsWhereEqual("patient_id", 4)[0]
-   app = AppointmentBooking()
+   # allocation = db.getRelation("Allocation").getRowsWhereEqual("patient_id", 4)[0]
+   AppointmentBooking()
 
    

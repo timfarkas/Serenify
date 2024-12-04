@@ -549,6 +549,11 @@ class Patient:
     def exercises(self):
         # Edit information
         Exercises()
+        self.root.destroy()
+
+
+
+
         # subprocess.Popen(["python3", "patient/exercises.py"])
         # self.root.destroy()
 
@@ -567,6 +572,5 @@ class Patient:
         self.messagenum.config(text=f"You have {self.messagecounter} new messages")
 
 
-# Run the application
 if __name__ == "__main__":
-    app = Patient()
+    Patient()

@@ -9,16 +9,16 @@ import datetime
 # from database.database import Database,ExerRecord
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
-from addfeature.globaldb import global_db
 from database.entities import ExerRecord
+from addfeature.globaldb import global_db
 global global_db
 db=global_db
 
 
 class Exercises:
     def __init__(self):
-        root4 = tk.Tk()
-        self.root = root4
+        root = tk.Tk()
+        self.root = root
         self.session = Session()
         self.session.open()
         self.userID = self.session.getId()
@@ -92,7 +92,6 @@ class Exercises:
         }
         self.create_exercise_buttons()
 
-
     #Call 999 in an Emergency
         self.emergency_label = tk.Label(self.root, text="Call 999 in an Emergency", font=("Arial", 14), fg = "red")
         self.emergency_label.grid(row=17, column=0, pady=5)
@@ -159,7 +158,7 @@ class Exercises:
         webbrowser.open(url)
     
     def backButton(self):
-        # subprocess.Popen(["python3", "patient/patientMain.py"])
+        subprocess.Popen(["python3", "patient/patientMain.py"])
         self.root.destroy()
 
 
@@ -179,7 +178,7 @@ class Exercises:
             label.grid(row=0, pady=5)
 
     def on_close(self):
-        # db.close()
+        db.close()
         self.root.destroy()
 
     def search_exercises(self):
@@ -203,7 +202,7 @@ class Exercises:
         self.search_var.set("")  # Clear the search bar
 
 
-# Run the application
+# # Run the application
 if __name__ == "__main__":
     Exercises()
 
