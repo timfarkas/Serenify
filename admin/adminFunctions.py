@@ -57,7 +57,7 @@ class AllocationEdit(tk.Toplevel):
         save_button.pack(pady=0)
 
         # Back Button
-        self.back_button = tk.Button(self, text="Back", command=selfç)
+        self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
     def save_mhwp(self):
@@ -205,8 +205,23 @@ class PatientEditApp(tk.Toplevel):
             self.toggle_button.config(text="Save Changes")  
         
         else:
-            self.save_changes_to_db()
+            success = self.save_changes_to_db()
             
+            if success:
+                self.toggle_button.config(text="Edit")
+                
+                # disable fields again after saving
+                self.username_entry.config(state='disabled')
+                self.email_entry.config(state='disabled')
+                self.password_entry.config(state='disabled')
+                self.fName_entry.config(state='disabled')
+                self.lName_entry.config(state='disabled')
+                self.emergency_email_entry.config(state='disabled')
+                self.emergency_name_entry.config(state='disabled')
+                self.is_disabled_check.config(state='disabled')
+            else:
+                pass
+
             updated_data = {
                 'username': self.username_entry.get(),
                 'email': self.email_entry.get(),
@@ -217,18 +232,6 @@ class PatientEditApp(tk.Toplevel):
                 'emergency_contact_name': self.emergency_name_entry.get(),
                 'is_disabled': self.is_disabled_var.get()
             }
-
-            self.toggle_button.config(text="Edit")
-
-            # disable fields again after saving
-            self.username_entry.config(state='disabled')
-            self.email_entry.config(state='disabled')
-            self.password_entry.config(state='disabled')
-            self.fName_entry.config(state='disabled')
-            self.lName_entry.config(state='disabled')
-            self.emergency_email_entry.config(state='disabled')
-            self.emergency_name_entry.config(state='disabled')
-            self.is_disabled_check.config(state='disabled')
     
     def save_changes_to_db(self):
         user_relation = self.db.getRelation('User')
@@ -249,9 +252,11 @@ class PatientEditApp(tk.Toplevel):
                     user_relation.editFieldInRow(self.user_id, field, new_value)
 
             messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
+            return True
         
         except Exception as e:
-            messagebox.showerror("Error", str(e)) 
+            messagebox.showerror("Error", str(e))
+            return False
         
         
 
@@ -400,8 +405,23 @@ class MHWPEditApp(PatientEditApp):
             self.toggle_button.config(text="Save Changes")  
         
         else:
-            self.save_changes_to_db()
-            
+            success = self.save_changes_to_db()
+            if success:
+                self.toggle_button.config(text="Edit")
+
+                # disable fields again after saving
+                self.username_entry.config(state='disabled')
+                self.email_entry.config(state='disabled')
+                self.password_entry.config(state='disabled')
+                self.fName_entry.config(state='disabled')
+                self.lName_entry.config(state='disabled')
+                self.emergency_email_entry.config(state='disabled')
+                self.emergency_name_entry.config(state='disabled')
+                self.specialization_entry.config(state='disabled')
+                self.is_disabled_check.config(state='disabled')
+            else:
+                pass
+
             updated_data = {
                 'username': self.username_entry.get(),
                 'email': self.email_entry.get(),
@@ -413,19 +433,6 @@ class MHWPEditApp(PatientEditApp):
                 'specialization': self.specialization_entry.get(),
                 'is_disabled': self.is_disabled_var.get()
             }
-
-            self.toggle_button.config(text="Edit")
-
-            # disable fields again after saving
-            self.username_entry.config(state='disabled')
-            self.email_entry.config(state='disabled')
-            self.password_entry.config(state='disabled')
-            self.fName_entry.config(state='disabled')
-            self.lName_entry.config(state='disabled')
-            self.emergency_email_entry.config(state='disabled')
-            self.emergency_name_entry.config(state='disabled')
-            self.specialization_entry.config(state='disabled')
-            self.is_disabled_check.config(state='disabled')
 
     def save_changes_to_db(self):
         user_relation = self.db.getRelation('User')
@@ -441,11 +448,17 @@ class MHWPEditApp(PatientEditApp):
             'is_disabled': self.is_disabled_var.get()
         }
         
-        for field, new_value in updated_data.items():
-            if self.original_data[field] != new_value:
-                user_relation.editFieldInRow(self.user_id, field, new_value)
+        try:
+            for field, new_value in updated_data.items():
+                if self.original_data[field] != new_value:
+                    user_relation.editFieldInRow(self.user_id, field, new_value)
         
-        messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
+            messagebox.showinfo("Success", f"{self.user_type} information updated successfully.")
+            return True
+        
+        except Exception as e:
+            messagebox.showerror("Error", str(e)) 
+            return False
 
 class UserSelectionApp(tk.Toplevel):
     def __init__(self, user_type, parent):
