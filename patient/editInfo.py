@@ -205,10 +205,11 @@ class EditInfo:
         subprocess.Popen(["python3", "patient/patientMain.py"])
 
 
-# if __name__ == "__main__":
-#
-#
-#     app = EditInfo()
+if __name__ == "__main__":
+
+
+    app = EditInfo()
+
 
 # db = Database()
 # print("Getting and printing relation 'User':")
