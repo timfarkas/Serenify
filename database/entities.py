@@ -33,6 +33,12 @@ class InvalidDataError(ValueError):
 class User:
     """A class to represent a user in the system."""
 
+    USER_ID = 0
+    USERNAME = 1
+    PASSWORD = 2
+    TYPE = 3
+    IS_DISABLED = 4
+
     def __init__(self, user_id: int = None, username: str = '', password: str = '', user_type: str = '',
                  is_disabled: bool = False):
         """
@@ -109,6 +115,16 @@ class Admin(User):
 
 class Patient(User):
     """A class to represent a patient user."""
+
+    USER_ID = 0
+    USERNAME = 1
+    EMAIL = 2
+    PASSWORD = 3
+    FNAME = 4
+    LNAME = 5
+    EMERGENCY_CONTACT_EMAIL = 6
+    EMERGENCY_CONTACT_NAME = 7
+    IS_DISABLED = 8
 
     def __init__(self,
                  user_id: int = None,
@@ -191,6 +207,15 @@ class Patient(User):
 
 class MHWP(User):
     """A class to represent a mental health worker professional (MHWP) user."""
+
+    USER_ID = 0
+    USERNAME = 1
+    EMAIL = 2
+    PASSWORD = 3
+    FNAME = 4
+    LNAME = 5
+    SPECIALIZATION = 6
+    IS_DISABLED = 7
 
     def __init__(self,
                  user_id: int = None,
@@ -282,6 +307,11 @@ class MHWP(User):
 class JournalEntry:
     """A class to represent a journal entry."""
 
+    ENTRY_ID = 0
+    PATIENT_ID = 1
+    TEXT = 2
+    TIMESTAMP = 3
+
     def __init__(self, entry_id: int = None, patient_id: int = None, text: str = '', timestamp: datetime = None):
         """
         Initialize a JournalEntry object.
@@ -329,6 +359,13 @@ class JournalEntry:
 
 class Appointment:
     """A class to represent an appointment."""
+
+    APPOINTMENT_ID = 0
+    PATIENT_ID = 1
+    MHWP_ID = 2
+    DATE = 3
+    ROOM_NAME = 4
+    STATUS = 5
 
     def __init__(self, appointment_id: int = None, 
                  patient_id: int = None, 
@@ -400,13 +437,14 @@ class Appointment:
         return True
 
     @staticmethod 
-    def checkTimeAndRoomCollisions(dateAndTime: datetime, room_name : str, appointmentRelation : Relation):
+    def checkTimeAndRoomCollisions(dateAndTime: datetime, room_name : str, appointment_id : int, appointmentRelation : Relation):
         simultaneousAppointments = appointmentRelation.getWhereEqual("date", dateAndTime)
-        if simultaneousAppointments is None or len(simultaneousAppointments) <= 0: ### no simultaneous appointments --> no collisions
+        o = len(appointmentRelation.getIDsWhereEqual("appointment_id", appointment_id)) if appointmentRelation.getIDsWhereEqual("appointment_id", appointment_id) is not None else 0
+        if simultaneousAppointments is None or len(simultaneousAppointments)-o <= 0: ### no simultaneous appointments --> no collisions
             return True
         else:
             equilocalAppointments = simultaneousAppointments.getWhereEqual('room_name', room_name)
-            if equilocalAppointments is None or len(equilocalAppointments) <= 0: ### simultaneous appointments all happen in different rooms --> no collisions
+            if equilocalAppointments is None or len(equilocalAppointments)-o <= 0: ### simultaneous appointments all happen in different rooms --> no collisions
                 return True
             else:
                 raise InvalidDataError("Appointment Collision: There is already an appointment for this time in this room.")
@@ -417,7 +455,7 @@ class Appointment:
         valid = Appointment.checkValidDataStatic(self.appointment_id, self.patient_id, self.mhwp_id, self.date, self.room_name, self.status)
         if self.appointmentRelation is not None:
             if type(self.appointmentRelation) == Relation and self.appointmentRelation.name == "Appointment":
-                valid = valid and self.checkTimeAndRoomCollisions(self.date, self.room_name, self.appointmentRelation)
+                valid = valid and self.checkTimeAndRoomCollisions(self.date, self.room_name,self.appointment_id, self.appointmentRelation)
             else:
                 raise ValueError("Appointment was initialized with invalid appointment relation reference. Please remove the reference or use db.getRelation('Appointment') to pass the appointment relation.")
         else:
@@ -426,6 +464,12 @@ class Appointment:
 
 class PatientRecord:
     """A class to represent a patient record entry."""
+    
+    RECORD_ID = 0
+    PATIENT_ID = 1
+    MHWP_ID = 2
+    NOTES = 3
+    CONDITIONS = 4
 
     def __init__(self, record_id: int = None, patient_id: int = None, mhwp_id: int = None, notes: str = '',
                  conditions: list = None, conditions_file : str = 'conditions.txt'):
@@ -500,6 +544,13 @@ class PatientRecord:
 class Allocation:
     """A class to represent an allocation."""
 
+    ALLOCATION_ID = 0
+    ADMIN_ID = 1
+    PATIENT_ID = 2
+    MHWP_ID = 3
+    START_DATE = 4
+    END_DATE = 5
+
     def __init__(self, allocation_id: int = None, admin_id: int = None, patient_id: int = None, mhwp_id: int = None,
                  start_date: datetime = None, end_date: datetime = None):
         """
@@ -569,6 +620,12 @@ class MoodEntry:
     timestamp (datetime, optional): The timestamp of when the mood entry was recorded. Can be None.
     """
 
+    MOODENTRY_ID = 0
+    PATIENT_ID = 1
+    MOODSCORE = 2
+    COMMENT = 3
+    TIMESTAMP = 4
+
     def __init__(self, moodentry_id: int = None, patient_id: int = None, moodscore: int = None, comment: str = '',
                  timestamp: datetime = None):
 
@@ -623,6 +680,13 @@ class MHWPReview:
     """
     A class to represent a review for a Mental Health Worker Professional (MHWP).
      """
+
+    MHWP_REVIEW_ID = 0
+    PATIENT_ID = 1
+    MHWP_ID = 2
+    REVIEWSCORE = 3
+    REVIEWCOMMENT = 4
+    TIMESTAMP = 5
 
     def __init__(self, MHWP_review_id: int = None, patient_id: int = None, mhwp_id: int = None, reviewscore: int = None,
                  reviewcomment: str = '', timestamp: datetime = None):
@@ -690,6 +754,12 @@ class MHWPReview:
 
 
 class ChatContent:
+    CHATCONTENT_ID = 0
+    ALLOCATION_ID = 1
+    USER_ID = 2
+    TEXT = 3
+    TIMESTAMP = 4
+
     def __init__(self, chatcontent_id: int = None, allocation_id: int = None, user_id: int = None, text: str = '',
                  timestamp: datetime = None):
 
@@ -741,6 +811,13 @@ class ChatContent:
 
 
 class Forum:
+    THREAD_ID = 0
+    PARENT_ID = 1
+    TOPIC = 2
+    CONTENT = 3
+    USER_ID = 4
+    TIMESTAMP = 5
+
     def __init__(self, thread_id: int = None, parent_id: int = None, topic: str = '', content: str = '',
                  user_id: int = None, timestamp: datetime = None):
         self.thread_id = thread_id
@@ -752,6 +829,13 @@ class Forum:
 
 
 class Notification:
+    NOTIFICATION_ID = 0
+    USER_ID = 1
+    NOTIFYCONTENT = 2
+    SOURCE_ID = 3
+    NEW = 4
+    TIMESTAMP = 5
+
     def __init__(self, notification_id: int = None, user_id: int = None, notifycontent: str = '', source_id: int = None,
                  new: bool = None, timestamp: datetime = None):
         self.notification_id = notification_id
@@ -762,6 +846,11 @@ class Notification:
         self.timestamp = timestamp
 
 class ExerRecord:
+    RECORD_ID = 0
+    USER_ID = 1
+    EXERCISE = 2
+    TIMESTAMP = 3
+
     def __init__(self, record_id: int = None, user_id: int = None, exercise: str = '',timestamp: datetime = None):
         self.record_id = record_id
         self.user_id = user_id
@@ -771,8 +860,3 @@ class ExerRecord:
 class UserError(Exception):
     """Custom exception for user-related errors."""
     pass
-
-
-
-
-

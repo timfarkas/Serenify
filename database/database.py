@@ -145,7 +145,9 @@ class Database:
                                               'emergency_contact_name',  # 8
                                               'specialization',  # 9
                                               'is_disabled'],  # 10
-                             relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, bool])
+                             relationAttributeTypes=[int, str, str, str, str, str, str, str, str, str, bool],
+                             allowDeletedEntry=True, ## support this for MHWP only, for Patients, use db.delete_patient() instead which handles destructive deletion propagation
+                             deletedEntryValues=['DeletedMHWP','DeletedEmail', None, 'DeletedMHWP', 'DeletedMHWP', 'MHWP', None, None, 'DeletedMHWP', True])
 
         self.journal_entry = Relation('JournalEntry',
                                       attributeLabels=['entry_id', 'patient_id', 'text', 'timestamp'],
@@ -446,19 +448,14 @@ class Database:
         if user_relation.getRowsWhereEqual("user_id",patientId)[0][user_relation._typeIndex] != "Patient":
             raise NotImplementedError(f"User with id {patientId} is not a patient, deleting not supported.")
 
-        for relationName, patientIdColumn in [("User", "user_id"), 
-                                              ("Appointment", "patient_id"), 
-                                              ("PatientRecord", "patient_id"), 
-                                              ("Allocation", "patient_id"), 
-                                              ("JournalEntry", "patient_id"), 
-                                              ("MoodEntry", "patient_id"), 
-                                              ("MHWPReview", "patient_id"), 
-                                              ("ChatContent", "user_id"), 
-                                              ("Forum", "user_id"),
-                                              ("Notification", "user_id"),
-                                              ("ExerRecord", "record_id")
-                                              ]:
-            
+        """
+        HERE USED TO BE REFERENCED RELATIONS FOR DELETION PROPAGATION; 
+        THESE HAVE MOVED TO RELATION CLASS (getReferencedRelations) FOR EXTENSIBILITY OF DELETIONS AND REDUCED REDUNDANCY.
+        """
+
+        referencedRelations = user_relation.getReferencedRelations(type = "Patient")
+
+        for relationName, patientIdColumn in referencedRelations:            
             relation = self.getRelation(relationName)
             if patientIdColumn in relation.data.columns:
                 relation.data.drop(relation.data[relation.data[patientIdColumn] == patientId].index, inplace=True)

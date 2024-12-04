@@ -6,6 +6,7 @@ from datetime import datetime
 from .dataStructs import Row, RowList, Relation
 from .entities import InvalidDataError, User, Admin, Patient, MHWP, JournalEntry, PatientRecord, Appointment, Allocation, MoodEntry
 from .database import Database
+from .initDBwithDummyData import initDummyDatabase
 
 '''
 AI Use Disclaimer:
@@ -772,6 +773,53 @@ class TestRelation(unittest.TestCase):
         # Test InvalidDataError for invalid specialization
         # with self.assertRaises(InvalidDataError):
         #     user_relation.editFieldInRow(1, 'specialization', 'InvalidSpecialization')
+
+    def test_mhwp_deletion(self):
+        
+        relationName = "User"
+        attributeLabels = ['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled']
+        attributeTypes = [int, str, str, str, str, str, str, str, str, str, bool]
+        deletedEntryValues = ['DeletedMHWP', 'DeletedEmail', None, 'DeletedMHWP', 'DeletedMHWP', 'MHWP', None, None, 'DeletedMHWP', True]
+        
+        user_relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True, allowDeletedEntry=True, deletedEntryValues=deletedEntryValues)
+        
+        ### test behavior of deleted row
+        # Attempt to populate the relation with an invalid deleted MHWP entry
+        with self.assertRaises(ValueError):
+            user_relation.insertRow(attributeList=[-1, 'InvalidMHWP', 'InvalidEmail', None, 'InvalidMHWP', 'InvalidMHWP', 'MHWP', None, None, 'InvalidMHWP', True])
+        
+        # Attempt to retrieve the deleted MHWP row using its ID
+        deleted_row = user_relation.getRowsWhereEqual('user_id', -1)
+        
+        # Check if the retrieved row matches the deleted entry values
+        self.assertEqual(deleted_row[0][0], 'DeletedMHWP')
+        self.assertEqual(deleted_row[0][1], 'DeletedEmail')
+        self.assertEqual(deleted_row[0][3], 'DeletedMHWP')
+        self.assertEqual(deleted_row[0][4], 'DeletedMHWP')
+        self.assertEqual(deleted_row[0][5], 'MHWP')
+        self.assertEqual(deleted_row[0][-1], True)
+    
+        deleted_relation = user_relation.getWhereEqual('user_id', -1)
+
+        ### test deletion
+        db = Database(overwrite=True)
+        initDummyDatabase(db)
+
+        db = Database()
+        mhwp_id = db.getRelation('User').getIDsWhereEqual('type', "MHWP")[0] ### get id of first mhwp in database
+
+        print(f"deleting MHWP with ID {mhwp_id}")
+
+        ### get ids of referenced records
+        appointment_id = db.getRelation('Appointment').getIDsWhereEqual('mhwp_id', mhwp_id)[0]
+        allocation_id = db.getRelation('Allocation').getIDsWhereEqual('mhwp_id', mhwp_id)[0]
+        patient_record_id = db.getRelation('PatientRecord').getIDsWhereEqual('mhwp_id', mhwp_id)[0]
+
+        db.getRelation('User').deleteRow(mhwp_id, db)
+
+        assert db.getRelation('Appointment').getRowsWhereEqual('appointment_id', appointment_id)[0][Appointment.MHWP_ID] == -1, "Wrong MHWP ID"
+        assert db.getRelation('Allocation').getRowsWhereEqual('allocation_id', allocation_id)[0][Allocation.MHWP_ID] == -1, "Wrong MHWP ID"
+        assert db.getRelation('PatientRecord').getRowsWhereEqual('record_id', patient_record_id)[0][PatientRecord.MHWP_ID] == -1, "Wrong MHWP ID"
 
     def test_get_where_smaller(self):
         # Similar to above, but returns a Relation
