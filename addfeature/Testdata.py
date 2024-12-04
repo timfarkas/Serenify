@@ -18,9 +18,9 @@ from datetime import datetime
 # print(sess.get("Test"))
 
 db=Database()
-db.close()
+# db.close()
 print(db._is_closed)
-opennotification()
+# opennotification()
 
 # usermoodlog=db.getRelation('MoodEntry').getRowsWhereEqual('patient_id',3)
 # lastrecorddate=usermoodlog[-1][4].strftime("%Y-%m-%d")
@@ -38,7 +38,8 @@ opennotification()
 # room1.editFieldInRow(1, 'lName',str("AAA"))
 # room2 = db.getRelation('User')
 
-# room1=db.getRelation('ExerRecord')
+room1=db.getRelation('MHWPReview')
+print(room1)
 # userdata=room1.getRowsWhereEqual("user_id",3)
 
     # exercisedata.append(i[2])

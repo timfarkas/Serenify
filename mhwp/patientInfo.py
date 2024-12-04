@@ -107,7 +107,7 @@ class PatientRecords:
         self.record = self.db.getRelation("PatientRecord")
         self.record = self.record.getRowsWhereEqual('patient_id', patient_id)
         self.record = pd.DataFrame(self.record)
-        db.close()
+        # db.close()
 
         # Check if the record is not empty
         if not self.record.empty:
