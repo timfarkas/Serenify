@@ -6,13 +6,15 @@ from datetime import datetime
 from .dataStructs import Row, RowList, Relation
 from .entities import InvalidDataError, User, Admin, Patient, MHWP, JournalEntry, PatientRecord, Appointment, Allocation, MoodEntry
 from .database import Database
+from .initDBwithDummyData import initDummyDatabase
 
 '''
-Disclaimer:
-    This script was written almost entirely by ChatGPT (GPT-o1-Preview).
-    The database, entities, and dataStructs code is almost entirely home-made (with LLM-generated docstrings and boiler plate code snippets in between).
+AI Use Disclaimer:
+    The tests in this script were written almost entirely by ChatGPT (GPT-o1-Preview), based on the code that they are testing.
+    However, the code that they are testing itself - the database, entities, and dataStructs backend - is essentially entirely man-made (with only docstrings and boiler plate code snippets in between being LLM-generated).
     Contact Tim Farkas for questions.
 '''
+logging.getLogger().setLevel(logging.ERROR) ### suppress logger warnings
 
 class TestRow(unittest.TestCase):
     def test_row_initialization(self):
@@ -213,6 +215,17 @@ class TestRelation(unittest.TestCase):
         attributeLabels = ['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled']
         attributeTypes = [int, str, str, str, str, str, str, str, str, str, bool]
         relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True)
+        
+        ### Test valid relation fields
+        relation.insertRow(attributeList=[1, 'mhwp1', 'mhwp1@example.com', 'password', 'Jane', 'Doe', 'MHWP', None, None, 'Psychology', False])
+        
+        relation.insertRow(attributeList=[2, 'admin1', 'admin1@example.com', 'password', 'Alice', 'Smith', 'Admin', None, None, None, False])
+        
+        relation.insertRow(attributeList=[3, 'patient1', 'patient1@example.com', 'password', 'Bob', 'Brown', 'Patient', 'emergency@example.com', 'Emergency Contact', None, False])
+        
+        ### reset relation
+        del relation 
+        relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True)
 
         # Test inserting a row with an invalid email
         with self.assertRaises(InvalidDataError):
@@ -231,8 +244,10 @@ class TestRelation(unittest.TestCase):
             relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'InvalidType', None, None, None, False])
 
         # # Test inserting a row with an invalid specialization
-        # with self.assertRaises(InvalidDataError):
-        #     relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'MHWP', None, None, '123', False])
+        with self.assertRaises(InvalidDataError):
+             relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'MHWP', None, None, '123', False])
+
+
 
     def test_insert_row_invalid_appointment(self):
         relationName = "Appointment"
@@ -579,10 +594,10 @@ class TestRelation(unittest.TestCase):
         with self.assertRaises(TypeError):
             relation.editRow(1, newValues=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'InvalidType', None, None, None, False])
         
-        # TODO
-        # # Test InvalidDataError for invalid specialization
-        # with self.assertRaises(InvalidDataError):
-        #     relation.editRow(1, newValues=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, 'InvalidSpecialization', False])
+        
+        # Test InvalidDataError for invalid specialization
+        with self.assertRaises(InvalidDataError):
+            relation.editRow(1, newValues=['user1', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, 'InvalidSpecialization', False])
         
         # Test TypeError for incorrect type
         with self.assertRaises(TypeError):
@@ -672,7 +687,7 @@ class TestRelation(unittest.TestCase):
         
         # Populate the relation with users
         user_relation.insertRow(attributeList=['user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
-        user_relation.insertRow(attributeList=['user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, None, False])
+        user_relation.insertRow(attributeList=['user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, 'Psychology', False])
         user_relation.insertRow(attributeList=['user3', 'user3@example.com', 'password', 'Alice', 'Johnson', 'Admin', None, None, None, False])
         
         # Edit field with valid data
@@ -720,7 +735,7 @@ class TestRelation(unittest.TestCase):
         
         # Populate the relation with users
         user_relation.insertRow(attributeList=[1, 'user1', 'user1@example.com', 'password', 'John', 'Doe', 'Patient', None, None, None, False])
-        user_relation.insertRow(attributeList=[2, 'user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, None, False])
+        user_relation.insertRow(attributeList=[2, 'user2', 'user2@example.com', 'password', 'Jane', 'Smith', 'MHWP', None, None, 'Psychology', False])
         user_relation.insertRow(attributeList=[3, 'user3', 'user3@example.com', 'password', 'Alice', 'Johnson', 'Admin', None, None, None, False])
         
         # Edit field with valid data
@@ -758,6 +773,53 @@ class TestRelation(unittest.TestCase):
         # Test InvalidDataError for invalid specialization
         # with self.assertRaises(InvalidDataError):
         #     user_relation.editFieldInRow(1, 'specialization', 'InvalidSpecialization')
+
+    def test_mhwp_deletion(self):
+        
+        relationName = "User"
+        attributeLabels = ['user_id', 'username', 'email', 'password', 'fName', 'lName', 'type', 'emergency_contact_email', 'emergency_contact_name', 'specialization', 'is_disabled']
+        attributeTypes = [int, str, str, str, str, str, str, str, str, str, bool]
+        deletedEntryValues = ['DeletedMHWP', 'DeletedEmail', None, 'DeletedMHWP', 'DeletedMHWP', 'MHWP', None, None, 'DeletedMHWP', True]
+        
+        user_relation = Relation(relationName, attributeLabels, attributeTypes, autoIncrementPrimaryKey=False, validityChecking=True, allowDeletedEntry=True, deletedEntryValues=deletedEntryValues)
+        
+        ### test behavior of deleted row
+        # Attempt to populate the relation with an invalid deleted MHWP entry
+        with self.assertRaises(ValueError):
+            user_relation.insertRow(attributeList=[-1, 'InvalidMHWP', 'InvalidEmail', None, 'InvalidMHWP', 'InvalidMHWP', 'MHWP', None, None, 'InvalidMHWP', True])
+        
+        # Attempt to retrieve the deleted MHWP row using its ID
+        deleted_row = user_relation.getRowsWhereEqual('user_id', -1)
+        
+        # Check if the retrieved row matches the deleted entry values
+        self.assertEqual(deleted_row[0][0], 'DeletedMHWP')
+        self.assertEqual(deleted_row[0][1], 'DeletedEmail')
+        self.assertEqual(deleted_row[0][3], 'DeletedMHWP')
+        self.assertEqual(deleted_row[0][4], 'DeletedMHWP')
+        self.assertEqual(deleted_row[0][5], 'MHWP')
+        self.assertEqual(deleted_row[0][-1], True)
+    
+        deleted_relation = user_relation.getWhereEqual('user_id', -1)
+
+        ### test deletion
+        db = Database(overwrite=True)
+        initDummyDatabase(db)
+
+        db = Database()
+        mhwp_id = db.getRelation('User').getIDsWhereEqual('type', "MHWP")[0] ### get id of first mhwp in database
+
+        print(f"deleting MHWP with ID {mhwp_id}")
+
+        ### get ids of referenced records
+        appointment_id = db.getRelation('Appointment').getIDsWhereEqual('mhwp_id', mhwp_id)[0]
+        allocation_id = db.getRelation('Allocation').getIDsWhereEqual('mhwp_id', mhwp_id)[0]
+        patient_record_id = db.getRelation('PatientRecord').getIDsWhereEqual('mhwp_id', mhwp_id)[0]
+
+        db.getRelation('User').deleteRow(mhwp_id, db)
+
+        assert db.getRelation('Appointment').getRowsWhereEqual('appointment_id', appointment_id)[0][Appointment.MHWP_ID] == -1, "Wrong MHWP ID"
+        assert db.getRelation('Allocation').getRowsWhereEqual('allocation_id', allocation_id)[0][Allocation.MHWP_ID] == -1, "Wrong MHWP ID"
+        assert db.getRelation('PatientRecord').getRowsWhereEqual('record_id', patient_record_id)[0][PatientRecord.MHWP_ID] == -1, "Wrong MHWP ID"
 
     def test_get_where_smaller(self):
         # Similar to above, but returns a Relation
@@ -1159,6 +1221,14 @@ class TestEntities(unittest.TestCase):
             JournalEntry(entry_id=1, patient_id=1, text='Valid text', timestamp='not_a_datetime')
 
     def test_appointment_invalid_data(self):
+        # Set up a temporary database for testing
+        test_db_file = 'test_appointment_database.pkl'
+        if os.path.exists(test_db_file):
+            os.remove(test_db_file)
+        logger = logging.getLogger('TestAppointmentInvalidData')
+        logger.setLevel(logging.CRITICAL)  # Suppress logging output during tests
+        db = Database(data_file=test_db_file, logger=logger, verbose=False, overwrite=True)
+    
         # Test invalid appointment_id
         with self.assertRaises(InvalidDataError):
             Appointment(appointment_id='not_an_int', patient_id=1, mhwp_id=1, date=datetime.now(), room_name='Room A', status='Scheduled')
@@ -1175,6 +1245,27 @@ class TestEntities(unittest.TestCase):
         with self.assertRaises(InvalidDataError):
             Appointment(appointment_id=1, patient_id=1, mhwp_id=1, date='not_a_datetime', room_name='Room A', status='Scheduled')
         
+        # Test time/room collision detection
+        appointmentRelation = db.getRelation('Appointment')
+        
+        # Insert a valid appointment
+        valid_appointment = Appointment(appointment_id=1, patient_id=1, mhwp_id=1, date=datetime.now(), room_name='Room A', status='Scheduled', appointmentRelation=appointmentRelation)
+        db.insert_appointment(valid_appointment)
+        
+        # Attempt to insert another appointment at the same time and room
+        with self.assertRaises(InvalidDataError):
+            Appointment(appointment_id=2, patient_id=2, mhwp_id=2, date=datetime.now(), room_name='Room A', status='Scheduled', appointmentRelation=appointmentRelation)
+        
+        # Attempt to insert another appointment at the same time but different room
+        try:
+            Appointment(appointment_id=3, patient_id=3, mhwp_id=3, date=datetime.now(), room_name='Room B', status='Scheduled', appointmentRelation=appointmentRelation)
+        except InvalidDataError:
+            self.fail("Appointment raised InvalidDataError unexpectedly!")
+
+        # Clean up the database file after the test
+        if os.path.exists(test_db_file):
+            os.remove(test_db_file)
+    
     def test_patient_invalid_data(self):
         # Test invalid username
         with self.assertRaises(InvalidDataError):

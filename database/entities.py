@@ -1,7 +1,8 @@
 from datetime import datetime
 import re
 import os 
-
+from .dataStructs import Relation
+import logging
 
 __all__ = [
     'InvalidDataError',
@@ -31,6 +32,12 @@ class InvalidDataError(ValueError):
 
 class User:
     """A class to represent a user in the system."""
+
+    USER_ID = 0
+    USERNAME = 1
+    PASSWORD = 2
+    TYPE = 3
+    IS_DISABLED = 4
 
     def __init__(self, user_id: int = None, username: str = '', password: str = '', user_type: str = '',
                  is_disabled: bool = False):
@@ -108,6 +115,16 @@ class Admin(User):
 
 class Patient(User):
     """A class to represent a patient user."""
+
+    USER_ID = 0
+    USERNAME = 1
+    EMAIL = 2
+    PASSWORD = 3
+    FNAME = 4
+    LNAME = 5
+    EMERGENCY_CONTACT_EMAIL = 6
+    EMERGENCY_CONTACT_NAME = 7
+    IS_DISABLED = 8
 
     def __init__(self,
                  user_id: int = None,
@@ -191,6 +208,15 @@ class Patient(User):
 class MHWP(User):
     """A class to represent a mental health worker professional (MHWP) user."""
 
+    USER_ID = 0
+    USERNAME = 1
+    EMAIL = 2
+    PASSWORD = 3
+    FNAME = 4
+    LNAME = 5
+    SPECIALIZATION = 6
+    IS_DISABLED = 7
+
     def __init__(self,
                  user_id: int = None,
                  username: str = '',
@@ -199,7 +225,8 @@ class MHWP(User):
                  fName: str = '',
                  lName: str = '',
                  specialization: str = '',
-                 is_disabled: bool = False):
+                 is_disabled: bool = False,
+                 specializations_file = 'specializations.txt'):
         """
         Initialize an MHWP object.
 
@@ -223,6 +250,17 @@ class MHWP(User):
         self.lName = lName
         self.email = email
         self.specialization = specialization
+
+        app_directory = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+        specializations_file = os.path.join(app_directory, specializations_file)
+
+        try:
+            with open(specializations_file, 'r') as file:
+                self.valid_specializations_list = [re.sub(r'\(.*?\)', '', line).strip() for line in file.readlines()]
+        except FileNotFoundError:
+            raise InvalidDataError(f"Conditions file '{specializations_file}' not found.")
+        except Exception as e:
+            raise InvalidDataError(f"An error occurred while loading conditions file: {str(e)}")
 
         success = self.checkValidData()
 
@@ -254,13 +292,25 @@ class MHWP(User):
 
         return True
 
+    def checkValidSpecialization(self, specialization : str):
+        if specialization not in self.valid_specializations_list:
+            raise InvalidDataError(f"Specialization {specialization} is not a valid specialization.")
+        else:
+            return True
+        
     def checkValidData(self):
-        return MHWP.checkValidDataStatic(self.user_id, self.username, self.email, self.password, self.fName, self.lName,
-                                         self.type, self.specialization, self.is_disabled)
-
-
+        success = MHWP.checkValidDataStatic(self.user_id, self.username, self.email, self.password, self.fName, self.lName,
+                                         self.type, self.specialization, self.is_disabled) 
+        success = success and self.checkValidSpecialization(self.specialization) ## check if specialization is valid
+        return success 
+    
 class JournalEntry:
     """A class to represent a journal entry."""
+
+    ENTRY_ID = 0
+    PATIENT_ID = 1
+    TEXT = 2
+    TIMESTAMP = 3
 
     def __init__(self, entry_id: int = None, patient_id: int = None, text: str = '', timestamp: datetime = None):
         """
@@ -304,14 +354,27 @@ class JournalEntry:
         return True
 
     def checkValidData(self):
-        return self.checkValidDataStatic(self.entry_id, self.patient_id, self.text, self.timestamp)
+        return JournalEntry.checkValidDataStatic(self.entry_id, self.patient_id, self.text, self.timestamp)
 
 
 class Appointment:
     """A class to represent an appointment."""
 
-    def __init__(self, appointment_id: int = None, patient_id: int = None, mhwp_id: int = None, date: datetime = None,
-                 room_name: str = None, status: str = ''):
+    APPOINTMENT_ID = 0
+    PATIENT_ID = 1
+    MHWP_ID = 2
+    DATE = 3
+    ROOM_NAME = 4
+    STATUS = 5
+
+    def __init__(self, appointment_id: int = None, 
+                 patient_id: int = None, 
+                 mhwp_id: int = None, 
+                 date: datetime = None,
+                 room_name: str = None, 
+                 status: str = '',
+                 collisionChecking: bool = True,
+                 appointmentRelation : Relation = None):
         """
         Initialize an Appointment object.
 
@@ -320,15 +383,21 @@ class Appointment:
         patient_id (int, optional): The ID of the patient associated with the appointment. Can be None.
         mhwp_id (int, optional): The ID of the MHWP associated with the appointment. Can be None.
         date (datetime, optional): The date of the appointment. Can be None.
-        status (str): The status of the appointment.
+        status (str): The status of the appointment. Can be an empty string.
+        relationReferenceChecking (bool, optional): Whether to check for collisions using appointmentsRelation. Defaults to True.
+        appointmentRelation (Relation, optional): The relation associated with the appointment. Can be None.
         """
 
         self.appointment_id = appointment_id
         self.patient_id = patient_id  # foreign key to Patient
         self.mhwp_id = mhwp_id  # foreign key to MHWP
-        self.date = date
+        if date and isinstance(date, datetime):
+            self.date = date.replace(second=0, microsecond=0) ### clean date of seconds and microseconds
+        else:
+            self.date = date
         self.room_name = room_name
         self.status = status
+        self.appointmentRelation = appointmentRelation
 
         success = self.checkValidData()
 
@@ -367,13 +436,40 @@ class Appointment:
 
         return True
 
-    def checkValidData(self):
-        return self.checkValidDataStatic(self.appointment_id, self.patient_id, self.mhwp_id, self.date, self.room_name,
-                                         self.status)
+    @staticmethod 
+    def checkTimeAndRoomCollisions(dateAndTime: datetime, room_name : str, appointment_id : int, appointmentRelation : Relation):
+        simultaneousAppointments = appointmentRelation.getWhereEqual("date", dateAndTime)
+        o = len(appointmentRelation.getIDsWhereEqual("appointment_id", appointment_id)) if appointmentRelation.getIDsWhereEqual("appointment_id", appointment_id) is not None else 0
+        if simultaneousAppointments is None or len(simultaneousAppointments)-o <= 0: ### no simultaneous appointments --> no collisions
+            return True
+        else:
+            equilocalAppointments = simultaneousAppointments.getWhereEqual('room_name', room_name)
+            if equilocalAppointments is None or len(equilocalAppointments)-o <= 0: ### simultaneous appointments all happen in different rooms --> no collisions
+                return True
+            else:
+                raise InvalidDataError("Appointment Collision: There is already an appointment for this time in this room.")
+        return False
 
+
+    def checkValidData(self):
+        valid = Appointment.checkValidDataStatic(self.appointment_id, self.patient_id, self.mhwp_id, self.date, self.room_name, self.status)
+        if self.appointmentRelation is not None:
+            if type(self.appointmentRelation) == Relation and self.appointmentRelation.name == "Appointment":
+                valid = valid and self.checkTimeAndRoomCollisions(self.date, self.room_name,self.appointment_id, self.appointmentRelation)
+            else:
+                raise ValueError("Appointment was initialized with invalid appointment relation reference. Please remove the reference or use db.getRelation('Appointment') to pass the appointment relation.")
+        else:
+            logging.warning(f"You are creating or validitychecking an appointment entity (id {self.appointment_id}) without the entity having access to appointmentRelation. This means that this Appointment entity can not check whether the date and room provided collide with other appointments. Please pass an appointmentRelation reference (using db.getRelation('Appointment') to enable date/room collision checking.)")
+        return valid 
 
 class PatientRecord:
     """A class to represent a patient record entry."""
+    
+    RECORD_ID = 0
+    PATIENT_ID = 1
+    MHWP_ID = 2
+    NOTES = 3
+    CONDITIONS = 4
 
     def __init__(self, record_id: int = None, patient_id: int = None, mhwp_id: int = None, notes: str = '',
                  conditions: list = None, conditions_file : str = 'conditions.txt'):
@@ -442,11 +538,18 @@ class PatientRecord:
         return True
 
     def checkValidData(self):
-        return self.checkValidDataStatic(self.record_id, self.patient_id, self.mhwp_id, self.notes, self.conditions, self.valid_conditions_list)
+        return PatientRecord.checkValidDataStatic(self.record_id, self.patient_id, self.mhwp_id, self.notes, self.conditions, self.valid_conditions_list)
 
 
 class Allocation:
     """A class to represent an allocation."""
+
+    ALLOCATION_ID = 0
+    ADMIN_ID = 1
+    PATIENT_ID = 2
+    MHWP_ID = 3
+    START_DATE = 4
+    END_DATE = 5
 
     def __init__(self, allocation_id: int = None, admin_id: int = None, patient_id: int = None, mhwp_id: int = None,
                  start_date: datetime = None, end_date: datetime = None):
@@ -501,7 +604,7 @@ class Allocation:
         return True
 
     def checkValidData(self):
-        return self.checkValidDataStatic(self.allocation_id, self.admin_id, self.patient_id, self.mhwp_id,
+        return Allocation.checkValidDataStatic(self.allocation_id, self.admin_id, self.patient_id, self.mhwp_id,
                                          self.start_date, self.end_date)
 
 
@@ -516,6 +619,12 @@ class MoodEntry:
     comment (str): A comment associated with the mood entry.
     timestamp (datetime, optional): The timestamp of when the mood entry was recorded. Can be None.
     """
+
+    MOODENTRY_ID = 0
+    PATIENT_ID = 1
+    MOODSCORE = 2
+    COMMENT = 3
+    TIMESTAMP = 4
 
     def __init__(self, moodentry_id: int = None, patient_id: int = None, moodscore: int = None, comment: str = '',
                  timestamp: datetime = None):
@@ -563,7 +672,7 @@ class MoodEntry:
         return True
 
     def checkValidData(self):
-        return self.checkValidDataStatic(self.moodentry_id, self.patient_id, self.moodscore, self.comment,
+        return MoodEntry.checkValidDataStatic(self.moodentry_id, self.patient_id, self.moodscore, self.comment,
                                          self.timestamp)
 
 
@@ -571,6 +680,13 @@ class MHWPReview:
     """
     A class to represent a review for a Mental Health Worker Professional (MHWP).
      """
+
+    MHWP_REVIEW_ID = 0
+    PATIENT_ID = 1
+    MHWP_ID = 2
+    REVIEWSCORE = 3
+    REVIEWCOMMENT = 4
+    TIMESTAMP = 5
 
     def __init__(self, MHWP_review_id: int = None, patient_id: int = None, mhwp_id: int = None, reviewscore: int = None,
                  reviewcomment: str = '', timestamp: datetime = None):
@@ -633,11 +749,17 @@ class MHWPReview:
         return True
 
     def checkValidData(self):
-        return self.checkValidDataStatic(self.MHWP_review_id, self.patient_id, self.mhwp_id, self.reviewscore,
+        return MHWPReview.checkValidDataStatic(self.MHWP_review_id, self.patient_id, self.mhwp_id, self.reviewscore,
                                          self.reviewcomment, self.timestamp)
 
 
 class ChatContent:
+    CHATCONTENT_ID = 0
+    ALLOCATION_ID = 1
+    USER_ID = 2
+    TEXT = 3
+    TIMESTAMP = 4
+
     def __init__(self, chatcontent_id: int = None, allocation_id: int = None, user_id: int = None, text: str = '',
                  timestamp: datetime = None):
 
@@ -684,11 +806,18 @@ class ChatContent:
         return True
 
     def checkValidData(self):
-        return self.checkValidDataStatic(self.chatcontent_id, self.allocation_id, self.user_id, self.text,
+        return ChatContent.checkValidDataStatic(self.chatcontent_id, self.allocation_id, self.user_id, self.text,
                                          self.timestamp)
 
 
 class Forum:
+    THREAD_ID = 0
+    PARENT_ID = 1
+    TOPIC = 2
+    CONTENT = 3
+    USER_ID = 4
+    TIMESTAMP = 5
+
     def __init__(self, thread_id: int = None, parent_id: int = None, topic: str = '', content: str = '',
                  user_id: int = None, timestamp: datetime = None):
         self.thread_id = thread_id
@@ -700,6 +829,13 @@ class Forum:
 
 
 class Notification:
+    NOTIFICATION_ID = 0
+    USER_ID = 1
+    NOTIFYCONTENT = 2
+    SOURCE_ID = 3
+    NEW = 4
+    TIMESTAMP = 5
+
     def __init__(self, notification_id: int = None, user_id: int = None, notifycontent: str = '', source_id: int = None,
                  new: bool = None, timestamp: datetime = None):
         self.notification_id = notification_id
@@ -710,6 +846,11 @@ class Notification:
         self.timestamp = timestamp
 
 class ExerRecord:
+    RECORD_ID = 0
+    USER_ID = 1
+    EXERCISE = 2
+    TIMESTAMP = 3
+
     def __init__(self, record_id: int = None, user_id: int = None, exercise: str = '',timestamp: datetime = None):
         self.record_id = record_id
         self.user_id = user_id
@@ -719,8 +860,3 @@ class ExerRecord:
 class UserError(Exception):
     """Custom exception for user-related errors."""
     pass
-
-
-
-
-

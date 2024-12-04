@@ -98,6 +98,10 @@ class RowList(list):
         if labels is not None:
             self.labelled = True
         self.labels = labels
+
+        if type(rows) == Row:
+            raise ValueError("Expected list of rows but received row.")
+
         for row in rows:
             if type(row) != Row:
                 raise TypeError(f"Expected Row but received {type(row)}. RowList must be initialized with a list of Row objects.")
@@ -119,7 +123,14 @@ class RowList(list):
         return out
 
 class Relation():
-    def __init__(self, relationName : str, attributeLabels : list, relationAttributeTypes : list = None, autoIncrementPrimaryKey: bool=True, validityChecking : bool = True):
+    def __init__(self, 
+                 relationName : str, 
+                 attributeLabels : list, 
+                 relationAttributeTypes : list = None, 
+                 autoIncrementPrimaryKey: bool=True, 
+                 validityChecking : bool = True,
+                 allowDeletedEntry : bool = False,
+                 deletedEntryValues : list = []):
         """
         Initialize a Relation object.
 
@@ -129,22 +140,45 @@ class Relation():
         relationAttributeTypes (list, optional): The types of the attributes.
         autoIncrementPrimaryKey (bool, default True): Whether the primary key should auto-increment.
         validityChecking (bool, default True): Whether to perform validity checking on the data.
+        allowDeletedEntry (bool, default True): Whether the relation allows an extra row which is set to 'deleted', with id -1.
+        deletedEntryValues (list, default []): The default values for deleted entries.
         """
         self.name = relationName
         self.numColumns = len(attributeLabels)
+
+        self.allowDeletedEntry = allowDeletedEntry
+
+        if self.allowDeletedEntry:
+            if len(deletedEntryValues) != len(attributeLabels)-1:
+                raise ValueError(f"No. of deletedEntryValues {len(deletedEntryValues)} must be equal to no. of attributeLabels {len(attributeLabels)} minus one (as id is hardcoded to -1) when supportsDeletedEntry is set to True.")
+            self.deletedEntryValues = deletedEntryValues
+            labelsWithoutId = attributeLabels.copy()
+            labelsWithoutId.pop(0)
+            self.deletedEntryRow = Row(deletedEntryValues,labelsWithoutId)
+        else:
+            self.deletedEntryValues = None
+            self.deletedEntryRow = None
 
         # set up type and validity checks
         self.typeChecking = relationAttributeTypes is not None
 
         if self.typeChecking:
             if len(relationAttributeTypes) != self.numColumns:
-                raise ValueError(f"No. of relationAttributeNames {attributeLabels} must be equal to no. of relationAttributeTypes {relationAttributeTypes}")
+                raise ValueError(f"No. of attributeLabels {attributeLabels} must be equal to no. of relationAttributeTypes {relationAttributeTypes}")
             self.types = relationAttributeTypes
             self.primaryKeyType = relationAttributeTypes[0]
         else:
             self.types = None
             self.primaryKeyType = int if autoIncrementPrimaryKey else None
 
+        ## typecheck deleted entry
+        if self.allowDeletedEntry and self.typeChecking: ### check deleted entry values for correct types
+            typesWithoutId = self.types.copy()
+            typesWithoutId.pop(0)
+            for value, desiredType in zip(self.deletedEntryValues,typesWithoutId):
+                if type(value) != desiredType and value is not None:
+                    raise TypeError(f"Deleted entry value {value} (type {type(value)}) is not of type {desiredType}.")
+        
 
         self.attributeLabels = attributeLabels
         self.primaryKeyName = attributeLabels[0]
@@ -157,8 +191,69 @@ class Relation():
         
         self._validityChecking = validityChecking
 
+        self.__initEntityTyping()
+
         if self._validityChecking:
             self.__initValidityChecking()
+
+        self.__setupReferencedRelations()
+
+    def __setupReferencedRelations(self):
+        if self.__isEntityTyped:
+            if self.name == "User":
+              self.__referencedRelations = {
+                  "Patient": [
+                      ("User", "user_id"), 
+                      ("Appointment", "patient_id"), 
+                      ("PatientRecord", "patient_id"), 
+                      ("Allocation", "patient_id"), 
+                      ("JournalEntry", "patient_id"), 
+                      ("MoodEntry", "patient_id"), 
+                      ("MHWPReview", "patient_id"), 
+                      ("ChatContent", "user_id"), 
+                      ("Forum", "user_id"),
+                      ("Notification", "user_id"),
+                      ("ExerRecord", "user_id")
+                  ],
+                  "MHWP": [
+                      ("User", "user_id"), 
+                      ("Appointment", "mhwp_id"), 
+                      ("PatientRecord", "mhwp_id"),
+                      ("Allocation", "mhwp_id"),  
+                      ("MHWPReview", "mhwp_id"), 
+                      ("Forum", "user_id"),
+                      ("Notification", "user_id")
+                  ]
+              }
+            
+    def getReferencedRelations(self, type=None):
+        ## check if valid type was provided if relation is entity typed (i.e. is User relation)
+        if self.__isEntityTyped and (type is None or type not in self.__classNameList):
+            raise ValueError(f"Relation {self.name} is entity typed but no or invalid type provided (valid types {self.__classNameList}).")
+        
+        if self.name == "User":
+            assert self.__isEntityTyped, "User but entity typed set to False."
+            return self.__referencedRelations.get(type) ### provide respective referencedRelations for type
+    
+        return self.__referencedRelations
+
+    def __initEntityTyping(self):
+        ### Entity subtyping logic
+        ### User Relation can contain three entity types, thus requires type-specific validity check
+        if self.name == "User":
+            self.__isEntityTyped = True
+            self.__classNameList = ['Patient','Admin','MHWP']
+            self._typeIndex = 6
+
+            ## this specifies which columns of the User table are irrelevant for the respective entity
+            ## these will be dropped for data validation
+            self.__dropColumnDict = {
+                'Patient': [self._typeIndex,9],
+                'Admin':[self._typeIndex,2,4,5,7,8,9],
+                'MHWP':[self._typeIndex,7,8]
+            }
+        else:
+            self.__isEntityTyped = False
 
     def __initValidityChecking(self):
         """
@@ -180,35 +275,28 @@ class Relation():
 
         ### import classes and store as instantiable objects
         try:
-            classNameList = [self.name]
-
-            ### Entity subtyping logic
-            ### User Relation can contain three entity types, thus requires type-specific validity check
-            if self.name == "User":
-                self.__isEntityTyped = True
-                classNameList = ['Patient','Admin','MHWP']
-                self._typeIndex = 6
-
-                ## this specifies which columns of the User table are irrelevant for the respective entity
-                ## these will be dropped for data validation
-                self.__dropColumnDict = {
-                    'Patient': [self._typeIndex,9],
-                    'Admin':[self._typeIndex,2,4,5,7,8,9],
-                    'MHWP':[self._typeIndex,7,8]
-                }
+            ### Sets up entity relation reference validity checking
+            ### I.e. defines entities where a relation must be passed to check for conflicts in relation to other rows in relation
+            ### e.g. Appointment checking for other appointments at same time and place
+            if self.name == "Appointment":
+                self.__needsRelationReferenceChecks = True
             else:
-                self.__isEntityTyped = False
+                self.__needsRelationReferenceChecks = False
 
 
-            ## import and get classes
+            ## get reference to entity class with name of relation 
+            if not self.__isEntityTyped:
+                classNameList = [self.name]
+            else:
+                classNameList = self.__classNameList
             module_ = __import__('database.entities', fromlist=classNameList)
             classes_ = [getattr(module_, className) for className in classNameList]
-
+            
             self.__classes = classes_
+
         except Exception as e:
             traceback.print_exc()
             raise e.add_note("Unexpected error occurred when initialising Relation-level validity checking.")
-
     
     @property
     def validityChecking(self):
@@ -299,6 +387,8 @@ class Relation():
         """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
+        if attribute == self.primaryKeyName and value == -1:
+            return RowList([self.deletedEntryRow],self.deletedEntryRow.labels)
         if self.data[attribute].empty:
             return None
         results = self.data[self.data[attribute] == value]
@@ -317,6 +407,8 @@ class Relation():
         """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
+        if attribute == self.primaryKeyName and value == -1:
+            return [-1]
         if self.data[attribute].empty:
             return None
         results = self.data[self.data[attribute] == value][self.primaryKeyName].tolist()
@@ -335,9 +427,14 @@ class Relation():
         """
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
+        if attribute == self.primaryKeyName and value == -1:
+            if self.allowDeletedEntry:
+                return Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
+            else:
+                raise IndexError("Trying to access deleted row (id -1) in Relation that doesn't allow deleted row access.")
         if self.data[attribute].empty:
             return None
-        resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking)
+        resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         results = self.data[self.data[attribute].apply(lambda x: x == value)]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
@@ -395,7 +492,7 @@ class Relation():
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
             return None
-        resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking)
+        resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         results = self.data[self.data[attribute] > value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
@@ -453,7 +550,7 @@ class Relation():
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
             return None
-        resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking)
+        resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         results = self.data[self.data[attribute] < value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
         if len(resultRows)>0:
@@ -643,20 +740,25 @@ class Relation():
     def _validateRowValues(self, attributeList: list = None, entityType: str = None):
         """
         Takes in a list of row values (with primary key column!) and validates them.
+        entityType is MHWP, Patient, or Admin if the attribute list refers to a User row.
         """
-        if type(attributeList[0]) != int and attributeList[0] is not None:
-            raise ValueError("Expected first value in attribute list to be primary key, of type int.")
+        if type(attributeList[0]) != int and attributeList[0] is not None and attributeList[0] <= 0:
+            raise ValueError(f"Expected first value in attribute list to be primary key, of type int, value 1 or greater. (received {attributeList[0]})")
         
         ### retrieve appropriate class
         list = attributeList.copy()
         relevantClasses = self.__classes
+        
         isTyped = self.__isEntityTyped
+        
         if isTyped:
             dropColumnDict = self.__dropColumnDict
+        
         correctEntityClass = None
+        
         if not isTyped:
             correctEntityClass = relevantClasses[0]
-        else:
+        else: 
             ### find appropriate class
             for entityClass in relevantClasses:
                 if entityClass.__name__ == entityType:
@@ -669,10 +771,65 @@ class Relation():
 
             for index in indicesToDrop:
                 list.pop(index)
+        
+        if self.__needsRelationReferenceChecks:
+            list.append(True) ### set relation reference checks to True
+            list.append(self) ### append reference to self to allow relation reference checking
 
         ### instantiate correct class
-        correctEntityClass(*list)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            correctEntityClass(*list)
+    
+    def deleteRow(self, primaryKey: int, dbReference):
+        """
+        Deletes a row from the relation based on the primary key. Currently only supports MHWP deletion. Use db.delete_patient() for patient deletion.
+
+        Parameters:
+        primaryKey (int): The primary key of the row to be deleted.
+        dbReference: A reference to the database object, used to access other relations.
+
+        Raises:
+        NotImplementedError: If deletion is not supported for the current relation or entity type.
+        IndexError: If the primary key is out of bounds or invalid.
+        ValueError: If attempting to delete from an empty dataset.
+        """
+        rowToDelete = self.getRowsWhereEqual(self.primaryKeyName,primaryKey)[0]
+        type = None
+        if self.__isEntityTyped:
+            type = rowToDelete[self._typeIndex]
+        if self.name != "User":
+            raise NotImplementedError(f"Deletions in {self.name} have not been implemented.")
+        elif self.name == "User" and type == "Patient":
+            raise NotImplementedError(f"Relation.deleteRow() doesn't support deleting patients, please use db.delete_patient(). (As patient deletion needs to be properly propagated.)")
+        elif self.name == "User" and type != "MHWP":
+            raise NotImplementedError(f"Deletions in {self.name} of type {type} have not been implemented.")
         
+        ### delete MHWP:
+
+        ### iterate through all referenced relations and set referencing foreign key to -1
+        for relationName, foreignKeyName in self.__referencedRelations.get(type):
+            relation = dbReference.getRelation(relationName)
+            
+            referenced_rows = relation.getIDsWhereEqual(foreignKeyName, primaryKey)
+            if referenced_rows is None or len(referenced_rows) == 0:
+                continue
+            ### iterate through all referenced rows
+            for referencedID in referenced_rows:
+                relation.editFieldInRow(referencedID, foreignKeyName, -1) ## set foreign key to -1, to point to deleted row constant
+                ### this sets primary key of record itself to -1 as well
+
+        ## actually delete row, (whose primary key was changed to -1)
+        self.__deleteRow(-1)
+        
+    def __deleteRow(self, primaryKey: int):
+        if primaryKey not in self.data[self.primaryKeyName].values:
+            raise IndexError(f"Primary key {primaryKey} is out of bounds or invalid.")
+        
+        if self.data.empty:
+            raise ValueError("Cannot delete from an empty dataset.")
+        
+        self.data = self.data[self.data[self.primaryKeyName] != primaryKey]
 
     def __str__(self) -> str:
         """
@@ -705,13 +862,15 @@ class Relation():
         Row: The converted Row object.
         """
 
-        #### convert pandas or numpy data types to native python types
+        #### convert pandas or numpy data types to native python types to fix typechecking errors
         converted_values = []
         for value in series.values.tolist():
-            if isinstance(value, (pd.Int64Dtype, pd.UInt64Dtype, np.int64, np.uint64,np.int32,np.uint32)):
+            if isinstance(value, (pd.Int64Dtype, pd.UInt64Dtype, np.int64, np.uint64, np.int32, np.uint32)):
                 converted_values.append(int(value))
             elif isinstance(value, (pd.Float64Dtype, pd.Float32Dtype)):
                 converted_values.append(float(value))
+            elif isinstance(value, pd._libs.tslibs.timestamps.Timestamp):
+                converted_values.append(value.to_pydatetime())
             else:
                 converted_values.append(value)
 

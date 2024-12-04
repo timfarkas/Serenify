@@ -222,9 +222,29 @@ def initDummyDatabase(db: Database):
             status='active'
         )
 
+        appointment3 = Appointment(
+            appointment_id=3,
+            patient_id=patient_user.user_id,
+            mhwp_id=mhwp_user.user_id,
+            date=datetime.datetime.now() + datetime.timedelta(days=1),
+            room_name='Room C',
+            status='scheduled'
+        )
+
+        appointment4 = Appointment(
+            appointment_id=4,
+            patient_id=patient_user2.user_id,
+            mhwp_id=mhwp_user.user_id,
+            date=datetime.datetime.now() + datetime.timedelta(days=2),
+            room_name='Room D',
+            status='scheduled'
+        )
+
         # Insert appointments into the database
         db.insert_appointment(appointment1)
         db.insert_appointment(appointment2)
+        db.insert_appointment(appointment3)
+        db.insert_appointment(appointment4)
 
         db.printAll()
 

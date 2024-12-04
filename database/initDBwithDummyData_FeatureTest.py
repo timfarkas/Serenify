@@ -256,23 +256,26 @@ def initDummyDatabase(db: Database):
         db.insert_patient_record(patient_record1)
         db.insert_patient_record(patient_record2)
         db.insert_patient_record(patient_record3)
+        appointmentRelation = db.getRelation('Appointment')
 
         # Create Appointment objects and insert them into the database
         appointment1 = Appointment(
             appointment_id=1,
-            room_name="A",
+            room_name="Room A",
             patient_id=3,
             mhwp_id=6,
             date=datetime.datetime(year=2024, month=12, day=5, hour=10, minute=0, second=0),
-            status='active'
+            status='active',
+            appointmentRelation=appointmentRelation
         )
         appointment2 = Appointment(
             appointment_id=2,
-            room_name="B",
+            room_name="Room B",
             patient_id=5,
             mhwp_id=7,
             date=datetime.datetime(year=2024, month=12, day=25, hour=10, minute=0, second=0),
-            status='active'
+            status='active',
+            appointmentRelation=appointmentRelation
         )
         # Insert appointments into the database
         db.insert_appointment(appointment1)
