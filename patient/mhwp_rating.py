@@ -35,6 +35,7 @@ def openrating():
         if reviewid:
             reviewlist.editFieldInRow(reviewid, "reviewscore", int(ratingscore))
             reviewlist.editFieldInRow(reviewid, "reviewcomment",reviewcomment)
+            reviewlist.editFieldInRow(reviewid, "timestamp", datetime.datetime.now())
             print("review updated")
         else:
             newreviewentry = MHWPReview(
