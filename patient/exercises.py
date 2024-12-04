@@ -6,18 +6,16 @@ from tkinter import messagebox
 import sys
 import os
 import datetime
-# from database.database import Database,ExerRecord
+from database.database import Database,ExerRecord
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.entities import ExerRecord
-from addfeature.globaldb import global_db
-global global_db
-db=global_db
 
 
 class Exercises:
     def __init__(self):
         root = tk.Tk()
+        self.db=Database()
         self.root = root
         self.session = Session()
         self.session.open()
@@ -38,7 +36,7 @@ class Exercises:
         # self.clear_button.grid(row=1, column=1)
 
         #Back button
-        self.back_button = tk.Button(self.root, text="Back to the main page", command=lambda:self.backButton)
+        self.back_button = tk.Button(self.root, text="Back to the main page", command= self.backButton)
         self.back_button.grid(row=0, column=0, pady=10)
         
         # H1 equivalent
@@ -95,8 +93,9 @@ class Exercises:
     #Call 999 in an Emergency
         self.emergency_label = tk.Label(self.root, text="Call 999 in an Emergency", font=("Arial", 14), fg = "red")
         self.emergency_label.grid(row=17, column=0, pady=5)
-
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.mainloop()
+
     def feedback_window(self, link,category):
         webbrowser.open(link)
         # self.open_link()
@@ -124,8 +123,8 @@ class Exercises:
             exercise=cate,
             timestamp=datetime.datetime.now(),
         )
-        db.insert_exerrecord(newrecord)
-        room1 = db.getRelation('ExerRecord')
+        self.db.insert_exerrecord(newrecord)
+        room1 = self.db.getRelation('ExerRecord')
         print(room1)
         self.root3.destroy()
 
@@ -158,8 +157,11 @@ class Exercises:
         webbrowser.open(url)
     
     def backButton(self):
+        import subprocess
         subprocess.Popen(["python3", "patient/patientMain.py"])
+        self.db.close()
         self.root.destroy()
+
 
 
     def display_search_results(self,searchresults):
@@ -178,9 +180,10 @@ class Exercises:
             label.grid(row=0, pady=5)
 
     def on_close(self):
-        db.close()
+        import subprocess
+        subprocess.Popen(["python3", "patient/patientMain.py"])
+        self.db.close()
         self.root.destroy()
-
     def search_exercises(self):
         search_term = self.search_var.get() # Normalize input
         print(f"Search Term: {search_term}")  # Debugging
@@ -201,8 +204,7 @@ class Exercises:
             messagebox.showwarning("Empty Search", "Please enter a term to search.")
         self.search_var.set("")  # Clear the search bar
 
-
 # # Run the application
-if __name__ == "__main__":
-    Exercises()
+# if __name__ == "__main__":
+#     Exercises()
 

@@ -20,7 +20,7 @@ class EditInfo:
         self.session = Session()
         self.session.open()
         self.current_user_id = self.session.getId()
-
+        self.db = Database()
         self.root =tk.Tk()
         self.root.title("Patient")
         self.root.geometry("500x700")
@@ -35,6 +35,7 @@ class EditInfo:
         # UI components
         self.create_widgets()
         self.load_current_info()
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.root.mainloop()
     def create_widgets(self):
@@ -99,8 +100,8 @@ class EditInfo:
         self.root.destroy()
     
     def load_current_info(self):
-        db = Database()
-        user_info = db.getRelation("User")
+        # db = Database()
+        user_info = self.db .getRelation("User")
         user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
         user_info = pd.DataFrame(user_info)
         if not user_info.empty:
@@ -119,8 +120,8 @@ class EditInfo:
 
     def match_in_database(self, username, email, new_password, fname, lname, emergency_contact_name, emergency_contact_email):
         # Check if the provided details match the database
-        db = Database()
-        user_info = db.getRelation("User")
+        # db = Database()
+        user_info = self.db.getRelation("User")
         user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
         user_info = pd.DataFrame(user_info)
 
@@ -152,8 +153,8 @@ class EditInfo:
         emergency_contact_email = self.emergency_contact_email_entry.get()
         emergency_contact_name = self.emergency_contact_name_entry.get()
 
-        db = Database()
-        user = db.getRelation("User")
+        # db = Database()
+        user = self.db.getRelation("User")
         user = user.getRowsWhereEqual('user_id', self.current_user_id)
         user = pd.DataFrame(user)
         current_password = user.iloc[0][3]
@@ -177,9 +178,9 @@ class EditInfo:
             newValues =(username, email, new_password if new_password else current_password, fname, lname, x, emergency_contact_email, emergency_contact_name, y, False)
             try:
                 # Try to perform the update
-                user = db.getRelation("User")
+                user = self.db.getRelation("User")
                 user.editRow(primaryKey=self.current_user_id, newValues=list(newValues))
-                db.close() #to save the database
+                # self.db.close() #to save the database
                 # Mask the password with asterisks
                 masked_password = '*' * len(new_password)
                 messagebox.showinfo(
@@ -193,13 +194,21 @@ class EditInfo:
             messagebox.showerror("Update Failed", "No new information found.")
 
     def backButton(self):
-        subprocess.Popen(["python3", "patient/patientMain.py"])
         self.root.destroy()
+        self.db.close()
+        import subprocess
+        subprocess.Popen(["python3", "patient/patientMain.py"])
+    def on_close(self):
+        self.root.destroy()
+        self.db.close()
+        import subprocess
+        subprocess.Popen(["python3", "patient/patientMain.py"])
 
-if __name__ == "__main__":
 
-
-    app = EditInfo()
+# if __name__ == "__main__":
+#
+#
+#     app = EditInfo()
 
 # db = Database()
 # print("Getting and printing relation 'User':")

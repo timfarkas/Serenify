@@ -30,11 +30,11 @@ db=global_db
 #                 db.insert_notification(newnotify)
 
 def opennotification():
+    # db=Database()
     sess = Session()
     sess.open()
     userID = sess.getId()
     identity = sess.getRole()
-
 
     def refresh_treeview():
         """Clears and refreshes the Treeview with updated data."""
@@ -46,7 +46,7 @@ def opennotification():
         usernotification = allnotification.getRowsWhereEqual('user_id', userID)
         # print("all noti",usernotification)
         usernotification.sort(key=lambda x: x[-1], reverse=True)
-        print("allnoti",usernotification)
+        # print("allnoti",usernotification)
         # Add rows to Treeview
         counter = 0
         for i in usernotification:
@@ -147,7 +147,7 @@ def opennotification():
     tree.heading("MessageID", text="Message ID")  # Hidden column
 
     # Set column widths
-    tree.column("Message", width=200)
+    tree.column("Message", width=250)
     tree.column("From", width=100)
     tree.column("Time", width=200)
     tree.column("UserID", width=0, stretch=False)  # Hide UserID
@@ -163,30 +163,32 @@ def opennotification():
 
         selected_item = tree.selection()[0]
         item_values = tree.item(selected_item, "values")  # Get the values of the selected item
-        # print("Selected item values:", item_values)
+        print("Selected item values:", item_values)
         messageID = int(item_values[4])  # Extract MessageID
         # print(f"Updating Message ID: {messageID}")
         allnotification.editFieldInRow(messageID, 'new', False)
         # Refresh the Treeview after the update
         refresh_treeview()
+        print(identity)
         if identity == "MHWP":
             patientID = item_values[3]
         elif identity == "Patient":
             patientID = userID
+        print("p",patientID,"iden",identity)
         if item_values[0]=="You have a new chat":
-            startchatroom(int(patientID), identity)
+            startchatroom(int(patientID))
         elif item_values[0] == "You have a new appointment":
-            # root.destroy()
+            messagebox.showinfo("Notification", f"Please go back dashboard to see appointment.")
             # db.close()
-            MHWPAppointmentManager()
+            # MHWPAppointmentManager()
         elif item_values[0] == "You have a patient showing bad mood":
             displaymood(int(patientID),"MHWP")
         elif item_values[0] == "You have a new patient review":
             messagebox.showinfo("Notification", f"Please go back dashboard to see review.")
         elif item_values[0] in ["You have a appointment updated","You have a appointment declined","You have a appointment confirmed"]:
-            # root.destroy()
+            messagebox.showinfo("Notification", f"Please go back dashboard to see appointment.")
             # db.close()
-            AppointmentBooking()
+            # AppointmentBooking()
 
             # opeen(userID)
             # Update the 'new' field in the Notification relation

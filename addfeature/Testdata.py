@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.database import Database
+from addfeature.notificationbox import opennotification
 from sessions import Session
 from datetime import datetime
 
@@ -17,7 +18,9 @@ from datetime import datetime
 # print(sess.get("Test"))
 
 db=Database()
-print(db.getRelation("ExerRecord"))
+db.close()
+print(db._is_closed)
+opennotification()
 
 # usermoodlog=db.getRelation('MoodEntry').getRowsWhereEqual('patient_id',3)
 # lastrecorddate=usermoodlog[-1][4].strftime("%Y-%m-%d")

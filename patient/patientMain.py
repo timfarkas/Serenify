@@ -9,6 +9,7 @@ from database.entities import Patient, JournalEntry, MoodEntry,Notification
 from addfeature.chatroom import startchatroom
 from addfeature.forum import openforsum
 from patient.exercises import Exercises
+from database.database import Database
 from patient.editInfo import EditInfo
 from patient.booking import AppointmentBooking
 from addfeature.notificationbox import opennotification
@@ -27,8 +28,8 @@ db=global_db
 
 
 class Patient:
-    def __init__(self, user_id=None):
-        # Initialize the session instance 
+    def __init__(self,user_id=None):
+        # Initialize the session instance
         self.session = Session()
         self.session.open()
         self.current_user_id = self.session.getId()
@@ -75,6 +76,8 @@ class Patient:
         for i in notificationdata:
             if i[1] == self.current_user_id:
                 self.messagecounter += 1
+
+
         # Buttons
         self.journal_entry = tk.Button(self.button_frame, text="Journal", command=self.openjournal,width=20)
         self.exercises_page = tk.Button(self.button_frame, text="Exercises", command = self.exercises,width=20)
@@ -82,7 +85,7 @@ class Patient:
         self.appointments = tk.Button(self.button_frame, text="Appointments", command = self.book,width=20)
         self.ratemhwp = tk.Button(self.button_frame, text="Rate my MHWP", command=lambda: openrating(), width=20)
 
-        self.openchat= tk.Button(self.button_frame, text="Chat with MHWP", command=lambda:startchatroom(self.current_user_id,"Patient"),width=20)
+        self.openchat= tk.Button(self.button_frame, text="Chat with MHWP", command=lambda:startchatroom(self.current_user_id),width=20)
         self.openforum = tk.Button(self.button_frame, text="Open Forum", command=lambda:openforsum(),width=20)
         self.opendashboard = tk.Button(self.button_frame, text="Open my dashboard", command=self.patientdashboard,width=20)
 
@@ -107,11 +110,12 @@ class Patient:
 
         # Turn off widgets if user is disabled
         self.disable_interactive_widgets()
-        def on_close():
-            db.close()
-            self.root.destroy()
-        self.root.protocol("WM_DELETE_WINDOW", on_close)
+
+        self.root.after(1000, self.refresh)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.mainloop()
+
+
     # def refresh_patient(self):
     #     self.root.destroy()  # Close the current Tkinter root
     #     root = tk.Tk()  # Create a new Tkinter root
@@ -542,23 +546,24 @@ class Patient:
 
     def edit_information(self):
         # Edit information
+        db.close()
+        self.root.destroy()
         EditInfo()
         # subprocess.Popen(["python3", "patient/editInfo.py"])
         # self.root.destroy()
 
     def exercises(self):
         # Edit information
-        Exercises()
+        db.close()
         self.root.destroy()
-
-
-
-
+        Exercises()
         # subprocess.Popen(["python3", "patient/exercises.py"])
         # self.root.destroy()
 
     def book(self):
         # Book an appointement
+        db.close()
+        self.root.destroy()
         AppointmentBooking()
         # subprocess.Popen(["python3", "patient/booking.py"])
         # self.root.destroy()
@@ -566,11 +571,19 @@ class Patient:
         # Edit information
         openpatientdashboard()
         # self.root.destroy()
-    def refresh_message(self):
-        """Update the message counter and refresh the label."""
-        self.messagecounter += 1
-        self.messagenum.config(text=f"You have {self.messagecounter} new messages")
+    def refresh(self):
+        # print(self.db._is_closed)
+        # if self.db._is_closed:
+        #     self.db=Database()
+        print("Refreshing")
+        notifications = db.getRelation('Notification').getRowsWhereEqual('new', True)
+        self.message_counter = sum(1 for n in notifications if n[1] == self.current_user_id)
+        self.messagenum.config(text=f"You have {self.message_counter} new messages")
+        self.root.after(1000, self.refresh)
 
+    def on_close(self):
+        db.close()
+        self.root.destroy()
 
 if __name__ == "__main__":
     Patient()

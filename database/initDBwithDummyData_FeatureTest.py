@@ -20,7 +20,7 @@ def initDummyDatabase(db: Database):
         admin_user0 = Admin(user_id=0, username='System', password='pass123456')
         admin_user1 = Admin(user_id=1, username='admin1', password='pass123456')
         patient_user1 = Patient(
-            username='Sunflower',
+            username='patient1',
             password='pass123456',
             fName='John',
             lName='Doe',
@@ -29,8 +29,8 @@ def initDummyDatabase(db: Database):
             is_disabled=False,
         )
         patient_user2 = Patient(
-            username='Lavender',
-            password='pass456789',
+            username='patient2',
+            password='pass123456',
             fName='Jane',
             lName='Smith',
             email='janesmith@example.com',
@@ -38,8 +38,8 @@ def initDummyDatabase(db: Database):
             is_disabled=False,
         )
         patient_user3 = Patient(
-            username='Orchid',
-            password='pass456789',
+            username='patient3',
+            password='pass123456',
             fName='Tony',
             lName='Wills',
             email='tonywills@example.com',
@@ -47,16 +47,16 @@ def initDummyDatabase(db: Database):
             is_disabled=False,
         )
         mhwp_user1 = MHWP(
-            username='Elephant',
-            password='pass456789',
+            username='mhwp1',
+            password='pass123456',
             fName='DrMartin',
             lName='Smith',
             email='drsmith@example.com',
             specialization='Psychology'
         )
         mhwp_user2 = MHWP(
-            username='Whale',
-            password='pass456789',
+            username='mhwp2',
+            password='pass123456',
             fName='Dr',
             lName='Brown',
             email='drbrown@example.com',

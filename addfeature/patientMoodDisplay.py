@@ -20,7 +20,9 @@ def startchat():
     """This function is triggered by the button."""
 
 
-def displaymood(patientID,identity):
+def displaymood(patientID):
+    identity= sess.getRole()
+    print(identity)
     userdata = db.getRelation('User').getRowsWhereEqual('user_id', patientID)
     userName = str(userdata[0][4]) + ' ' + str(userdata[0][5])
     Moodrecord = db.getRelation('MoodEntry')
@@ -56,7 +58,7 @@ def displaymood(patientID,identity):
     canv.pack()
     if identity=="MHWP":
         # print("before start",userId,"m")
-        btn = Button(root, text="Start Chat",  command=lambda: startchatroom(patientID,"MHWP"))
+        btn = Button(root, text="Start Chat",  command=lambda: startchatroom(patientID))
         btn.pack(pady=10)
     def on_close():
         # db.close()

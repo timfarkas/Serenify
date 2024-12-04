@@ -92,5 +92,5 @@ def openrating():
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
 
-if __name__ == "__main__":
-    openrating()
+# if __name__ == "__main__":
+#     openrating()
