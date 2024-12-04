@@ -107,19 +107,18 @@ class PatientRecords:
         self.record = self.db.getRelation("PatientRecord")
         self.record = self.record.getRowsWhereEqual('patient_id', patient_id)
         self.record = pd.DataFrame(self.record)
-        # db.close()
 
         # Check if the record is not empty
         if not self.record.empty:
             # Sort records by the first column (record_id) in descending order
-            self.record.sort_values(by=self.record.columns[0], ascending=False, inplace=True)  # Use the first column for sorting
+            self.record.sort_values(by=self.record.columns[0], ascending=False, inplace=True) 
             most_recent_record = self.record.iloc[0]  # Get the most recent record
 
-            # Extract the most recent diagnosis (assumed to be in column 4)
-            most_recent_diagnosis = most_recent_record[4]  # Adjust the index if the diagnosis is in a different column
+            # Extract the most recent diagnosis
+            most_recent_diagnosis = most_recent_record[4] 
 
-            # Filter and collect non-empty notes (assumed to be in column 3)
-            non_empty_notes = self.record[self.record[3].str.strip() != ''][3]  # Adjust the index if notes are in a different column
+            # Filter and collect non-empty notes 
+            non_empty_notes = self.record[self.record[3].str.strip() != ''][3] 
 
             # Display the data
             self.record_text.config(state=tk.NORMAL)
@@ -136,10 +135,6 @@ class PatientRecords:
             else:
                 self.record_text.insert(tk.END, "No notes available.\n")
 
-
-                # Displaying the extracted data
-                self.record_text.insert(tk.END, f"Notes: {notes}\n")
-                self.record_text.insert(tk.END, f"Diagnosis: {diagnosis}\n\n")
 
             self.record_text.config(state=tk.DISABLED)
         else:
