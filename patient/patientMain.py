@@ -25,7 +25,7 @@ class Patient:
 
         self.root = root
         self.root.title("Patient")
-        self.root.geometry("700x700")
+        self.root.geometry("700x800")
 
         db = Database()
         self.patientName = db.getRelation("User").getRowsWhereEqual("user_id",self.current_user_id)[0][4]

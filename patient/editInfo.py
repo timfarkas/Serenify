@@ -197,7 +197,7 @@ class EditInfo:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = EditInfo(root, current_user_id)
+    app = EditInfo(root)
     root.mainloop()
 # db = Database()
 # print("Getting and printing relation 'User':")
