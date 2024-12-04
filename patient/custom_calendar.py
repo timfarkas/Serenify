@@ -80,7 +80,16 @@ class Calendar(ttk.Frame):
         for i in range(7):
             self.cal_frame.grid_columnconfigure(i, weight=1)
 
+    # Validity checks added for date and time selection on calendar
     def _is_date_disabled(self, date_obj):
+        now = datetime.now()
+        today = now.date()
+
+        if date_obj < today:
+            return True
+        elif date_obj == today:
+            current_hour = now.hour
+            return True if current_hour >= 16 else False
         if self._mindate and date_obj < self._mindate.date():
             return True
         if self._maxdate and date_obj > self._maxdate.date():
