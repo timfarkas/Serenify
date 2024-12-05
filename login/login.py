@@ -82,6 +82,7 @@ class LoginPage:
             self.session.close()
             self.findMainPage(username, password, role)
         else:
+            messagebox.showerror("Login Failed", "Please ensure your user type is correctly selected")
             messagebox.showerror("Login Failed", "Invalid username or password")
 
     def correctDetails(self, username, password, role):
