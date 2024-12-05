@@ -37,7 +37,7 @@ class LoginPage:
         self.user_role = tk.StringVar(value="admin")  # Default radio button is "admin"
         self.role_label = tk.Label(root, text="Please select your user type:")
         self.role_label.pack()
-        roles = ["admin", "mhwp", "patient"]
+        roles = ["Admin", "MHWP", "Patient"]
         for role in roles:
             tk.Radiobutton(root, text=role.capitalize(), variable=self.user_role, value=role).pack()
 
@@ -82,6 +82,10 @@ class LoginPage:
             if user_data[3] != password:  # NEW: Check password after confirming user exists
                 messagebox.showerror("Login Failed", "Invalid password. Please try again.")
                 return
+            
+            if user_data[6] != role:  # NEW: Check role
+                messagebox.showerror("Login Failed", "Incorrect role. Please try again.")
+                return
             # If username and password are valid, extract user details as session variables
             for key, value in zip(user_data.labels, user_data.values):
                 if key != "password":  # Skip password
@@ -96,7 +100,7 @@ class LoginPage:
     def correctDetails(self, username, password, role):
         try:
 
-            # self.db.printAll()
+            self.db.printAll()
             # Query the database for the user
             user_relation = self.db.getRelation("User")
             user_data = user_relation.getRowsWhereEqual('username',username)
@@ -106,11 +110,9 @@ class LoginPage:
             messagebox.showerror("Database Error", f"An error occurred while checking credentials: {e}")
             return False
 
-
-
     def findMainPage(self, username, password, role):
         # Takes user to the main page
-        if role == "admin":
+        if role == "Admin":
             self.session.open()
             self.session.setRole('Admin')
             self.session.close()
@@ -118,7 +120,7 @@ class LoginPage:
             self.db.close()
             AdminMainPage()
             # exec(open("admin/adminFunctions.py").read())
-        elif role == "mhwp":
+        elif role == "MHWP":
             self.session.open()
             self.session.setRole('MHWP')
             self.session.close()
@@ -126,7 +128,7 @@ class LoginPage:
             self.db.close()
             MHWPDashboard()
             # exec(open("mhwp/mhwp_dashboard.py").read())
-        elif role == "patient":
+        elif role == "Patient":
             self.session.open()
             self.session.setRole('Patient')
             self.session.close()
