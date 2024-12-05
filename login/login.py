@@ -24,20 +24,16 @@ class LoginPage:
         self.session.open()
 
         # H1 equivalent
-        h1_label = tk.Label(root, text="Signing in.", font=("Arial", 24, "bold"))
+        h1_label = tk.Label(root, text="Please sign in", font=("Arial", 24, "bold"))
         h1_label.pack()
 
         # Radio buttons for role selection
-        self.user_role = tk.StringVar(value="admin")  # Default radio button is "admin"
-        self.role_label = tk.Label(root, text="Please select your user type:")
-        self.role_label.pack()
-        roles = ["admin", "mhwp", "patient"]
-        for role in roles:
-            tk.Radiobutton(root, text=role.capitalize(), variable=self.user_role, value=role).pack()
-        
-        # New patient button
-        self.new_button = tk.Button(root, text="New Patient", command=self.newPatientPage)
-        self.new_button.pack()
+        # self.user_role = tk.StringVar(value="admin")  # Default radio button is "admin"
+        # self.role_label = tk.Label(root, text="Please select your user type:")
+        # self.role_label.pack()
+        # roles = ["Admin", "MHWP", "Patient"]
+        # for role in roles:
+        #     tk.Radiobutton(root, text=role.capitalize(), variable=self.user_role, value=role).pack()
 
         # Username and password fields
         self.username_label = tk.Label(root, text="Username:")
@@ -57,11 +53,15 @@ class LoginPage:
         self.reset_button = tk.Button(root, text="Forgotten your password?", command=self.passwordResetPage)
         self.reset_button.pack()
 
+        # New patient button
+        self.new_button = tk.Button(root, text="New Patient", command=self.newPatientPage)
+        self.new_button.pack()
+
     def handle_login(self):
         # Retrieve inputs
         username = self.username_entry.get()
         password = self.password_entry.get()
-        selected_role = self.user_role.get()
+        # selected_role = self.user_role.get()
 
         try:
             # Query the database for the user
@@ -76,51 +76,29 @@ class LoginPage:
             user_data = user_data[0]
 
             password_index = 3  
-            role_index = 2      
+            # role_index = 6      
 
             # Verify the password
             if user_data[password_index] != password:
                 messagebox.showerror("Login Failed", "Invalid password. Please try again.")
                 return
 
-            # Verify the role
-            if user_data[role_index] != selected_role:
-                messagebox.showerror("Login Failed", f"Invalid role selection. You are registered as a {user_data[role_index]}.")
-                return
+            # # Verify the role
+            # if user_data[role_index] != selected_role:
+            #     messagebox.showerror("Login Failed", f"Invalid role selection. You are registered as a {user_data[role_index]}.")
+            #     return
 
             # Successful login
             for key, value in zip(user_data.labels, user_data.values):  
                 if key != "password":
                     self.session.set(key=key, value=value)
 
-            self.findMainPage(username, password, selected_role)
+            self.findMainPage(username, password)
 
         except Exception as e:
             messagebox.showerror("Error", f"An unexpected error occurred: {e}")
 
-        #     # Verify the password
-        #     if user_data[3] != password:  # NEW: Check password after confirming user exists
-        #         messagebox.showerror("Login Failed", "Invalid password. Please try again.")
-        #         return
-            
-        #     # Verify role
-        #     if user_data[0][2] != selected_role:
-        #         messagebox.showerror("Login Failed", f"Invalid role selection. You are registered as a {user_data['role']}.")
-        #         return
-
-        #     # If username and password are valid, extract user details as session variables
-        #     for key, value in zip(user_data.labels, user_data.values):
-        #         if key != "password":  # Skip password
-        #             self.session.set(key=key, value=value)
-
-        #     # Navigate to the appropriate page based on the user's role
-        #     self.session.close()
-        #     self.findMainPage(username, password, selected_role)
-        # except Exception as e:
-        #     messagebox.showerror("Error", f"An unexpected error occurred: {e}")
-
-
-    def correctDetails(self, username, password, role):
+    def correctDetails(self, username, password):
         try:
             
             # self.db.printAll()
@@ -172,7 +150,7 @@ class LoginPage:
         subprocess.Popen(["python3", "-m", "login.resetPassword"])
         self.root.destroy()
  
-# Run the application
+# Run the login page
 if __name__ == "__main__":
     root = tk.Tk()
     app = LoginPage(root)

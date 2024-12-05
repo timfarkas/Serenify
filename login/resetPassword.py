@@ -42,7 +42,6 @@ class ResetPage():
         self.login_button = tk.Button(root, text="Return to login", command=self.returnToLogin)
         self.login_button.grid(row=5, column=0, columnspan=2, pady=10)
 
-
         # This DEBUG's the DB
         # db = Database()
         # db.printAll()
@@ -80,9 +79,10 @@ class ResetPage():
         userRelation.editFieldInRow(id, targetAttribute='password', value=password)
         db.printAll()
         db.close()
-        print(f"Password updated and database saved successfully.")        
+        print(f"Password updated and database saved successfully.")
+
     def returnToLogin(self):
-        exec(open("login/login.py").read())
+        subprocess.Popen(["python3", "-m", "login.login"])
         self.root.destroy()
 
 ###### Run the application
