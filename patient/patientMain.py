@@ -19,8 +19,9 @@ from sessions import Session
 from datetime import datetime
 import pandas as pd
 from addfeature.globaldb import global_db
-global global_db
 db=global_db
+# global global_db
+
 ### Initialize the database with dummy data and save it
 # db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
 # initDummyDatabase(db)

@@ -10,22 +10,22 @@ from database.entities import Patient
 class New_patient():
     def __init__(self, root):
         self.root = root
-        self.root.title("New Patient Registration")
-        self.root.geometry("600x600") # We must use grid styling throughout!
+        self.root.title("New Patient Submission")
+        # self.root.geometry("400x600")
 
         self.db = Database(verbose=True)
     
-        patient_root = tk.Toplevel()  # Toplevel for the patient window
-        patient_root.title("New Patient Submission")
+        # self.root = tk.Toplevel()  # Toplevel for the patient window
+        # self.root.title("New Patient Submission")
 
-        h1_label = tk.Label(patient_root, text="Sign up", font=("Arial", 24, "bold"))
-        h1_label.grid(row=0, column=0, columnspan=2, pady=(10, 5))
+        h1_label = tk.Label(self.root, text="Sign up", font=("Arial", 24, "bold"))
+        h1_label.grid(row=0, column=0, columnspan=2, pady=(10, 5), sticky="nsew")
 
-        h2_label = tk.Label(patient_root, text="Welcome! Please fill out the below:", font=("Arial", 18, "bold"))
+        h2_label = tk.Label(self.root, text="Welcome! Please fill out the below:", font=("Arial", 18, "bold"))
         h2_label.grid(row=1, column=0, columnspan=2, pady=(0, 10))
 
         # Personal information fieldset
-        fieldset = tk.LabelFrame(patient_root, text="Personal Information", padx=10, pady=10)
+        fieldset = tk.LabelFrame(self.root, text="Personal Information", padx=10, pady=10)
         fieldset.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
 
         tk.Label(fieldset, text="First Name:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
@@ -57,10 +57,10 @@ class New_patient():
         self.password_entry.grid(row=10, column=1, padx=5, pady=5)
 
         # Buttons at the bottom
-        complete_button = tk.Button(patient_root, text="Submit Information", command=self.submit_user)
+        complete_button = tk.Button(self.root, text="Submit Information", command=self.submit_user)
         complete_button.grid(row=3, column=0, columnspan=2, pady=(10, 5))
 
-        login_button = tk.Button(patient_root, text="Login", command=self.backToLogin)
+        login_button = tk.Button(self.root, text="Login", command=self.backToLogin)
         login_button.grid(row=4, column=0, columnspan=2, pady=(0, 10))
 
     
