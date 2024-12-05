@@ -62,7 +62,16 @@ def initDummyDatabase(db, printOut = False):
         emergency_contact_name='some',
         is_disabled=False,
     )
-    
+    patient_disabled = Patient(
+        username='disabled',
+        password='pass123456',
+        fName='Rob',
+        lName='Smith',
+        email='rob@example.com',
+        emergency_contact_name='some',
+        is_disabled=True,
+    )
+
     mhwp_user1 = MHWP(
         username='mhwp1',
         password='pass123456',
@@ -100,6 +109,7 @@ def initDummyDatabase(db, printOut = False):
     db.insert_mhwp(mhwp_user1) ## ID 9
     db.insert_mhwp(mhwp_user2) ## ID 10
     db.insert_mhwp(mhwp_user3) ## ID 11
+    db.insert_patient(patient_disabled) ## ID 12
 
     ### ALLOCATIONS
     # Allocate mhwp to patient and insert allocation into database

@@ -22,6 +22,16 @@ from addfeature.globaldb import global_db
 global global_db
 db=global_db
 
+# from database.initDummyData import initDummyDatabase
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#
+
+##### DB INIT FOR TESTING
+### Initialize the database with dummy data and save it
+# db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
+# initDummyDatabase(db, printOut=True)
+# db.close()
+
 
 class Patient:
     def __init__(self,user_id=None):
@@ -40,7 +50,6 @@ class Patient:
         self.title_label = tk.Label(self.root, text=f"Welcome back, {self.patientName}!", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=6, pady=10)
         self.main_frame = tk.Frame(self.root, width=200)  # Define width for main_frame
-
 
         # Mood of the day
         self.main_frame.grid(row=1, column=0, padx=10, pady=10) 
@@ -95,13 +104,12 @@ class Patient:
         self.messagebox.grid(row=4, column=1, pady=5,sticky="w")
         self.messagenum.grid(row=5, column=1, sticky="w")
 
-
+        # Turn off widgets if user is disabled
+        self.disable_interactive_widgets()
+        
         # Logging out
         self.logout_button = tk.Button(self.root, text="Logout", command=self.exitUser)
         self.logout_button.grid(row=4, column=0, columnspan = 6, pady=5)
-
-        # Turn off widgets if user is disabled
-        self.disable_interactive_widgets()
 
         self.root.after(1000, self.refresh)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -144,6 +152,8 @@ class Patient:
         self.submit_button.grid(row=6, column=0, columnspan=6, pady=10)
 
         self.apply_initial_colors()
+        # Turn off widgets if user is disabled
+        self.disable_mood()
 
     def cleanmoodwindow(self):
         for widget in self.fieldset1.winfo_children():
@@ -222,6 +232,36 @@ class Patient:
                 is_disabled = False
                 
             if is_disabled:
+        
+                # Disable buttons
+                self.appointments.config(state=tk.DISABLED)
+                self.journal_entry.config(state=tk.DISABLED)
+                self.exercises_page.config(state=tk.DISABLED)
+                self.edit_into.config(state=tk.DISABLED)
+                self.ratemhwp.config(state=tk.DISABLED)
+                self.openchat.config(state=tk.DISABLED)
+                self.openforum.config(state=tk.DISABLED)
+                self.messagebox.config(state=tk.DISABLED)
+
+                # Show message that the user is disabled
+                messagebox.showinfo("Access Restricted", "Your account is disabled. You cannot make changes or submit new information.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while disabling widgets: {e}")
+
+
+    def disable_mood(self):
+        #Remove some functionalities for disabled users
+        try:
+            user_info = db.getRelation("User")
+            user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
+            user_info = pd.DataFrame(user_info)
+            if not user_info.empty:
+                #Accessing the is_disabled column using the numeric index - 10 (True/False)
+                is_disabled = user_info.iloc[0][10]
+            else: 
+                is_disabled = False
+                
+            if is_disabled:
                 # Disable mood submission
                 self.radio1.config(state=tk.DISABLED)
                 self.radio2.config(state=tk.DISABLED)
@@ -231,19 +271,6 @@ class Patient:
                 self.radio6.config(state=tk.DISABLED)
                 self.mood_comment_text.config(state=tk.DISABLED)
                 self.submit_button.config(state=tk.DISABLED)
-
-                # Disable journal editing
-                self.journal_text.config(state=tk.DISABLED)
-                self.save_button.config(state=tk.DISABLED)
-
-                # Disable edit personal info
-                self.edit_into.config(state=tk.DISABLED)
-
-                # Disable booking appointments
-                self.appointments.config(state=tk.DISABLED)
-
-                # Show message that the user is disabled
-                messagebox.showinfo("Access Restricted", "Your account is disabled. You cannot make changes or submit new information.")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while disabling widgets: {e}")
 
@@ -554,3 +581,13 @@ class Patient:
 
 if __name__ == "__main__":
     Patient()
+
+# #### DB OPENING
+# ## reopen database
+# db = Database()
+
+# #### DB QUERIES
+# ## get User relation (table) via db.getRelation(entityName)
+# print("Getting and printing relation 'User':")
+# userRelation = db.getRelation('User')
+# print(userRelation)
