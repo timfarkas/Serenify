@@ -519,7 +519,9 @@ class Patient:
         if search_term:
             # Fetch all journal entries
             journal_entries = db.getRelation("JournalEntry").getRowsWhereEqual("patient_id", self.current_user_id)
-
+            # journal_entries = db.getRelation("JournalEntry")
+            filtered_rows = journal_entries
+            self.journal_df = pd.DataFrame(filtered_rows)
             # Filter entries that match the search term
             matching_entries = [
                 entry for entry in journal_entries if search_term in entry[2].lower()

@@ -25,8 +25,8 @@ sess.setRole(db.getRelation('User').getRowsWhereEqual("user_id",sess.getId())[0]
 sess.close()
 db.close()
 #
-# exec(open("patient/patientMain.py").read())
-MHWPDashboard()
+exec(open("patient/patientMain.py").read())
+# MHWPDashboard()
 # Exercises()
 # subprocess.Popen(["python3", "mhwp/mhwp_dashboard.py"])
 
