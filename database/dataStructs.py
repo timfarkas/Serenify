@@ -388,9 +388,10 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if attribute == self.primaryKeyName and value == -1:
+            assert len(self.attributeLabels) - 1 ==len(self.deletedEntryRow.labels), "Unexpected label array length mismatch.."
             return RowList([self.deletedEntryRow],self.deletedEntryRow.labels)
         if self.data[attribute].empty:
-            return None
+            return RowList([],self.attributeLabels)
         results = self.data[self.data[attribute] == value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
 
@@ -410,7 +411,7 @@ class Relation():
         if attribute == self.primaryKeyName and value == -1:
             return [-1]
         if self.data[attribute].empty:
-            return None
+            return []
         results = self.data[self.data[attribute] == value][self.primaryKeyName].tolist()
         return results
 
@@ -433,7 +434,8 @@ class Relation():
             else:
                 raise IndexError("Trying to access deleted row (id -1) in Relation that doesn't allow deleted row access.")
         if self.data[attribute].empty:
-            return None
+            ## return empty relation
+            return Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         results = self.data[self.data[attribute].apply(lambda x: x == value)]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
@@ -455,7 +457,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return RowList([],self.attributeLabels)
         results = self.data[self.data[attribute] > value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
 
@@ -473,7 +475,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return []
         results = self.data[self.data[attribute] > value][self.primaryKeyName].tolist()
         return results
 
@@ -491,7 +493,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         results = self.data[self.data[attribute] > value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
@@ -513,7 +515,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return RowList([],self.attributeLabels)
         results = self.data[self.data[attribute] < value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
 
@@ -531,7 +533,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return []
         results = self.data[self.data[attribute] < value][self.primaryKeyName].tolist()
         return results
 
@@ -549,7 +551,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         results = self.data[self.data[attribute] < value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
@@ -871,6 +873,10 @@ class Relation():
                 converted_values.append(float(value))
             elif isinstance(value, pd._libs.tslibs.timestamps.Timestamp):
                 converted_values.append(value.to_pydatetime())
+            elif isinstance(value, (np.bool, pd.BooleanDtype)):
+                converted_values.append(bool(value))
+            elif isinstance(value, pd.StringDtype):
+                converted_values.append(str(value))
             else:
                 converted_values.append(value)
 
