@@ -13,13 +13,14 @@ import datetime
 def initDummyDatabase(db, printOut = False):
     ### USERS
     # Create User objects
-    admin_user0 = Admin(username='System', password='pass123456')
-    admin_user1 = Admin(username='admin1', password='pass123456')
-    admin_user2 = Admin(username='admin2', password='pass123456')
+    admin_user0 = Admin(username='System', password='pass123456', role='admin')
+    admin_user1 = Admin(username='admin1', password='pass123456', role='admin')
+    admin_user2 = Admin(username='admin2', password='pass123456', role='admin')
     
     patient_user1 = Patient(
         username='patient1',
         password='pass123456',
+        role='patient',
         fName='John',
         lName='Doe',
         email='johndoe@example.com',
@@ -29,6 +30,7 @@ def initDummyDatabase(db, printOut = False):
     patient_user2 = Patient(
         username='patient2',
         password='pass123456',
+        role='patient',
         fName='Jane',
         lName='Smith',
         email='janesmith@example.com',
@@ -38,6 +40,7 @@ def initDummyDatabase(db, printOut = False):
     patient_user3 = Patient(
         username='patient3',
         password='pass123456',
+        role='patient',
         fName='Tony',
         lName='Wills',
         email='tonywills@example.com',
@@ -47,6 +50,7 @@ def initDummyDatabase(db, printOut = False):
     patient_user4 = Patient(
         username='patient4',
         password='pass123456',
+        role='patient',
         fName='Alice',
         lName='Johnson',
         email='alicejohnson@example.com',
@@ -56,6 +60,7 @@ def initDummyDatabase(db, printOut = False):
     patient_user5 = Patient(
         username='patient5',
         password='pass123456',
+        role='patient',
         fName='Bob',
         lName='Brown',
         email='bobbrown@example.com',
@@ -66,6 +71,7 @@ def initDummyDatabase(db, printOut = False):
     mhwp_user1 = MHWP(
         username='mhwp1',
         password='pass123456',
+        role='mhwp',
         fName='Dr',
         lName='Smith',
         email='drsmith@example.com',
@@ -74,6 +80,7 @@ def initDummyDatabase(db, printOut = False):
     mhwp_user2 = MHWP(
         username='mhwp2',
         password='pass123456',
+        role='mhwp',
         fName='Dr',
         lName='Brown',
         email='drbrown@example.com',
@@ -82,6 +89,7 @@ def initDummyDatabase(db, printOut = False):
     mhwp_user3 = MHWP(
         username='mhwp3',
         password='pass123456',
+        role='mhwp',
         fName='Dr',
         lName='White',
         email='drwhite@example.com',
