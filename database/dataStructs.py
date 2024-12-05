@@ -433,7 +433,8 @@ class Relation():
             else:
                 raise IndexError("Trying to access deleted row (id -1) in Relation that doesn't allow deleted row access.")
         if self.data[attribute].empty:
-            return None
+            ## return empty relation
+            return Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         results = self.data[self.data[attribute].apply(lambda x: x == value)]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
@@ -491,7 +492,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         results = self.data[self.data[attribute] > value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
@@ -549,7 +550,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         resultRelation = Relation(self.name,self.attributeLabels,self.types,autoIncrementPrimaryKey=False,validityChecking=self._validityChecking,allowDeletedEntry=self.allowDeletedEntry,deletedEntryValues=self.deletedEntryValues)
         results = self.data[self.data[attribute] < value]
         resultRows = Relation._rowListFromDataFrame(results,self.attributeLabels)
