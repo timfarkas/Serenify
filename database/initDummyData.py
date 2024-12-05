@@ -13,13 +13,13 @@ import datetime
 def initDummyDatabase(db, printOut = False):
     ### USERS
     # Create User objects
-    admin_user0 = Admin(username='System', password='pass123456')
-    admin_user1 = Admin(username='admin1', password='pass123456')
-    admin_user2 = Admin(username='admin2', password='pass123456')
+    admin_user0 = Admin(username='System', password='')
+    admin_user1 = Admin(username='admin1', password='')
+    admin_user2 = Admin(username='admin2', password='')
     
     patient_user1 = Patient(
         username='patient1',
-        password='pass123456',
+        password='',
         fName='John',
         lName='Doe',
         email='johndoe@example.com',
@@ -28,7 +28,7 @@ def initDummyDatabase(db, printOut = False):
     )
     patient_user2 = Patient(
         username='patient2',
-        password='pass123456',
+        password='',
         fName='Jane',
         lName='Smith',
         email='janesmith@example.com',
@@ -37,7 +37,7 @@ def initDummyDatabase(db, printOut = False):
     )
     patient_user3 = Patient(
         username='patient3',
-        password='pass123456',
+        password='',
         fName='Tony',
         lName='Wills',
         email='tonywills@example.com',
@@ -46,7 +46,7 @@ def initDummyDatabase(db, printOut = False):
     )
     patient_user4 = Patient(
         username='patient4',
-        password='pass123456',
+        password='',
         fName='Alice',
         lName='Johnson',
         email='alicejohnson@example.com',
@@ -55,17 +55,26 @@ def initDummyDatabase(db, printOut = False):
     )
     patient_user5 = Patient(
         username='patient5',
-        password='pass123456',
+        password='',
         fName='Bob',
         lName='Brown',
         email='bobbrown@example.com',
         emergency_contact_name='some',
         is_disabled=False,
     )
-    
+    patient_disabled = Patient(
+        username='disabled',
+        password='pass123456',
+        fName='Rob',
+        lName='Smith',
+        email='rob@example.com',
+        emergency_contact_name='some',
+        is_disabled=True,
+    )
+
     mhwp_user1 = MHWP(
         username='mhwp1',
-        password='pass123456',
+        password='',
         fName='Dr',
         lName='Smith',
         email='drsmith@example.com',
@@ -73,7 +82,7 @@ def initDummyDatabase(db, printOut = False):
     )
     mhwp_user2 = MHWP(
         username='mhwp2',
-        password='pass123456',
+        password='',
         fName='Dr',
         lName='Brown',
         email='drbrown@example.com',
@@ -81,7 +90,7 @@ def initDummyDatabase(db, printOut = False):
     )
     mhwp_user3 = MHWP(
         username='mhwp3',
-        password='pass123456',
+        password='',
         fName='Dr',
         lName='White',
         email='drwhite@example.com',
@@ -100,6 +109,7 @@ def initDummyDatabase(db, printOut = False):
     db.insert_mhwp(mhwp_user1) ## ID 9
     db.insert_mhwp(mhwp_user2) ## ID 10
     db.insert_mhwp(mhwp_user3) ## ID 11
+    db.insert_patient(patient_disabled) ## ID 12
 
     ### ALLOCATIONS
     # Allocate mhwp to patient and insert allocation into database

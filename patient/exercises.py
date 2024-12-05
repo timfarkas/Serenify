@@ -17,12 +17,12 @@ class Exercises:
         root = tk.Tk()
         self.db=Database()
         self.root = root
+        # Initialize the session
         self.session = Session()
         self.session.open()
         self.userID = self.session.getId()
         self.root.title("Mental Health Exercises")
         self.root.geometry("1000x800")
-        # Initialize the session instance
 
         # Search Bar and Clear Button
         self.search_frame = tk.Frame(self.root)
@@ -32,8 +32,7 @@ class Exercises:
         self.search_entry.grid(row=0, column=0, pady=10)
         self.search_button = tk.Button(self.search_frame, text="Search", command=lambda:self.search_exercises())
         self.search_button.grid(row=0, column=1, pady=5)
-        # self.clear_button = tk.Button(self.search_frame, text="Clear") #command=self.clear_search,
-        # self.clear_button.grid(row=1, column=1)
+    
 
         #Back button
         self.back_button = tk.Button(self.root, text="Back to the main page", command= self.backButton)
@@ -98,7 +97,6 @@ class Exercises:
 
     def feedback_window(self, link,category):
         webbrowser.open(link)
-        # self.open_link()
         # Create the main window
         self.root3 = tk.Tk()
         self.root3.title("Feedback")  # Set window title
@@ -135,7 +133,6 @@ class Exercises:
         row = 2
         col = 0
         # Create buttons for each category and its exercises
-        # self.buttons = {}  # Dictionary to store button references by category and button index
         for category, exercises in self.exercises.items():
             # Add category label
             label = tk.Label(self.root, text=category, font=("Arial", 18, "bold"), fg="light blue")
@@ -162,8 +159,6 @@ class Exercises:
         self.db.close()
         self.root.destroy()
 
-
-
     def display_search_results(self,searchresults):
         self.root2 = tk.Tk()
         self.root2.title("Search")
@@ -184,6 +179,7 @@ class Exercises:
         subprocess.Popen(["python3", "patient/patientMain.py"])
         self.db.close()
         self.root.destroy()
+
     def search_exercises(self):
         search_term = self.search_var.get() # Normalize input
         print(f"Search Term: {search_term}")  # Debugging
@@ -196,15 +192,10 @@ class Exercises:
             print(matching_exercises)
             if matching_exercises:
                 self.display_search_results(matching_exercises)
-                # results_text = "\n\n".join(matching_exercises)
-                # messagebox.showinfo("Search Results", f"Found matching exercises:\n\n{results_text}")
             else:
                 messagebox.showinfo("Search Results", "No matching exercises found.")
         else:
             messagebox.showwarning("Empty Search", "Please enter a term to search.")
         self.search_var.set("")  # Clear the search bar
 
-# # Run the application
-# if __name__ == "__main__":
-#     Exercises()
 
