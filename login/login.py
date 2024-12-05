@@ -62,29 +62,71 @@ class LoginPage:
         self.reset_button = tk.Button(root, text="Forgotten your password?", command=self.passwordResetPage)
         self.reset_button.pack()
 
+    # def handle_login(self):
+    #     # Retrieve inputs
+    #     username = self.username_entry.get()
+    #     password = self.password_entry.get()
+    #     role = self.user_role.get()
+        
+    #     try:
+    #         user_relation = self.db.getRelation("User")
+    #         user_data = user_relation.getRowsWhereEqual('username',username)[0]
+    #         if not user_data:
+    #             messagebox.showerror("Login Failed", "Invalid username or password")
+    #             return
+    #         user_data = user_data[0]
+    #         verified = bool(user_data[3] == password)
+
+    #         if verified:
+
+    #             ### extract user details as session variables
+    #             for key, value in zip(user_data.labels, user_data.values):
+    #                 if key != "password": ## skip password
+    #                     self.session.set(key=key,value=value)
+    #             print(self.session)
+    #             print(self.session.getId())
+    #             self.session.close()
+    #             self.findMainPage(username, password, role)
+    #         else:
+    #             messagebox.showerror("Login Failed", "Please ensure your user type is correctly selected")
+    #             messagebox.showerror("Login Failed", "Invalid username or password")
+    #     except Exception as e:
+    #         messagebox.showerror("Error", f"An unexpected error occurred: {e}")
+
     def handle_login(self):
         # Retrieve inputs
         username = self.username_entry.get()
         password = self.password_entry.get()
         role = self.user_role.get()
-        
-        user_relation = self.db.getRelation("User")
-        user_data = user_relation.getRowsWhereEqual('username',username)[0]
-        verified = bool(user_data[3] == password)
 
-        if verified:
+        try:
+            # Query the database for the user
+            user_relation = self.db.getRelation("User")
+            user_data = user_relation.getRowsWhereEqual('username', username)
 
-            ### extract user details as session variables
+            if not user_data:  # NEW: Check if no user was found before indexing
+                messagebox.showerror("Login Failed", "Username not found. Please check your input.")
+                return
+
+            # Retrieve the first match (assuming usernames are unique)
+            user_data = user_data[0]
+
+            # Verify the password
+            if user_data[3] != password:  # NEW: Check password after confirming user exists
+                messagebox.showerror("Login Failed", "Invalid password. Please try again.")
+                return
+
+            # If username and password are valid, extract user details as session variables
             for key, value in zip(user_data.labels, user_data.values):
-                if key != "password": ## skip password
-                    self.session.set(key=key,value=value)
-            print(self.session)
-            print(self.session.getId())
+                if key != "password":  # Skip password
+                    self.session.set(key=key, value=value)
+
+            # Navigate to the appropriate page based on the user's role
             self.session.close()
             self.findMainPage(username, password, role)
-        else:
-            messagebox.showerror("Login Failed", "Please ensure your user type is correctly selected")
-            messagebox.showerror("Login Failed", "Invalid username or password")
+        except Exception as e:
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
+
 
     def correctDetails(self, username, password, role):
         try:
@@ -137,19 +179,6 @@ class LoginPage:
     def passwordResetPage(self):
         subprocess.Popen(["python3", "-m", "login.resetPassword"])
         self.root.destroy()
-
-    # def sessionStart(self):
-    #     username = self.username_entry.get()
-    #     # self.db = Database()
-    #     user_relation = self.db.getRelation("User")
-    #     user_data = user_relation.getRowsWhereEqual('username',username)
-    #     if user_data:
-    #         user = user_data[0]
-    #         user_id = user[0] 
-    #         self.session.set("user_id", user_id)
-    #         print(f"User ID {user_id} has been set in the session.")
-    #     else:
-    #         messagebox.showerror("Login Error", "User not found in the database.")
  
 # Run the application
 if __name__ == "__main__":
