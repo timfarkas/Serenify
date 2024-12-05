@@ -1,3 +1,7 @@
+"""
+This class is deprecated and will be deleted soon.
+"""
+
 import os
 import sys
 
@@ -16,6 +20,10 @@ import database.initDummyData
 
 import logging
 
+"""
+This class is deprecated and will be deleted soon.
+"""
+
 # Test functions
 def initDummyDatabase(db: Database):
     logging.warning("\n\nWARNING, this way of calling initDummyDatabase is deprecated, please use initDummyData.initDummyDatabase (instead of initDBwithDummyData_FeatureTest.initDummyDatabase, changed for brevity).\n\n")
@@ -28,3 +36,7 @@ if __name__ == "__main__":
     db = Database(overwrite=True)
     initDummyDatabase(db)
     db.close()
+
+"""
+This class is deprecated and will be deleted soon.
+"""
