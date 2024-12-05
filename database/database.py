@@ -330,8 +330,7 @@ class Database:
             if entityData is not None:
                 entityData.insertRow(row=row)
             else:
-                raise KeyError(
-                    f"{entity} not found in data dict, available values {pd.DataFrame.apply(pd.DataFrame(self.dataDict.values()), str)}")
+                raise KeyError(f"{entity} not found in data dict, available values {pd.DataFrame.apply(pd.DataFrame(self.dataDict.values()), str)}")
         elif row == None and rowList is not None:
             self.dataDict.get(entity).insertRows(rowList)
         else:
@@ -364,7 +363,7 @@ class Database:
         if entityData != None:
             return entityData.getRowsWhereEqual(entityData.primaryKeyName, id)
         else:
-            raise KeyError(f"{entity} not found in data dict, available values {self.dataDict.values()}")
+            raise KeyError(f"{entity} not found in data dict, available values {pd.DataFrame.apply(pd.DataFrame(self.dataDict.values()), str)}")
 
     @ensure_open
     def getRelation(self, entity: str) -> Relation:
@@ -390,7 +389,7 @@ class Database:
         if entityData != None:
             return entityData
         else:
-            raise KeyError(f"{entity} not found in data dict, available values {self.dataDict.values()}")
+            raise KeyError(f"{entity} not found in data dict, available values {pd.DataFrame.apply(pd.DataFrame(self.dataDict.values()), str)}")
 
     @ensure_open
     def insert_admin(self, admin: Admin):
