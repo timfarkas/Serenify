@@ -390,7 +390,7 @@ class Patient:
             close_button.pack(pady=10)
     def exitUser(self):
         db.close()
-        subprocess.Popen(["python3", "main.py"])
+        subprocess.Popen(["python3", "-m" "login.login"])
         self.root.destroy()
 
     def apply_initial_colors(self):

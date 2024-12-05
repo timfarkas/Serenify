@@ -62,34 +62,6 @@ class LoginPage:
         self.reset_button = tk.Button(root, text="Forgotten your password?", command=self.passwordResetPage)
         self.reset_button.pack()
 
-    # def handle_login(self):
-    #     # Retrieve inputs
-    #     username = self.username_entry.get()
-    #     password = self.password_entry.get()
-    #     role = self.user_role.get()
-        
-    #     try:
-    #         user_relation = self.db.getRelation("User")
-    #         user_data = user_relation.getRowsWhereEqual('username',username)[0]
-    #         if not user_data:
-    #             messagebox.showerror("Login Failed", "Invalid username or password")
-    #             return
-    #         user_data = user_data[0]
-    #         verified = bool(user_data[3] == password)
-    #         if verified:
-    #             ### extract user details as session variables
-    #             for key, value in zip(user_data.labels, user_data.values):
-    #                 if key != "password": ## skip password
-    #                     self.session.set(key=key,value=value)
-    #             print(self.session)
-    #             print(self.session.getId())
-    #             self.session.close()
-    #             self.findMainPage(username, password, role)
-    #         else:
-    #             messagebox.showerror("Login Failed", "Please ensure your user type is correctly selected")
-    #             messagebox.showerror("Login Failed", "Invalid username or password")
-    #     except Exception as e:
-    #         messagebox.showerror("Error", f"An unexpected error occurred: {e}")
     def handle_login(self):
         # Retrieve inputs
         username = self.username_entry.get()
