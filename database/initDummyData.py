@@ -13,9 +13,9 @@ import datetime
 def initDummyDatabase(db, printOut = False):
     ### USERS
     # Create User objects
-    admin_user0 = Admin(username='System', password='pass123456')
-    admin_user1 = Admin(username='admin1', password='pass123456')
-    admin_user2 = Admin(username='admin2', password='pass123456')
+    admin_user0 = Admin(username='System', password='')
+    admin_user1 = Admin(username='admin1', password='')
+    admin_user2 = Admin(username='admin2', password='')
     
     patient_user1 = Patient(
         username='patient1',
