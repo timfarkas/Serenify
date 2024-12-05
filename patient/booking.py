@@ -313,7 +313,7 @@ class AppointmentBooking:
             for row in appointments:
                 apt_date = row[3]
                 if isinstance(apt_date, datetime):
-                    if apt_date.to_pydatetime().strftime('%Y-%m-%d %H:%M') == date_str:
+                    if apt_date.strftime('%Y-%m-%d %H:%M') == date_str:
                         self.update_appointment_status(row[0], "Cancelled")
                         break
 
