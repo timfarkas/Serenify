@@ -2,7 +2,7 @@ import sys
 import os
 import tkinter as tk
 from tkinter import messagebox, ttk
-import subprocess # This allows us to open other files
+import subprocess
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.entities import PatientRecord
 from database import Database
@@ -24,6 +24,10 @@ class PatientRecords:
         self.title_label = tk.Label(self.root, text=f"Patient Records", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=2, pady=5)
 
+        #Back button
+        self.back_button = tk.Button(self.root, text="Back", command= self.backButton)
+        self.back_button.grid(row=0, column=0, padx=2, pady=5)
+
         # Load conditions from conditions.txt
         self.conditions_list = self.load_conditions("conditions.txt")
 
@@ -42,7 +46,6 @@ class PatientRecords:
         self.scrollbar.config(command=self.patient_listbox.yview)
 
         # Populate List with Patients
-        # db = Database()
         self.patients = self.db.getRelation("User")
         self.patients = self.patients.getRowsWhereEqual('type', 'Patient')
         self.patients = pd.DataFrame(self.patients)
@@ -101,16 +104,14 @@ class PatientRecords:
         selected_patient = self.patients.iloc[selected_index[0]]
         patient_id = selected_patient[0]
 
-
         #Loading patient data
-        # db = Database()
         self.record = self.db.getRelation("PatientRecord")
         self.record = self.record.getRowsWhereEqual('patient_id', patient_id)
         self.record = pd.DataFrame(self.record)
 
         # Check if the record is not empty
         if not self.record.empty:
-            # Sort records by the first column (record_id) in descending order
+            # Sort records by the first column (record_id)
             self.record.sort_values(by=self.record.columns[0], ascending=False, inplace=True) 
             most_recent_record = self.record.iloc[0]  # Get the most recent record
 
@@ -149,7 +150,7 @@ class PatientRecords:
             messagebox.showwarning("No Patient Selected", "Please select a patient to save notes.")
             return
         # Extract patient ID and new note text
-        patient_id = int(self.patients.iloc[selected_index[0]][0]) # manually typecasting as otherwise it throws a type error
+        patient_id = int(self.patients.iloc[selected_index[0]][0])
         new_note = self.notes_entry.get()
         if not new_note:
             messagebox.showwarning("Incomplete Data", "Please provide notes.")
@@ -157,7 +158,6 @@ class PatientRecords:
 
         try:
             # Connect to database and get existing records
-            # db = Database()
             records_relation = self.db.getRelation("PatientRecord")
             existing_records = records_relation.getRowsWhereEqual('patient_id', patient_id)
 
@@ -183,23 +183,12 @@ class PatientRecords:
             print("After save:", self.db.getRelation("PatientRecord").getRowsWhereEqual('patient_id', patient_id))
 
             # Cleanup and refresh display
-            # db.close()
-            # db = Database()
             self.load_patient_records(None)
             self.notes_entry.delete(0, tk.END)
             messagebox.showinfo("Success", "Notes saved successfully")
 
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save notes: {str(e)}")
-# =======
-#             self.record_text.config(state=tk.DISABLED)
-#         else:
-#             # If no records are found
-#             self.record_text.config(state=tk.NORMAL)
-#             self.record_text.delete("1.0", tk.END)
-#             self.record_text.insert(tk.END, "No records found for the selected patient.\n")
-#             self.record_text.config(state=tk.DISABLED)
-# >>>>>>> main
 
 
     def save_diagnosis_and_notes(self):
@@ -218,11 +207,8 @@ class PatientRecords:
             return
 
         try:
-
             # Connect to database and get existing records
-            # self.db = Database()
             records_relation = self.db.getRelation("PatientRecord")
-
             existing_records = records_relation.getRowsWhereEqual('patient_id', patient_id)
 
             # Handle existing conditions
@@ -252,17 +238,10 @@ class PatientRecords:
                 conditions=conditions
             )
 
-
             # Save record and refresh display
             self.db.insert_patient_record(new_record)
-            # db.close()
-            # db = Database()
-# =======
-#             db.insert_patient_record(new_record)
-#             db.close()
 
-#             # Refresh display
-# >>>>>>> main
+            # Refresh display
             self.load_patient_records(None)
             self.notes_entry.delete("1.0", tk.END)
             self.diagnosis_var.set("")
@@ -276,6 +255,12 @@ class PatientRecords:
         self.root.destroy()
         import subprocess
         subprocess.Popen(["python3", "mhwp/mhwp_dashboard.py"])
+
+    def backButton(self):
+        import subprocess
+        subprocess.Popen(["python3", "patient/patientMain.py"])
+        self.db.close()
+        self.root.destroy()
 
 
 if __name__ == "__main__":
