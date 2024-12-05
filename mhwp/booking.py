@@ -328,7 +328,8 @@ class MHWPAppointmentManager():
                # Check for conflicts
                existing_appointments = appointments_relation.getRowsWhereEqual("patient_id", patient_id)
                for row in existing_appointments:
-                   if row[0] != appointment_id and row[5] == "Confirmed":  # Skip same appointment and non-confirmed
+                   if row[0] != appointment_id and row[5] in ["Pending",
+                                                              "Confirmed"]:  # Check both pending and confirmed
                        existing_date = row[3]
                        if isinstance(existing_date, datetime):
                            if (existing_date.date() == apt_date.date() and
@@ -339,7 +340,7 @@ class MHWPAppointmentManager():
                # Check room availability
                room_appointments = appointments_relation.getRowsWhereEqual("mhwp_id", self.mhwp_id)
                for row in room_appointments:
-                   if row[0] != appointment_id and row[5] == "Confirmed":
+                   if row[0] != appointment_id and row[5] in ["Pending", "Confirmed"]:
                        existing_date = row[3]
                        if isinstance(existing_date, datetime):
                            if (existing_date.date() == apt_date.date() and

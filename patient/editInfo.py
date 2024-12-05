@@ -3,16 +3,12 @@ from tkinter import messagebox
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# from database.entities import Patient
 from database import Database
 import pandas as pd
 import subprocess
 from sessions import Session
 from database.initDBwithDummyData import initDummyDatabase
-### Initialize the database with dummy data and save it
-# db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
-# initDummyDatabase(db)
-# # db.close()
+
 
 class EditInfo:
     def __init__(self):
@@ -32,7 +28,7 @@ class EditInfo:
         self.t_label = tk.Label(self.root, text="Edit your personal information here:", font=("Arial", 12))
         self.t_label.grid(row=1, column=0, columnspan = 6, pady=10)
 
-        # UI components
+        # UI
         self.create_widgets()
         self.load_current_info()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -93,14 +89,9 @@ class EditInfo:
         #Back button
         self.back_button = tk.Button(self.root, text="Back to the main page", command=self.backButton)
         self.back_button.grid(row=12, column=0, columnspan=2, pady=5)
-
-
-    def backButton(self):
-        subprocess.Popen(["python3", "mhwpMain.py"])
-        self.root.destroy()
     
     def load_current_info(self):
-        # db = Database()
+        #Loads existing information for that patient
         user_info = self.db .getRelation("User")
         user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
         user_info = pd.DataFrame(user_info)
@@ -120,7 +111,6 @@ class EditInfo:
 
     def match_in_database(self, username, email, new_password, fname, lname, emergency_contact_name, emergency_contact_email):
         # Check if the provided details match the database
-        # db = Database()
         user_info = self.db.getRelation("User")
         user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
         user_info = pd.DataFrame(user_info)
@@ -142,6 +132,7 @@ class EditInfo:
             return False
 
     def update_info (self):
+        # Updates information in the database
         # Retrieve data from the entry fields
         username = self.username_entry.get()
         email = self.email_entry.get()
@@ -153,14 +144,12 @@ class EditInfo:
         emergency_contact_email = self.emergency_contact_email_entry.get()
         emergency_contact_name = self.emergency_contact_name_entry.get()
 
-        # db = Database()
         user = self.db.getRelation("User")
         user = user.getRowsWhereEqual('user_id', self.current_user_id)
         user = pd.DataFrame(user)
         current_password = user.iloc[0][3]
-        x = user.iloc[0][6] # Want to preserve all other information in database
+        x = user.iloc[0][6] # Want to preserve other information in database
         y = user.iloc[0][9]
-        # z = user.iloc[0][10] #what if i want to preserve disabled info in case its TRUE ? im getting error if i use it
 
         if  self.match_in_database(username, email, new_password, fname, lname, emergency_contact_email, emergency_contact_name):
                # If the password fields are not empty, will require password verification
@@ -180,8 +169,7 @@ class EditInfo:
                 # Try to perform the update
                 user = self.db.getRelation("User")
                 user.editRow(primaryKey=self.current_user_id, newValues=list(newValues))
-                # self.db.close() #to save the database
-                # Mask the password with asterisks
+                # Mask the password 
                 masked_password = '*' * len(new_password)
                 messagebox.showinfo(
                 "Information Updated",
@@ -198,6 +186,7 @@ class EditInfo:
         self.db.close()
         import subprocess
         subprocess.Popen(["python3", "patient/patientMain.py"])
+
     def on_close(self):
         self.root.destroy()
         self.db.close()
@@ -209,9 +198,3 @@ if __name__ == "__main__":
 
 
     app = EditInfo()
-
-
-# db = Database()
-# print("Getting and printing relation 'User':")
-# userRelation = db.getRelation('User')
-# print(userRelation)
