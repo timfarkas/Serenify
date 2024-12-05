@@ -1,19 +1,30 @@
 import tkinter as tk
+from tkinter import ttk
+from tkinter import *
 from tkinter import messagebox, ttk
+import subprocess
 
-import sys
+
 import os
-
+import sys
+from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from database.database import Database
-from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
-
 from sessions import Session
+from database.database import Database
+
+from addfeature.globaldb import global_db
+from addfeature.globaldb import global_db
+# global global_db
+db=global_db
+
+
+
+
+from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
 ## on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.
 
-class AllocationEdit(tk.Toplevel):
+class AdminMainPage(tk.Toplevel):
     def __init__(self, patient_id, parent, db):
         super().__init__()
         self.db = db
@@ -587,7 +598,7 @@ class AllocationSelection(UserSelectionApp):
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = AllocationEdit(self.selected_user_id, self, db=self.db)
+            app = AdminMainPage(self.selected_user_id, self, db=self.db)
         else:
             messagebox.showinfo("No Patient Selected", "Please select a patient to continue.")
 

@@ -5,9 +5,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database  # Import Database
+from admin.adminFunctions import AdminMainPage
 from mhwp.mhwp_dashboard import MHWPDashboard
 from patient.patientMain import Patient
-from database.entities import Appointment  
+# from database.entities import Appointment
 from database.dataStructs import Row  
 from sessions import Session
 
@@ -21,7 +22,7 @@ class LoginPage:
     def __init__(self, root):
         self.root = root
         self.root.title("Login")
-        self.root.geometry("600x600")
+        self.root.geometry("400x400")
 
         self.db = Database(verbose=True)
         # Initialize the session instance 
@@ -108,7 +109,8 @@ class LoginPage:
             self.session.close()
             self.root.destroy()
             self.db.close()
-            exec(open("admin/adminFunctions.py").read())
+            AdminMainPage()
+            # exec(open("admin/adminFunctions.py").read())
         elif role == "mhwp":
             self.session.open()
             self.session.setRole('MHWP')
