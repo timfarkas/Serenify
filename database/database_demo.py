@@ -4,14 +4,14 @@ import datetime
 from .database import Database
 from .entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment, MoodEntry,ChatContent
 
-from .initDBwithDummyData import initDummyDatabase
+from .initDummyData import initDummyDatabase
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 #
 
 ##### DB INIT FOR TESTING
 ### Initialize the database with dummy data and save it
 db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
-initDummyDatabase(db)
+initDummyDatabase(db, printOut=True)
 db.close()
 
 ##### DB OPENING
