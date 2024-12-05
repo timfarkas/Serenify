@@ -3,7 +3,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from database.initDBwithDummyData_FeatureTest import initDummyDatabase
+
 from sessions import Session
 from database.database import Database
 import tkinter as tk
@@ -20,7 +20,7 @@ db=Database()
 sess = Session()
 sess._initialize()
 sess.open()
-sess.setId(9)
+sess.setId(3)
 sess.setRole(db.getRelation('User').getRowsWhereEqual("user_id",sess.getId())[0][6])
 sess.close()
 db.close()

@@ -21,6 +21,7 @@ def startchat():
 
 
 def displaymood(patientID):
+    sess.open()
     identity= sess.getRole()
     print(identity)
     userdata = db.getRelation('User').getRowsWhereEqual('user_id', patientID)
