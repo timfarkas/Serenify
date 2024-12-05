@@ -21,10 +21,6 @@ import pandas as pd
 from addfeature.globaldb import global_db
 global global_db
 db=global_db
-### Initialize the database with dummy data and save it
-# db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
-# initDummyDatabase(db)
-# db.close()
 
 
 class Patient:
@@ -41,12 +37,13 @@ class Patient:
         self.patientName = db.getRelation("User").getRowsWhereEqual("user_id",self.current_user_id)[0][4]
 
         # Title label
-
-
         self.title_label = tk.Label(self.root, text=f"Welcome back, {self.patientName}!", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=6, pady=10)
         self.main_frame = tk.Frame(self.root, width=200)  # Define width for main_frame
-        self.main_frame.grid(row=1, column=0, padx=10, pady=10)  # Add this line to place `main_frame` in the layout
+
+
+        # Mood of the day
+        self.main_frame.grid(row=1, column=0, padx=10, pady=10) 
         self.fieldset1 = tk.LabelFrame(self.main_frame, text="How are you feeling today?", labelanchor="n",font=("Arial", 12), padx=10, pady=10,width=500,height=200)
         self.fieldset1.grid(row=0, column=0, padx=10, pady=10)
         self.fieldset1.grid_propagate(False)
@@ -56,20 +53,15 @@ class Patient:
             lastrecorddate = usermoodlog[-1][4].strftime("%Y-%m-%d")
             nowdate = datetime.now().strftime("%Y-%m-%d")
             if lastrecorddate == nowdate:
-                # self.cleanmoodwindow()
                 self.printlastmood()
             else:
                 self.showmoodselection(self.fieldset1)
         else:
             self.showmoodselection(self.fieldset1)
-        # Mood of the day
 
-        # Frame for displaying exercises based on mood
 
         self.button_frame = tk.Frame(self.root)
         self.button_frame.grid(row=2, pady=20, padx=20)
-        # self.button_frame.grid_propagate(False)
-
 
         notificationdata = db.getRelation('Notification').getRowsWhereEqual('new', True)
         self.messagecounter = 0
@@ -115,12 +107,6 @@ class Patient:
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.mainloop()
 
-
-    # def refresh_patient(self):
-    #     self.root.destroy()  # Close the current Tkinter root
-    #     root = tk.Tk()  # Create a new Tkinter root
-    #     app = Patient(root)  # Reinitialize the Patient class with the new root
-    #     root.mainloop()
     def showmoodselection(self,fieldset1):
         self.exercise_frame = tk.Frame(self.root)
         self.exercise_frame.grid(row=4, column=2, columnspan=6, pady=20)
@@ -142,7 +128,6 @@ class Patient:
         self.radio4.grid(row=2, column=3)
         self.radio5.grid(row=2, column=4)
         self.radio6.grid(row=2, column=5)
-        # main_frame.grid(row=0, column=0, sticky="nsew")
 
         # Mood comment
         self.mood_comment_frame = tk.Frame(self.fieldset1)
@@ -159,6 +144,7 @@ class Patient:
         self.submit_button.grid(row=6, column=0, columnspan=6, pady=10)
 
         self.apply_initial_colors()
+
     def cleanmoodwindow(self):
         for widget in self.fieldset1.winfo_children():
             widget.destroy()
@@ -204,7 +190,7 @@ class Patient:
                 )
                 db.insert_notification(newnotify)
                 print("message sent")
-                # db.close()
+                
     def printlastmood(self):
         self.fieldset1.grid_rowconfigure(0, weight=1)  # Ensure row expands
         self.fieldset1.grid_columnconfigure(0, weight=1)
@@ -222,10 +208,10 @@ class Patient:
         self.update_title.grid(row=0, column=0, stick="nsew")
         self.update_text.grid(row=1, column=0, stick="nsew")
         self.update_button.grid(row=2, column=0, pady=5)
+
     def disable_interactive_widgets(self):
         #Remove some functionalities for disabled users
         try:
-            # db = Database()
             user_info = db.getRelation("User")
             user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
             user_info = pd.DataFrame(user_info)
@@ -447,9 +433,6 @@ class Patient:
         self.printlastmood()
 
     def show_recommended_exercises(self):
-        # Clear any existing exercise widgets
-        # for widget in self.exercise_frame.winfo_children():
-        #     widget.destroy()
         self.root2= tk.Tk()
         self.root2.title("Exercise Recommendations")
         self.exercise_frame = tk.Frame(self.root2)
@@ -475,15 +458,9 @@ class Patient:
 
     def back_to_mood(self):
         self.root2.destroy()
-        # Clear any exercise-related content and show the mood selection again
-        # for widget in self.exercise_frame.winfo_children():
-        #     widget.destroy()
-        #
-        # self.title_label.config(text="Welcome back")
-        # self.submit_button.config(state=tk.NORMAL)
 
     def save_journal_entry(self):
-        """Save the journal entry to the database and refresh the Treeview."""
+        """Save the journal entry to the database and refresh"""
         # Get the journal text
         journal_text = self.journal_text.get("1.0", "end-1c").strip()
 
@@ -516,7 +493,6 @@ class Patient:
 
         if search_term:
             # Fetch journal entries
-            # db = Database()
             journal_entries = db.getRelation("JournalEntry")
             filtered_rows = journal_entries.getRowsWhereEqual('patient_id', self.current_user_id)
             self.journal_df = pd.DataFrame(filtered_rows)
@@ -533,7 +509,6 @@ class Patient:
             messagebox.showwarning("Empty Search", "Please enter a term to search.")
 
     def view_all_journal_entries(self):
-        # db = Database()
         journal_entries = db.getRelation("JournalEntry")
         filtered_rows = journal_entries.getRowsWhereEqual('patient_id', self.current_user_id)
         self.journal_df = pd.DataFrame(filtered_rows)
@@ -549,32 +524,24 @@ class Patient:
         db.close()
         self.root.destroy()
         EditInfo()
-        # subprocess.Popen(["python3", "patient/editInfo.py"])
-        # self.root.destroy()
 
     def exercises(self):
         # Edit information
         db.close()
         self.root.destroy()
         Exercises()
-        # subprocess.Popen(["python3", "patient/exercises.py"])
-        # self.root.destroy()
 
     def book(self):
         # Book an appointement
         db.close()
         self.root.destroy()
         AppointmentBooking()
-        # subprocess.Popen(["python3", "patient/booking.py"])
-        # self.root.destroy()
+
     def patientdashboard(self):
         # Edit information
         openpatientdashboard()
-        # self.root.destroy()
+
     def refresh(self):
-        # print(self.db._is_closed)
-        # if self.db._is_closed:
-        #     self.db=Database()
         print("Refreshing")
         notifications = db.getRelation('Notification').getRowsWhereEqual('new', True)
         self.message_counter = sum(1 for n in notifications if n[1] == self.current_user_id)
