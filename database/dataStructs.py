@@ -873,6 +873,10 @@ class Relation():
                 converted_values.append(float(value))
             elif isinstance(value, pd._libs.tslibs.timestamps.Timestamp):
                 converted_values.append(value.to_pydatetime())
+            elif isinstance(value, (np.bool, pd.BooleanDtype)):
+                converted_values.append(bool(value))
+            elif isinstance(value, pd.StringDtype):
+                converted_values.append(str(value))
             else:
                 converted_values.append(value)
 
