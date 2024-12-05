@@ -3,7 +3,6 @@ from tkinter import messagebox
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# from database.entities import Patient
 from database import Database
 import pandas as pd
 import subprocess
@@ -14,10 +13,12 @@ class ResetPage():
         self.root = root
         self.root.title("Reset Password")
         self.root.geometry("400x300")
-        
+
+        # Title 
         h1_label = tk.Label(root, text="Reset your password", font=("Arial", 24, "bold"))
         h1_label.grid(row=0, column=0, columnspan=2, pady=10)
 
+        # Initialising a fieldset to gather user info
         fieldset = tk.LabelFrame(root, text="Enter your username and new password below", padx=10, pady=10)
         fieldset.grid(row=1, column=0, columnspan=2, padx=10, pady=10, sticky="ew")
 
@@ -35,32 +36,27 @@ class ResetPage():
 
         # Reset button
         self.reset_button = tk.Button(root, text="Reset", command=lambda: self.changePassword(self.username_entry.get(), self.new_password_entry.get()))
-
         self.reset_button.grid(row=4, column=0, columnspan=2, pady=10)
 
         # Login button
         self.login_button = tk.Button(root, text="Return to login", command=self.returnToLogin)
         self.login_button.grid(row=5, column=0, columnspan=2, pady=10)
 
-        # This DEBUG's the DB
-        # db = Database()
-        # db.printAll()
-        # db.close()
-
     def changePassword(self, username, password):
+        # Open the database
         db = Database()
         print('This should only execute once the user clicks submit...')
         if self.match_in_database(username):
             matching_ids = self.match_in_database(username)
             if matching_ids:  # Check if any IDs matched
-                self.updatePassword(matching_ids[0], password)
+                self.updatePassword(matching_ids[0], password) # We update that users password to their new input
             db.close()
             print("Password successfully changed")
             messagebox.showinfo("Success", "Password successfully changed")
-        else:
+        else: # Else statement used so that username must already be in the database
             print("No information found under the chosen username")
             messagebox.showerror("Reset failed", "No information found under the chosen username")
-            db.close()
+            db.close() # Important to close database so that it saves changes
     
     def match_in_database(self, username):
         # Check if the provided details match the database
@@ -70,9 +66,9 @@ class ResetPage():
         print(matching_ids)
         db.close()
         return matching_ids
-        # return len(user_info.getIDsWhereEqual('username', username)) == 1
 
     def updatePassword(self, id, password):
+        # Update the entered usernames password with their new input
         db = Database()
         userRelation = db.getRelation('User')
         print(f"Updating password for user_id: {id}")
@@ -80,20 +76,15 @@ class ResetPage():
         db.printAll()
         db.close()
         print(f"Password updated and database saved successfully.")
-
+    
+    # Takes user to the login page
     def returnToLogin(self):
         subprocess.Popen(["python3", "-m", "login.login"])
         self.root.destroy()
 
-###### Run the application
+# Run the application
 if __name__ == "__main__":
     root = tk.Tk()
     app = ResetPage(root=root)
 
     root.mainloop()
-
-###### Used for debugging 
-# db = Database()
-# print("Getting and printing relation 'User':")
-# userRelation = db.getRelation('User')
-# print(userRelation)
