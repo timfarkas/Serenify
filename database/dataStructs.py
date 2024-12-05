@@ -388,9 +388,10 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if attribute == self.primaryKeyName and value == -1:
+            assert len(self.attributeLabels) - 1 ==len(self.deletedEntryRow.labels), "Unexpected label array length mismatch.."
             return RowList([self.deletedEntryRow],self.deletedEntryRow.labels)
         if self.data[attribute].empty:
-            return None
+            return RowList([],self.attributeLabels)
         results = self.data[self.data[attribute] == value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
 
@@ -410,7 +411,7 @@ class Relation():
         if attribute == self.primaryKeyName and value == -1:
             return [-1]
         if self.data[attribute].empty:
-            return None
+            return []
         results = self.data[self.data[attribute] == value][self.primaryKeyName].tolist()
         return results
 
@@ -456,7 +457,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return RowList([],self.attributeLabels)
         results = self.data[self.data[attribute] > value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
 
@@ -474,7 +475,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return []
         results = self.data[self.data[attribute] > value][self.primaryKeyName].tolist()
         return results
 
@@ -514,7 +515,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return RowList([],self.attributeLabels)
         results = self.data[self.data[attribute] < value]
         return Relation._rowListFromDataFrame(results,self.attributeLabels)
 
@@ -532,7 +533,7 @@ class Relation():
         if attribute not in self.attributeLabels:
             raise KeyError(f"Column key {attribute} does not exist in columns {self.attributeLabels}")
         if self.data[attribute].empty:
-            return None
+            return []
         results = self.data[self.data[attribute] < value][self.primaryKeyName].tolist()
         return results
 
