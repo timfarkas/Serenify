@@ -147,7 +147,11 @@ class MHWPDashboard:
         fieldset2.grid(row=0, column=1, padx=10, pady=10)
         tk.Label(fieldset2, text=f"Total Patients: {len(self.patient_data)}").grid(row=0, column=0, sticky="w")
         appointments = self.db.getRelation('Appointment').getRowsWhereEqual('mhwp_id', self.userID)
-        tk.Label(fieldset2, text=f"Appointments: {len(appointments)}").grid(row=1, column=0, sticky="w")
+        appcount=0
+        for i in appointments:
+            if (i[5] == "Confirmed") and (i[3]>datetime.now()):
+                appcount += 1
+        tk.Label(fieldset2, text=f"Appointments: {appcount}").grid(row=1, column=0, sticky="w")
         tk.Label(fieldset2, text=f"My Rating: {self.my_rating_score}").grid(row=2, column=0, sticky="w")
         Button(fieldset2, text="View my review", command=open_review, width=15).grid(row=3, column=0, sticky="w")
 

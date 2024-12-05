@@ -551,15 +551,58 @@ def initDummyDatabase(db, printOut = False):
     exer6 = ExerRecord(
         user_id=6,
         exercise="Self Guided Mindfulness",
+        timestamp=datetime.datetime(year=2024, month=11, day=25, hour=10, minute=0, second=0),
+    )
+    exer7 = ExerRecord(
+        user_id=6,
+        exercise="Self Guided Mindfulness",
+        timestamp=datetime.datetime(year=2024, month=11, day=25, hour=10, minute=0, second=0),
+    )
+    exer8 = ExerRecord(
+        user_id=6,
+        exercise="Body Scan",
         timestamp=datetime.datetime(year=2024, month=11, day=26, hour=10, minute=0, second=0),
     )
+    exer9 = ExerRecord(
+        user_id=6,
+        exercise="Mindfulness",
+        timestamp=datetime.datetime(year=2024, month=11, day=26, hour=10, minute=0, second=0),
+    )
+    exer10 = ExerRecord(
+        user_id=6,
+        exercise="Mindfulness",
+        timestamp=datetime.datetime(year=2024, month=11, day=27, hour=10, minute=0, second=0),
+    )
+    exer11 = ExerRecord(
+        user_id=6,
+        exercise="Body Scan",
+        timestamp=datetime.datetime(year=2024, month=11, day=28, hour=10, minute=0, second=0),
+    )
+    exer12 = ExerRecord(
+        user_id=6,
+        exercise="Mindfulness",
+        timestamp=datetime.datetime(year=2024, month=11, day=29, hour=10, minute=0, second=0),
+    )
+    exer13 = ExerRecord(
+        user_id=6,
+        exercise="Body Scan",
+        timestamp=datetime.datetime(year=2024, month=11, day=30, hour=10, minute=0, second=0),
+    )
+
+
     db.insert_exerrecord(exer1)
     db.insert_exerrecord(exer2)
     db.insert_exerrecord(exer3)
     db.insert_exerrecord(exer4)
     db.insert_exerrecord(exer5)
     db.insert_exerrecord(exer6)
-
+    db.insert_exerrecord(exer7)
+    db.insert_exerrecord(exer8)
+    db.insert_exerrecord(exer9)
+    db.insert_exerrecord(exer10)
+    db.insert_exerrecord(exer11)
+    db.insert_exerrecord(exer12)
+    db.insert_exerrecord(exer13)
     if printOut:
         db.printAll()
 

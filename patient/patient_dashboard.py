@@ -19,33 +19,7 @@ def openpatientdashboard():
     sess = Session()
     sess.open()
     userID = sess.getId()
-    #Can change this input for test
-    # # userdata = db.getRelation('Allocations').getAllRows()
-    # # print(userdata)
-    # patientlist = db.getRelation('Allocation').getRowsWhereEqual('patient_id',userID)
-    # # print(patientlist)
-    # patientids=[i[2] for i in patientlist]
-    #
-    # patientdata=[]
-    # for i in patientids:
-    #     userdata=db.getRelation('User').getRowsWhereEqual('user_id',i)
-    #     Moodrecord= db.getRelation('MoodEntry')
-    #     usermood = Moodrecord.getRowsWhereEqual('patient_id', i)
-    #     recentmood="-"
-    #     recentupdate="-"
-    #     if len(usermood)>0:
-    #         recentmood=usermood[-1][2]
-    #         recentupdate=usermood[-1][4].strftime("%b %d")
-    #     patientdata.append([userdata[0][0], str(userdata[0][4]) + " " + str(userdata[0][5]), userdata[0][2],recentmood,recentupdate])
-    # allreview = db.getRelation('MHWPReview').getRowsWhereEqual('mhwp_id',MHWPID)
-    # reviewlist=[]
-    # for i in allreview:
-    #     reviewlist.append(i[3])
-    # if len(reviewlist)>=1:
-    #     myratingscore=sum(reviewlist)/len(reviewlist)
-    # else:
-    #     myratingscore="NA"
-    #
+
     notificationdata = db.getRelation('Notification').getRowsWhereEqual('new',True)
     messagecounter=0
     for i in notificationdata:
@@ -58,18 +32,6 @@ def openpatientdashboard():
 
 
 
-    # root1 = tk.Tk()
-    #
-    # fieldset = tk.LabelFrame(root1, text="MHWP Information", padx=10, pady=10)
-    # fieldset.pack(padx=10, pady=10)
-    #
-    # nam_label = tk.Label(fieldset, text="Name: ", width=25)
-    # nam_label.grid(row=0, column=0)
-    # spe_label = tk.Label(fieldset, text="Specialization: ")
-    # spe_label.grid(row=1, column=0)
-    # ema_label = tk.Label(fieldset, text="Email: ")
-    # ema_label.grid(row=2, column=0)
-
     root = tk.Tk()
     root.title("Patient Dashboard")
 
@@ -79,33 +41,22 @@ def openpatientdashboard():
     winheight = 300
 
     # Set window size to match the canvas width
-    root.geometry(f"{winwidth+50}x{winheight+200}")  # Add extra height and width for padding
+    root.geometry(f"{winwidth+50}x{winheight+600}")  # Add extra height and width for padding
 
     # Create main frame
     # Main frame configuration
     main_frame = tk.Frame(root)
     main_frame.grid(row=0, column=0, sticky="nsew")
     main_frame.grid_columnconfigure(0, weight=1)  # Left fieldset
-    main_frame.grid_columnconfigure(1, weight=1)
+    # main_frame.grid_columnconfigure(1, weight=1)
 
     # Left fieldset
     fieldset1 = tk.LabelFrame(main_frame, text="My exercises", padx=10, pady=10,labelanchor="n")
-    fieldset1.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
-    # btn = Button(fieldset1, text="Rate my MHWP", command=lambda:openrating(), width=15)
-    # btn.grid(row=1, column=0, sticky="w")
-    # btn = Button(fieldset1, text="Chat with MHWP", command=lambda:startchatroom(userID,"Patient"), width=15)
-    # btn.grid(row=2, column=0, sticky="w")
-    # btn = Button(fieldset1, text="Enter Forum", command=lambda: openforsum(), width=15)
-    # btn.grid(row=3, column=0, sticky="w")
-    # btn = Button(fieldset1, text="Open Message", command=lambda: clickbutton(), width=15)
-    # btn.grid(row=4, column=0, sticky="w")
-    # label3 = tk.Label(fieldset1, text=f"You have {messagecounter} new messages")
-    # label3.grid(row=5, column=0, sticky="w")
+    fieldset1.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
 
     userexerdata = db.getRelation('ExerRecord').getRowsWhereEqual("user_id", userID)
     exercisedata = []
     exerdict=dict()
-    colorset=["red", "blue", "green", "yellow"]
 
     for i in userexerdata:
         if i[2] in exerdict:
@@ -114,7 +65,7 @@ def openpatientdashboard():
             exerdict[i[2]] =1
         exercisedata.append(i[2])
     canwidth=250
-    canheight=120
+    canheight=150
     execanv = Canvas(fieldset1, width=canwidth, height=canheight, bg="white")
     exercisedata = list(exerdict.values())[::-1]
     labels = list(exerdict.keys())[::-1]
@@ -122,7 +73,7 @@ def openpatientdashboard():
 
     x = canwidth/2-60
     y = canheight/2
-    radius = canheight/2*0.8
+    radius = canheight/2*0.6
     total = sum(exercisedata)
     start_angle = 0
 
@@ -132,7 +83,7 @@ def openpatientdashboard():
         # Draw the slice
         execanv.create_arc(x-radius, y - radius, x + radius, y + radius,start=start_angle, extent=extent,fill=colors[i], outline="black")
         start_angle += extent
-    execanv.pack()
+    execanv.grid(row=0,column=0)
 
     box_size = 10  # Size of the color box
     padding = 5  # Spacing between items
@@ -148,7 +99,6 @@ def openpatientdashboard():
             legendx + box_size + 10, legendy + i * (box_size + padding) + box_size // 2,
             text=label, anchor="w", font=("Arial", 10)
         )
-    execanv.pack()
 
     exerrecords = db.getRelation('ExerRecord').getRowsWhereEqual('user_id',userID)
     exercount=0
@@ -170,18 +120,21 @@ def openpatientdashboard():
     for i in usermood:
         if i[4] > seven_days_ago:
             pastscore.append(i[2])
-
     averagescore=(round((sum(pastscore)/len(pastscore)),1) if len(pastscore)>0 else "")
 
-
     fieldset2 = tk.LabelFrame(main_frame, text="Key Statistics", padx=10, pady=10, labelanchor="n")
-    fieldset2.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+    fieldset2.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+
     label1 = tk.Label(fieldset2, text=f"Exercises in 30 days: {exercount}")
     label1.grid(row=0, column=0, sticky="w")
     label2 = tk.Label(fieldset2, text=f"Average mood in 7 days: {averagescore}")
     label2.grid(row=1, column=0, sticky="w")
     appointments = db.getRelation('Appointment').getRowsWhereEqual('patient_id', userID)
-    label3 = tk.Label(fieldset2, text=f"Appointments: {len(appointments)}")
+    appcount=0
+    for i in appointments:
+        if (i[5]=="Confirmed") and(i[3]>datetime.now()):
+            appcount+=1
+    label3 = tk.Label(fieldset2, text=f"Appointments: {appcount}")
     label3.grid(row=2, column=0, sticky="w")
     # label3 = tk.Label(fieldset2, text=f"My Rating: {myratingscore}")
     # label3.grid(row=2, column=0, sticky="w")
@@ -192,9 +145,10 @@ def openpatientdashboard():
 
 
 
-    tree_frame = tk.Frame(main_frame)
-    tree_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
-
+    # tree_frame = tk.Frame(main_frame)
+    # tree_frame.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
+    tree_frame = tk.LabelFrame(main_frame, text="Mood Tracker", padx=10, pady=10, labelanchor="n")
+    tree_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
     length = len(usermood)
     dotdata = []
@@ -205,8 +159,9 @@ def openpatientdashboard():
     for i in usermood:
         dotdata.append([cord, winheight - 40 - i[2] * 30])  # Adjust height for mood visualization
         cord += interval
+    canv = Canvas(tree_frame, width=winwidth, height=winheight, bg="white")
+    canv.grid(row=0, column=0, sticky="nsew")
 
-    canv = Canvas(main_frame, width=winwidth, height=winheight, bg="white")
     if len(dotdata) > 0:
         for i in dotdata:
             canv.create_oval(i[0] - radius, i[1] - radius, i[0] + radius, i[1] + radius, outline="pink", fill="pink")
@@ -218,10 +173,81 @@ def openpatientdashboard():
                              font=("Arial", 10))
             canv.create_text(dotdata[i][0], dotdata[i][1] - 20, text=usermood[i][2], fill="gray", font=("Arial", 10))
         canv.create_rectangle(15, 40, winwidth - 15, winheight - 15, outline="gray")
-        canv.create_text(80, 20, text=f"Name: {userName}", fill="Lightseagreen", font=("Arial", 14, "bold"))
+        canv.create_text(20, 20, text=f"Name: {userName}", fill="Lightseagreen", font=("Arial", 20, "bold"),anchor="w")
     else:
         canv.create_text(winwidth / 2, winheight / 2, text="No Record", fill="Gray", font=("Arial", 20, "bold"))
-    canv.grid(row=1, column=0, columnspan=2, pady=10)
+
+
+
+
+    allexer = db.getRelation('ExerRecord').getRowsWhereEqual('user_id', userID)
+    exerrecords = dict()
+    for i in allexer:
+        if i[3].strftime("%Y-%m-%d") in exerrecords:
+            exerrecords[i[3].strftime("%Y-%m-%d")] += 1
+        else:
+            exerrecords[i[3].strftime("%Y-%m-%d")] = 1
+    print(exerrecords)
+    # userdata=room1.getRowsWhereEqual("user_id",3)
+    sorted_list = sorted(exerrecords.items(), key=lambda x:x[0])
+    print(sorted_list)
+    displaynum = 7
+    if len(sorted_list) > displaynum:
+        sorted_list = sorted_list[-displaynum:]
+
+    dates = []
+    values = []
+    num_bars = len(sorted_list)
+    for i in sorted_list:
+        dates.append(i[0])
+        values.append(i[1])
+
+    # Create a Canvas to draw the chart
+
+    barcanv = Canvas(fieldset1, width=250, height=150, bg="white")
+    barcanv.grid(row=0, column=1, columnspan=2, pady=10)
+    # Draw the bar chart
+    def draw_bar_chart():
+        # Dimensions
+        chart_width = 200
+        chart_height = 90
+        padding = 30
+        bar_width = 20
+        max_value = max(values)
+
+        # Calculate scaling factor
+        scale = chart_height / max_value if max_value > 0 else 1
+
+        # Draw X-axis and Y-axis
+
+
+        # Draw bars and labels
+        for i in range(num_bars):
+            x0 = padding + i * (bar_width + 10)
+            y0 = chart_height + padding - (values[i] * scale)
+            x1 = x0 + bar_width
+            y1 = chart_height + padding
+
+            # Draw the bar
+            barcanv.create_rectangle(x0, y0, x1, y1, fill="lightblue", outline="lightblue")
+
+            # Add text labels (value)
+            barcanv.create_text(
+                (x0 + x1) / 2, y0 - 10, text=str(values[i]), anchor="s", font=("Arial", 8)
+            )
+
+            # Add text labels (date)
+            barcanv.create_text(
+                (x0 + x1) / 2, chart_height + padding + 15, text=dates[i], anchor="n", font=("Arial", 5)
+            )
+        barcanv.create_line(
+            padding, chart_height + padding, chart_width + padding, chart_height + padding, width=1
+        )
+        # barcanv.create_line(
+        #     padding, padding, padding, chart_height + padding, width=1
+        # )
+
+    draw_bar_chart()
 
     def on_close():
         # db.close()

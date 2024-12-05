@@ -261,132 +261,6 @@ class Patient:
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while disabling widgets: {e}")
 
-    def openjournal(self):
-        # Create a new Toplevel window for the journal
-        root3 = tk.Toplevel(self.root)
-        root3.title("Journal")  # Set the title of the journal window
-        root3.geometry("600x500")  # Set a fixed size for the window
-
-        # Journaling Section Frame
-        self.journal_frame = tk.Frame(root3, padx=10, pady=10)
-        self.journal_frame.grid(row=0, column=0, columnspan=6, pady=(10, 0), padx=10, sticky="nsew")
-
-        # Journal Entry Label
-        self.journal_label = tk.Label(
-            self.journal_frame, text="Journal Entry:", font=("Arial", 12)
-        )
-        self.journal_label.grid(row=0, column=0, padx=10, pady=(0, 5), sticky="w")
-
-        # Journal Entry Textbox
-        self.journal_text = tk.Text(self.journal_frame, height=5, width=40)
-        self.journal_text.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-
-        # Save Button
-        self.save_button = tk.Button(
-            self.journal_frame, text="Save Journal Entry", command=self.save_journal_entry
-        )
-        self.save_button.grid(row=2, column=0, padx=10, pady=5, sticky="w")
-
-        # Search Functionality
-        self.search_label = tk.Label(
-            self.journal_frame, text="Search Journal Entries:", font=("Arial", 12)
-        )
-        self.search_label.grid(row=0, column=1, padx=10, pady=(0, 5), sticky="w")
-
-        self.search_entry = tk.Entry(self.journal_frame, width=30)
-        self.search_entry.grid(row=1, column=1, padx=10, pady=5, sticky="w")
-
-        self.search_button = tk.Button(
-            self.journal_frame, text="Search", command=self.search_journal_entries
-        )
-        self.search_button.grid(row=2, column=1, padx=10, pady=5, sticky="w")
-
-        # View All Entries Button
-        self.view_entries_button = tk.Button(
-            self.journal_frame,
-            text="View All Journal Entries",
-            command=self.view_all_journal_entries,
-        )
-        self.view_entries_button.grid(row=3, column=1, padx=10, pady=5, sticky="w")
-
-        # Treeview Section Frame
-        self.tree_frame = tk.Frame(root3, padx=10, pady=10)
-        self.tree_frame.grid(row=1, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
-
-        # Treeview Widget
-        self.journal_tree = ttk.Treeview(
-            self.tree_frame, columns=("Text", "Time"), show="headings", height=10
-        )
-        self.journal_tree.pack(fill="both", expand=True)
-
-        # Define Treeview Headings
-        self.journal_tree.heading("Text", text="Text")
-        self.journal_tree.heading("Time", text="Time")
-
-        # Define Treeview Columns
-        self.journal_tree.column("Text", anchor="w", width=400)
-        self.journal_tree.column("Time", anchor="center", width=150)
-
-        # Treeview Scrollbar
-        scrollbar = tk.Scrollbar(
-            self.tree_frame, orient="vertical", command=self.journal_tree.yview
-        )
-        scrollbar.pack(side="right", fill="y")
-        self.journal_tree.configure(yscrollcommand=scrollbar.set)
-
-        # Bind click event to the Treeview
-        self.journal_tree.bind("<Double-1>", self.show_full_entry)
-
-        # Load Journal Entries into Treeview
-        self.load_journal_entries()
-
-    def refresh_treeview(self):
-        """Clear and reload the Treeview with updated journal entries."""
-        # Clear all existing items in the Treeview
-        for item in self.journal_tree.get_children():
-            self.journal_tree.delete(item)
-
-        # Reload the data into the Treeview
-        self.load_journal_entries()
-    def load_journal_entries(self):
-        """Load journal entries into the Treeview."""
-        # Fetch journal entries from the database
-        journal_entries = db.getRelation("JournalEntry").getRowsWhereEqual("patient_id", self.current_user_id)
-
-        # Insert entries into the Treeview
-        for entry in journal_entries:
-            self.journal_tree.insert("", "end", values=(entry[2][:50], entry[3].strftime("%Y-%m-%d %H:%M")))
-
-    def show_full_entry(self, event):
-        """Display the full content of a journal entry."""
-        # Get selected item
-        selected_item = self.journal_tree.selection()
-        if selected_item:
-            item_values = self.journal_tree.item(selected_item, "values")
-
-            # Show full text in a popup
-            full_text = item_values[0]  # Extract full text
-            timestamp = item_values[1]  # Extract timestamp
-
-            popup = tk.Toplevel(self.root)
-            popup.title("Journal Entry")
-            popup.geometry("400x300")
-
-            # Display text
-            text_label = tk.Label(popup, text="Full Entry:", font=("Arial", 12, "bold"))
-            text_label.pack(pady=10)
-
-            text_box = tk.Text(popup, wrap="word", height=10, width=40)
-            text_box.pack(pady=10, padx=10)
-            text_box.insert("1.0", full_text)
-            text_box.config(state="disabled")  # Make it read-only
-
-            # Display timestamp
-            timestamp_label = tk.Label(popup, text=f"Date: {timestamp}", font=("Arial", 10, "italic"))
-            timestamp_label.pack(pady=5)
-
-            close_button = tk.Button(popup, text="Close", command=popup.destroy)
-            close_button.pack(pady=10)
     def exitUser(self):
         db.close()
         subprocess.Popen(["python3", "main.py"])
@@ -466,11 +340,12 @@ class Patient:
             exercise_text = "No exercises available."
 
         # Display the exercise recommendations in the exercise frame
-        exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 12), justify="left")
+        exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 16), justify="left")
         exercises_label.pack()
-
+        back_button = tk.Button(self.exercise_frame, text="Go to Exercises", command=self.exercises,width=20)
+        back_button.pack(pady=10)
         # Add a button to go back to mood selection
-        back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood)
+        back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood,width=20)
         back_button.pack(pady=10)
 
     def back_to_mood(self):
@@ -482,6 +357,129 @@ class Patient:
         # self.title_label.config(text="Welcome back")
         # self.submit_button.config(state=tk.NORMAL)
 
+    def openjournal(self):
+        # Create a new Toplevel window for the journal
+        root3 = tk.Toplevel(self.root)
+        root3.title("Journal")  # Set the title of the journal window
+        root3.geometry("650x500")  # Set a fixed size for the window
+
+        # Journaling Section Frame
+        self.journal_frame = tk.Frame(root3, padx=10, pady=10)
+        self.journal_frame.grid(row=0, column=0, columnspan=6, pady=(10, 0), padx=10, sticky="nsew")
+
+        # Journal Entry Label
+        self.journal_label = tk.Label(
+            self.journal_frame, text="Journal Entry:", font=("Arial", 12)
+        )
+        self.journal_label.grid(row=0, column=0, padx=10, pady=(0, 5), sticky="w")
+
+        # Journal Entry Textbox
+        self.journal_text = tk.Text(self.journal_frame, height=5, width=40)
+        self.journal_text.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+
+        # Save Button
+        self.save_button = tk.Button(
+            self.journal_frame, text="Save Journal Entry", command=self.save_journal_entry
+        )
+        self.save_button.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+
+        # Search Functionality
+        self.search_label = tk.Label(
+            self.journal_frame, text="Search Journal Entries:", font=("Arial", 12)
+        )
+        self.search_label.grid(row=0, column=1, padx=10, pady=(0, 5), sticky="w")
+
+        self.search_entry = tk.Entry(self.journal_frame, width=30)
+        self.search_entry.grid(row=1, column=1, padx=10, pady=5, sticky="w")
+
+        self.search_button = tk.Button(
+            self.journal_frame, text="Search", command=self.search_journal_entries
+        )
+        self.search_button.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+
+        # Treeview Section Frame
+        self.tree_frame = tk.Frame(root3, padx=10, pady=10)
+        self.tree_frame.grid(row=1, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
+
+        # Treeview Widget
+        self.journal_tree = ttk.Treeview(
+            self.tree_frame, columns=("Text", "Time"), show="headings", height=10
+        )
+        self.journal_tree.pack(fill="both", expand=True)
+
+        # Define Treeview Headings
+        self.journal_tree.heading("Text", text="Text")
+        self.journal_tree.heading("Time", text="Time")
+
+        # Define Treeview Columns
+        self.journal_tree.column("Text", anchor="w", width=400)
+        self.journal_tree.column("Time", anchor="center", width=150)
+
+        # Treeview Scrollbar
+        scrollbar = tk.Scrollbar(
+            self.tree_frame, orient="vertical", command=self.journal_tree.yview
+        )
+        scrollbar.pack(side="right", fill="y")
+        self.journal_tree.configure(yscrollcommand=scrollbar.set)
+
+        # Bind click event to the Treeview
+        self.journal_tree.bind("<Double-1>", self.show_full_entry)
+
+        # Load Journal Entries into Treeview
+        self.load_journal_entries()
+
+    def refresh_treeview(self):
+        """Clear and reload the Treeview with updated journal entries."""
+        # Clear all existing items in the Treeview
+        for item in self.journal_tree.get_children():
+            self.journal_tree.delete(item)
+
+        # Reload the data into the Treeview
+        self.load_journal_entries()
+
+    def load_journal_entries(self):
+        """Load all journal entries into the Treeview."""
+        # Clear the Treeview
+        for item in self.journal_tree.get_children():
+            self.journal_tree.delete(item)
+
+        # Fetch journal entries from the database
+        journal_entries = db.getRelation("JournalEntry").getRowsWhereEqual("patient_id", self.current_user_id)
+
+        # Insert all entries into the Treeview
+        for entry in journal_entries:
+            self.journal_tree.insert("", "end", values=(entry[2][:50], entry[3].strftime("%Y-%m-%d %H:%M")))
+
+    def show_full_entry(self, event):
+        """Display the full content of a journal entry."""
+        # Get selected item
+        selected_item = self.journal_tree.selection()
+        if selected_item:
+            item_values = self.journal_tree.item(selected_item, "values")
+
+            # Show full text in a popup
+            full_text = item_values[0]  # Extract full text
+            timestamp = item_values[1]  # Extract timestamp
+
+            popup = tk.Toplevel(self.root)
+            popup.title("Journal Entry")
+            popup.geometry("400x300")
+
+            # Display text
+            text_label = tk.Label(popup, text="Full Entry:", font=("Arial", 12, "bold"))
+            text_label.pack(pady=10)
+
+            text_box = tk.Text(popup, wrap="word", height=10, width=40)
+            text_box.pack(pady=10, padx=10)
+            text_box.insert("1.0", full_text)
+            text_box.config(state="disabled")  # Make it read-only
+
+            # Display timestamp
+            timestamp_label = tk.Label(popup, text=f"Date: {timestamp}", font=("Arial", 10, "italic"))
+            timestamp_label.pack(pady=5)
+
+            close_button = tk.Button(popup, text="Close", command=popup.destroy)
+            close_button.pack(pady=10)
     def save_journal_entry(self):
         """Save the journal entry to the database and refresh the Treeview."""
         # Get the journal text
@@ -511,26 +509,28 @@ class Patient:
         self.refresh_treeview()
 
     def search_journal_entries(self):
-        # Get search term and search the journal entries
+        """Search for journal entries and display matching results in the Treeview."""
         search_term = self.search_entry.get().strip().lower()
 
+        # Clear the Treeview
+        for item in self.journal_tree.get_children():
+            self.journal_tree.delete(item)
+
         if search_term:
-            # Fetch journal entries
-            # db = Database()
-            journal_entries = db.getRelation("JournalEntry")
-            filtered_rows = journal_entries.getRowsWhereEqual('patient_id', self.current_user_id)
-            self.journal_df = pd.DataFrame(filtered_rows)
+            # Fetch all journal entries
+            journal_entries = db.getRelation("JournalEntry").getRowsWhereEqual("patient_id", self.current_user_id)
 
-            # Search the DataFrame for the term
-            matching_entries = self.journal_df[self.journal_df[2].str.contains(search_term, case=False, na=False)]
+            # Filter entries that match the search term
+            matching_entries = [
+                entry for entry in journal_entries if search_term in entry[2].lower()
+            ]
 
-            if not matching_entries.empty:
-                results_text = "\n\n".join([f"Entry on {entry[3]}: {entry[2]}" for _, entry in matching_entries.iterrows()])
-                messagebox.showinfo("Search Results", f"Found matching entries:\n\n{results_text}")
-            else:
-                messagebox.showinfo("Search Results", "No matching entries found.")
+            # Reload the Treeview with matching entries
+            for entry in matching_entries:
+                self.journal_tree.insert("", "end", values=(entry[2][:50], entry[3].strftime("%Y-%m-%d %H:%M")))
         else:
-            messagebox.showwarning("Empty Search", "Please enter a term to search.")
+            # If no search term, reload all entries
+            self.load_journal_entries()
 
     def view_all_journal_entries(self):
         # db = Database()
@@ -556,6 +556,10 @@ class Patient:
         # Edit information
         db.close()
         self.root.destroy()
+        try:
+            self.root2.destroy()
+        except:
+            pass
         Exercises()
         # subprocess.Popen(["python3", "patient/exercises.py"])
         # self.root.destroy()
