@@ -10,7 +10,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database
-from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
+from database.entities import User,Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
 from addfeature.globaldb import global_db
 from addfeature.globaldb import global_db
@@ -30,6 +30,11 @@ class AllocationEdit(tk.Toplevel):
         self.db = db
         self.patient_id = patient_id
         self.parent = parent
+
+        self.sess = Session()
+        self.sess.open()
+        self.adminID = self.sess.getId()
+
         self.create_ui()
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
@@ -41,20 +46,31 @@ class AllocationEdit(tk.Toplevel):
         h1_label.pack()
         
         # Fetch current MHWP assigned to the patient
-        patient = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", self.patient_id)
-        if not patient:
-            messagebox.showerror("Error", "No patient found with the provided ID.")
-            return
-        assigned_mhwp_id = patient[0][3]
+        patient_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", self.patient_id)
         
-        self.allocation_id = patient[0][0]
+        if not patient_allocation: ### patient not allocated to any mhwp yet
+            newPatient = self.db.getRelation('User').getRowsWhereEqual("user_id", self.patient_id)
+            if not newPatient:
+                messagebox.showerror("Error", "No patient found with the provided ID.")
+            else:
+                self.patientIsNewlyCreated = True
+        else:
+            self.patientIsNewlyCreated = False
         
-        assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", assigned_mhwp_id)
-        assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
+        if self.patientIsNewlyCreated == False:
+            assigned_mhwp_id = patient_allocation[0][Allocation.MHWP_ID]
+            self.allocation_id = patient_allocation[0][Allocation.ALLOCATION_ID]
+            
+            assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", assigned_mhwp_id)
+            assigned_mhwp_name = f"{assigned_mhwp[0][User.FNAME]} {assigned_mhwp[0][User.LNAME]}"
+        else:
+            assigned_mhwp_name = f"No MHWP assigned yet."
+            self.new_user_id = newPatient[0][User.USER_ID]
+
 
         # Fetch list of MHWPs
         mhwps = self.db.getRelation('User').getRowsWhereEqual("type", "MHWP")
-        self.mhwp_dict = {f"{mhwp[4]} {mhwp[5]}": mhwp[0] for mhwp in mhwps}
+        self.mhwp_dict = {f"{mhwp[User.FNAME]} {mhwp[User.LNAME]}": mhwp[0] for mhwp in mhwps}
         mhwp_names = list(self.mhwp_dict.keys())
 
         # Create label and dropdown for MHWP selection
@@ -77,11 +93,17 @@ class AllocationEdit(tk.Toplevel):
         new_mhwp_id = self.mhwp_dict.get(new_mhwp_name)
 
         try:
-            # Update the patient's MHWP in the database
-            userRelation = self.db.getRelation('Allocation')
-            userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
-
-            messagebox.showinfo("Success", "MHWP updated successfully.")
+            if not self.patientIsNewlyCreated:
+                # Update the patient's MHWP in the database
+                userRelation = self.db.getRelation('Allocation')
+                userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
+                messagebox.showinfo("Success", "MHWP updated successfully.")
+            else:
+                ### default to 1yr from now
+                allocation = Allocation(admin_id=self.adminID, patient_id=self.new_user_id, mhwp_id=new_mhwp_id, start_date=datetime.now(), end_date=datetime.now().replace(year=datetime.now().year + 1))
+                self.db.insert_allocation(allocation)
+                messagebox.showinfo("Success", "MHWP allocated successfully.")
+            
         
         except Exception as e:
             messagebox.showerror("Error", str(e)) 
