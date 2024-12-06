@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
+import math
 
 import sys
 import os
@@ -342,11 +343,38 @@ class MHWPEditApp(PatientEditApp):
         self.emergency_name_entry.config(state='disabled')
         self.emergency_name_entry.grid(row=7, column=1)
 
+        # to speak to Tim about the hypenated ones which were causing an error.
+        specialization_options = [
+            "Psychology",
+            "Psychiatry",
+            "Counseling",
+            "Substance Abuse Counseling",
+            "Clinical Psychology",
+            "Child and Adolescent Psychology",
+            "Geriatric Psychology",
+            "Neuropsychology",
+            "Health Psychology",
+            "Rehabilitation Counseling",
+            "Art Therapy",
+            "Music Therapy",
+            "Behavioral Therapy",
+            "Cognitive Behavioral Therapy",
+            "Dialectical Behavior Therapy",
+            "Play Therapy",
+            "Hypnotherapy",
+            "Psychodynamic Therapy",
+            "Existential Therapy",
+            "Humanistic Therapy",
+            "Integrative Therapy",
+            "Narrative Therapy",
+            "Gestalt Therapy",
+            "Acceptance and Commitment Therapy",
+            "Eye Movement Desensitization and Reprocessing"
+        ]
         tk.Label(user_frame, text="Specialization:").grid(row=8, column=0)
-        self.specialization_entry = tk.Entry(user_frame)
-        self.specialization_entry.insert(0, user['specialization'] if user['specialization'] else '')
-        self.specialization_entry.config(state='disabled')
-        self.specialization_entry.grid(row=8, column=1)
+        self.specialization_var = tk.StringVar(value=user['specialization'] if user['specialization'] else specialization_options[0])
+        self.specialization_combobox = ttk.Combobox(user_frame, textvariable=self.specialization_var, values=specialization_options, state='disabled')
+        self.specialization_combobox.grid(row=8, column=1)
 
         tk.Label(user_frame, text="Disable User:").grid(row=10, column=0)
         self.is_disabled_var = tk.BooleanVar(value=bool(user['is_disabled']))
@@ -358,10 +386,9 @@ class MHWPEditApp(PatientEditApp):
         self.toggle_button = tk.Button(self, text="Edit", command=self.toggle_edit_save)
         self.toggle_button.pack(pady=0)
 
-        # To speak to Tim about implementing for MHWPs
         # Delete Button
-        #self.delete_button = tk.Button(self, text=f"Delete {self.user_type}", command=self.delete_user)
-        #self.delete_button.pack(pady=0)
+        self.delete_button = tk.Button(self, text=f"Delete {self.user_type}", command=self.delete_MHWP)
+        self.delete_button.pack(pady=0)
 
         # Back Button
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
@@ -399,7 +426,7 @@ class MHWPEditApp(PatientEditApp):
             self.lName_entry.config(state='normal')
             self.emergency_email_entry.config(state='normal')
             self.emergency_name_entry.config(state='normal')
-            self.specialization_entry.config(state='normal')
+            self.specialization_combobox.config(state='readonly')
             self.is_disabled_check.config(state='normal')
 
             self.toggle_button.config(text="Save Changes")  
@@ -417,7 +444,7 @@ class MHWPEditApp(PatientEditApp):
                 self.lName_entry.config(state='disabled')
                 self.emergency_email_entry.config(state='disabled')
                 self.emergency_name_entry.config(state='disabled')
-                self.specialization_entry.config(state='disabled')
+                self.specialization_combobox.config(state='disabled')
                 self.is_disabled_check.config(state='disabled')
             else:
                 pass
@@ -430,7 +457,7 @@ class MHWPEditApp(PatientEditApp):
                 'lName': self.lName_entry.get(),
                 'emergency_contact_email': self.emergency_email_entry.get(),
                 'emergency_contact_name': self.emergency_name_entry.get(),
-                'specialization': self.specialization_entry.get(),
+                'specialization': self.specialization_var.get(),
                 'is_disabled': self.is_disabled_var.get()
             }
 
@@ -444,7 +471,7 @@ class MHWPEditApp(PatientEditApp):
             'lName': self.lName_entry.get(),
             'emergency_contact_email': self.emergency_email_entry.get(),
             'emergency_contact_name': self.emergency_name_entry.get(),
-            'specialization': self.specialization_entry.get(),
+            'specialization': self.specialization_var.get(),
             'is_disabled': self.is_disabled_var.get()
         }
         
@@ -459,6 +486,18 @@ class MHWPEditApp(PatientEditApp):
         except Exception as e:
             messagebox.showerror("Error", str(e)) 
             return False
+    
+    def delete_MHWP(self):
+        user_relation = self.db.getRelation('User')
+        response = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete this MHWP?")
+
+        if response:
+            user_relation.deleteRow(self.user_id, self.db)
+            messagebox.showinfo("Success", "MWHP deleted successfully.")
+            
+            self.parent.refresh_treeview()
+            self.destroy()
+            self.parent.deiconify()
 
 class UserSelectionApp(tk.Toplevel):
     def __init__(self, user_type, parent):
@@ -638,7 +677,10 @@ class AllocationSelection(UserSelectionApp):
             patient_name = f"{user[4]} {user[5]}"
 
             mhwp_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
-            mhwp_allocation_id = mhwp_allocation[0][3]
+            if mhwp_allocation and len(mhwp_allocation) > 0:
+                mhwp_allocation_id = mhwp_allocation[0][3]
+            else:
+                mhwp_allocation_id = None
 
             if mhwp_allocation_id:
                 assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
@@ -677,13 +719,27 @@ class KeyStatistics(tk.Toplevel):
             mhwp_name = f"{mhwp_user[0][4]} {mhwp_user[0][5]}"
 
             self.total_appointments.update({mhwp_name : mhwp_appointments})
+
+        # calculate allocation counts per MHWP
+        mhwp_counts = {}
+        allocations = self.db.getRelation('Allocation').getAllRows() 
+        for alloc in allocations:
+            mhwp_id = alloc.getField('mhwp_id')
+            if mhwp_id and mhwp_id != "":
+                # Get MHWP name
+                mhwp_user = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_id)
+                if mhwp_user:
+                    mhwp_name = f"{mhwp_user[0][4]} {mhwp_user[0][5]}"
+                    mhwp_counts[mhwp_name] = mhwp_counts.get(mhwp_name, 0) + 1
+
+        self.allocation_counts = mhwp_counts
     
     def create_ui(self):
         
         self.title("Bar Chart with Tkinter Canvas")
 
         # Create a Canvas widget
-        canvas = tk.Canvas(self, width=600, height=550)
+        canvas = tk.Canvas(self, width=1050, height=550)
         canvas.pack()
 
         # Graph title
@@ -770,21 +826,81 @@ class KeyStatistics(tk.Toplevel):
         key_stats_gap = 22
 
         # Create the summary of key statistics on the canvas
-        canvas.create_text(300, (key_stats_x_position - 10), text="Key Statistics", font=("Arial", 16, "bold"))
-        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 1), text=f"No. Patients: {patient_row_count}", font=("Arial", 14))
-        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 2), text=f"No. MHWP: {mhwp_row_count}", font=("Arial", 14))
-        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 3), text=f"Patients Per MHWP: {patient_per_MHWP}", font=("Arial", 14))
-        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 4), text=f"Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
-        canvas.create_text(175, (key_stats_x_position + key_stats_gap * 5), text=f"Unallocated Patients: {unalocated_patients_row_count}", font=("Arial", 14))
-        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 1), text=f"No. Journal Entries: {no_journal_entries}", font=("Arial", 14))
-        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 2), text=f"No. Patient Records: {no_patient_records}", font=("Arial", 14))
-        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 3), text=f"Active Appointments: {no_active_appointments}", font=("Arial", 14))
-        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 4), text=f"Confirmed Appointments: {no_confirmed_appointments}", font=("Arial", 14))
-        canvas.create_text(425, (key_stats_x_position + key_stats_gap * 5), text=f"Declined Appointments: {no_declined_appointments}", font=("Arial", 14))
+        canvas.create_text(527, (key_stats_x_position - 10), text="Key Statistics", font=("Arial", 16, "bold"))
+        canvas.create_text(402, (key_stats_x_position + key_stats_gap * 1), text=f"No. Patients: {patient_row_count}", font=("Arial", 14))
+        canvas.create_text(402, (key_stats_x_position + key_stats_gap * 2), text=f"No. MHWP: {mhwp_row_count}", font=("Arial", 14))
+        canvas.create_text(402, (key_stats_x_position + key_stats_gap * 3), text=f"Patients Per MHWP: {patient_per_MHWP}", font=("Arial", 14))
+        canvas.create_text(402, (key_stats_x_position + key_stats_gap * 4), text=f"Disabled Accounts: {disabled_accounts_row_count}", font=("Arial", 14))
+        canvas.create_text(402, (key_stats_x_position + key_stats_gap * 5), text=f"Unallocated Patients: {unalocated_patients_row_count}", font=("Arial", 14))
+        canvas.create_text(652, (key_stats_x_position + key_stats_gap * 1), text=f"No. Journal Entries: {no_journal_entries}", font=("Arial", 14))
+        canvas.create_text(652, (key_stats_x_position + key_stats_gap * 2), text=f"No. Patient Records: {no_patient_records}", font=("Arial", 14))
+        canvas.create_text(652, (key_stats_x_position + key_stats_gap * 3), text=f"Active Appointments: {no_active_appointments}", font=("Arial", 14))
+        canvas.create_text(652, (key_stats_x_position + key_stats_gap * 4), text=f"Confirmed Appointments: {no_confirmed_appointments}", font=("Arial", 14))
+        canvas.create_text(652, (key_stats_x_position + key_stats_gap * 5), text=f"Declined Appointments: {no_declined_appointments}", font=("Arial", 14))
+
+        # draw the pie chart
+        self.draw_pie_chart(canvas, x_center=780, y_center=205, radius=100)
 
         # Back button
         back_button = tk.Button(self, text="Back", command=self.go_back)
         back_button.pack(pady=5)
+
+    def draw_pie_chart(self, canvas, x_center, y_center, radius):
+
+        canvas.create_text(x_center + 55, y_center - radius - 85, text="Patients per MHWP", font=("Arial", 16, "bold"))
+
+        colors = ["lightgreen", "lavender", "mistyrose", "palegreen", "lightpink", "lightblue"]
+        color_index = 0
+
+        start_angle = 0
+
+        data = self.allocation_counts
+        total = sum(data.values()) if data else 1
+        
+        legend_x = x_center + radius + 50  # Position of the legend
+        legend_y = y_center - radius  # Top position of the legend
+
+        for mhwp_name, count in data.items():
+            # Calculate the angle of each slice
+            extent_angle = (count / total) * 360
+
+            # Draw the arc
+            fill_color = colors[color_index % len(colors)]
+            canvas.create_arc(
+                x_center - radius, y_center - radius, 
+                x_center + radius, y_center + radius,
+                start=start_angle, extent=extent_angle, 
+                fill=fill_color)
+
+            # Update start angle for next slice
+            start_angle += extent_angle
+            color_index += 1
+
+        # Draw Legend
+        color_index = 0
+        for mhwp_name, count in data.items():
+            fill_color = colors[color_index % len(colors)]
+
+            # Draw legend color box
+            canvas.create_rectangle(
+                legend_x, legend_y + (color_index * 20),
+                legend_x + 20, legend_y + (color_index * 20) + 15,
+                fill=fill_color
+            )
+
+            # Add text for the legend
+            canvas.create_text(
+                legend_x + 30, legend_y + (color_index * 20) + 7,
+                text=f"{mhwp_name} ({count})",
+                font=("Arial", 10),
+                anchor="w"
+            )
+            color_index += 1
+
+        # If no data, draw a message
+        if not data:
+            canvas.create_text(x_center, y_center, text="No Allocations Found", font=("Arial", 12))
+
 
     def go_back(self): 
         self.destroy()
@@ -840,10 +956,9 @@ class AdminMainPage(tk.Tk):
         app = KeyStatistics(self)
 
     def log_out(self):
-        from login.login import LoginPage
+        from main import App
         self.destroy()
-        root = tk.Tk()
-        app = LoginPage(root)
+        app = App()
         root.mainloop()
 
 
