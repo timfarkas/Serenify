@@ -5,7 +5,7 @@ from tkinter import ttk
 from tkinter import messagebox
 import subprocess # This allows us to open other files
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from database.entities import Patient, JournalEntry, MoodEntry,Notification
+from database.entities import Allocation,User,Patient, JournalEntry, MoodEntry,Notification
 from addfeature.chatroom import startchatroom
 from addfeature.forum import openforsum
 from patient.exercises import Exercises
@@ -50,12 +50,12 @@ class Patient:
         self.title_label = tk.Label(self.root, text=f"Welcome back, {self.patientName}!", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=6, pady=10)
         self.main_frame = tk.Frame(self.root, width=200)  # Define width for main_frame
-
-        # Mood of the day
         self.main_frame.grid(row=1, column=0, padx=10, pady=10) 
-        self.fieldset1 = tk.LabelFrame(self.main_frame, text="How are you feeling today?", labelanchor="n",font=("Arial", 12), padx=10, pady=10,width=500,height=200)
-        self.fieldset1.grid(row=0, column=0, padx=10, pady=10)
-        self.fieldset1.grid_propagate(False)
+
+        # MOOD FRAME
+        self.mood_frame = tk.LabelFrame(self.main_frame, text="How are you feeling today?", labelanchor="n",font=("Arial", 12), padx=10, pady=10,width=550,height=200)
+        self.mood_frame.grid(row=0, column=0, padx=10, pady=10)
+        self.mood_frame.grid_propagate(False)
 
         usermoodlog = db.getRelation('MoodEntry').getRowsWhereEqual('patient_id', self.current_user_id)
         if len(usermoodlog) > 0:
@@ -64,13 +64,40 @@ class Patient:
             if lastrecorddate == nowdate:
                 self.printlastmood()
             else:
-                self.showmoodselection(self.fieldset1)
+                self.showmoodselection(self.mood_frame)
         else:
-            self.showmoodselection(self.fieldset1)
+            self.showmoodselection(self.mood_frame)
 
+        ### MHWP INFO AND FUNCTIONS
+        ## get allocations of current patient where mhwp id is not deleted 
+        allocation = db.getRelation("Allocation").getWhereEqual("patient_id", self.current_user_id).getRowsWhereLarger('mhwp_id', 0)
+        
+        if not allocation:
+            self.allocated = False
+            self.mhwp_text = text="You are currently not allocated to any MHWP. Please contact an administrator."
+        else:
+            self.allocated = True
+            mhwp_id = allocation[0][Allocation.MHWP_ID]  
+            mhwp_info = db.getRelation("User").getRowsWhereEqual("user_id", mhwp_id)
+            mhwp_name = f"{mhwp_info[0][User.FNAME]} {mhwp_info[0][User.LNAME]}"  
+            self.mhwp_text = f"Your MHWP: {mhwp_name}"
 
-        self.button_frame = tk.Frame(self.root)
-        self.button_frame.grid(row=2, pady=20, padx=20)
+        mhwp_frame = tk.LabelFrame(self.main_frame,text=self.mhwp_text,labelanchor="n",font=("Arial", 12), width=550)
+        mhwp_frame.grid(row=1, column=0, pady=20)
+        
+        
+        self.ratemhwp = tk.Button(mhwp_frame, text="Rate", command=lambda: openrating(), width=12)
+        self.ratemhwp.grid(row=1, column=2)
+
+        self.openchat = tk.Button(mhwp_frame, text="Chat", command=lambda:startchatroom(self.current_user_id), width=12)
+        self.openchat.grid(row=1, column=1)
+
+        self.appointments = tk.Button(mhwp_frame, text="Appointments", command=self.book, width=12)
+        self.appointments.grid(row=1, column=0)
+
+        ### PERSONAL FUNCTIONS
+        self.personal_frame = tk.Frame(self.main_frame)
+        self.personal_frame.grid(row=2, padx=20, pady=20)
 
         notificationdata = db.getRelation('Notification').getRowsWhereEqual('new', True)
         self.messagecounter = 0
@@ -78,39 +105,42 @@ class Patient:
             if i[1] == self.current_user_id:
                 self.messagecounter += 1
 
+        self.opendashboard = tk.Button(self.personal_frame, text="My well-being stats", command=self.patientdashboard, width=20)
+        self.opendashboard.grid(row=0, column=0, pady=5, sticky="w")
 
-        # Buttons
-        self.journal_entry = tk.Button(self.button_frame, text="Journal", command=self.openjournal,width=20)
-        self.exercises_page = tk.Button(self.button_frame, text="Exercises", command = self.exercises,width=20)
-        self.edit_into = tk.Button(self.button_frame, text="Edit personal info", command = self.edit_information,width=20)
-        self.appointments = tk.Button(self.button_frame, text="Appointments", command = self.book,width=20)
-        self.ratemhwp = tk.Button(self.button_frame, text="Rate my MHWP", command=lambda: openrating(), width=20)
+        self.journal_entry = tk.Button(self.personal_frame, text="My Journal", command=self.openjournal, width=20)
+        self.journal_entry.grid(row=0, column=1, pady=5, sticky="w")
 
-        self.openchat= tk.Button(self.button_frame, text="Chat with MHWP", command=lambda:startchatroom(self.current_user_id),width=20)
-        self.openforum = tk.Button(self.button_frame, text="Open Forum", command=lambda:openforsum(),width=20)
-        self.opendashboard = tk.Button(self.button_frame, text="Open my dashboard", command=self.patientdashboard,width=20)
+        self.exercises_page = tk.Button(self.personal_frame, text="Exercises", command=self.exercises, width=20)
+        self.exercises_page.grid(row=1, column=0, pady=5, sticky="w")
 
-        self.messagebox= tk.Button(self.button_frame, text="My message", command=lambda:opennotification(),width=20)
-        self.messagenum = tk.Label(self.button_frame, text=f"You have {self.messagecounter} new messages",width=20)
+        self.openforum = tk.Button(self.personal_frame, text="Forum", command=lambda:openforsum(), width=20)
+        self.openforum.grid(row=1, column=1, pady=5, sticky="w")
 
-        self.journal_entry.grid(row=1, column=0, pady=5, sticky="w")
-        self.exercises_page.grid(row=2, column=0, pady=5, sticky="w")
-        self.edit_into.grid(row=3, column=0, pady=5,sticky="w")
-        self.appointments.grid(row=4, column=0, pady=5, sticky="w")
-        self.ratemhwp.grid(row=5, column=0, sticky="w")
-        self.openchat.grid(row=1, column=1, pady=5,sticky="w")
-        self.openforum.grid(row=2, column=1, pady=5,sticky="w")
-        self.opendashboard.grid(row=3, column=1, pady=5, sticky="w")
-        self.messagebox.grid(row=4, column=1, pady=5,sticky="w")
-        self.messagenum.grid(row=5, column=1, sticky="w")
+        ### APP MESSAGES
+        self.message_frame = tk.Frame(self.main_frame)
+        self.message_frame.grid(row=3, column=0, columnspan=2, pady=5)
 
-        # Turn off widgets if user is disabled
+        self.messagenum = tk.Label(self.message_frame, text=f"You have {self.messagecounter} new messages", width=40)
+        self.messagenum.grid(row=0, column=1, sticky="w")
+
+        self.messagebox = tk.Button(self.message_frame, text="My messages", command=lambda:opennotification(), width=40)
+        self.messagebox.grid(row=1, column=1, sticky="w")
+
+        ### EDIT PERSONAL INFO AND LOGOUT
+        self.editandlogout_frame = tk.Frame(self.main_frame)
+        self.editandlogout_frame.grid(row=4, column=0, columnspan=2, pady=5)
+
+        self.edit_into = tk.Button(self.editandlogout_frame, text="Edit personal info", command=self.edit_information, width=20)
+        self.edit_into.grid(row=0, column=0, pady=5, sticky="w")
+
+        self.logout_button = tk.Button(self.editandlogout_frame, text="Logout", command=self.exitUser)
+        self.logout_button.grid(row=0, column=1, pady=5, sticky="w")
+
+        # Turns off all widgets if user is disabled, turns off mhwp functions if user is not allocated
         self.disable_interactive_widgets()
-        
-        # Logging out
-        self.logout_button = tk.Button(self.root, text="Logout", command=self.exitUser)
-        self.logout_button.grid(row=4, column=0, columnspan = 6, pady=5)
-
+        self.disable_mhwp_widgets()
+    
         self.root.after(1000, self.refresh)
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.mainloop()
@@ -121,13 +151,13 @@ class Patient:
         self.radio_var = tk.IntVar()
         self.radio_var.set("")  # Default to no selection
         # Create the mood selection options
-        self.radio1 = tk.Radiobutton(self.fieldset1, text="Amazing", variable=self.radio_var, value="6", fg="black")
-        self.radio2 = tk.Radiobutton(self.fieldset1, text="Great", variable=self.radio_var, value="5", fg="black")
-        self.radio3 = tk.Radiobutton(self.fieldset1, text="Good", variable=self.radio_var, value="4", fg="black")
-        self.radio4 = tk.Radiobutton(self.fieldset1, text="Okay", variable=self.radio_var, value="3", fg="black")
-        self.radio5 = tk.Radiobutton(self.fieldset1, text="Could be better", variable=self.radio_var, value="2",
+        self.radio1 = tk.Radiobutton(self.mood_frame, text="Amazing", variable=self.radio_var, value="6", fg="black")
+        self.radio2 = tk.Radiobutton(self.mood_frame, text="Great", variable=self.radio_var, value="5", fg="black")
+        self.radio3 = tk.Radiobutton(self.mood_frame, text="Good", variable=self.radio_var, value="4", fg="black")
+        self.radio4 = tk.Radiobutton(self.mood_frame, text="Okay", variable=self.radio_var, value="3", fg="black")
+        self.radio5 = tk.Radiobutton(self.mood_frame, text="Could be better", variable=self.radio_var, value="2",
                                      fg="black")
-        self.radio6 = tk.Radiobutton(self.fieldset1, text="Terrible", variable=self.radio_var, value="1", fg="black")
+        self.radio6 = tk.Radiobutton(self.mood_frame, text="Terrible", variable=self.radio_var, value="1", fg="black")
 
         # Grid the radio buttons
         self.radio1.grid(row=2, column=0)
@@ -138,17 +168,17 @@ class Patient:
         self.radio6.grid(row=2, column=5)
 
         # Mood comment
-        self.mood_comment_frame = tk.Frame(self.fieldset1)
+        self.mood_comment_frame = tk.Frame(self.mood_frame)
         self.mood_comment_frame.grid(row=3, column=0, columnspan=6, pady=10)
 
-        self.mood_comment_label = tk.Label(self.fieldset1, text="(Optional) Mood comment:", font=("Arial", 12))
+        self.mood_comment_label = tk.Label(self.mood_frame, text="(Optional) Mood comment:", font=("Arial", 12))
         self.mood_comment_label.grid(row=4, column=0, padx=10, columnspan=6)
 
-        self.mood_comment_text = tk.Text(self.fieldset1, height=2, width=40)
+        self.mood_comment_text = tk.Text(self.mood_frame, height=2, width=40)
         self.mood_comment_text.grid(row=5, column=0, padx=10, pady=5, columnspan=6)
 
         # Create a submit button to process the selected mood
-        self.submit_button = tk.Button(self.fieldset1, text="Submit Mood", command=self.submit_mood)
+        self.submit_button = tk.Button(self.mood_frame, text="Submit Mood", command=self.submit_mood)
         self.submit_button.grid(row=6, column=0, columnspan=6, pady=10)
 
         self.apply_initial_colors()
@@ -156,7 +186,7 @@ class Patient:
         self.disable_mood()
 
     def cleanmoodwindow(self):
-        for widget in self.fieldset1.winfo_children():
+        for widget in self.mood_frame.winfo_children():
             widget.destroy()
 
     def resetmood(self):
@@ -173,7 +203,7 @@ class Patient:
             print(db.getRelation('MoodEntry'))
             # db.close()
             self.cleanmoodwindow()
-            self.showmoodselection(self.fieldset1)
+            self.showmoodselection(self.mood_frame)
 
 
     def moodlevelcheck(self):
@@ -202,19 +232,19 @@ class Patient:
                 print("message sent")
                 
     def printlastmood(self):
-        self.fieldset1.grid_rowconfigure(0, weight=1)  # Ensure row expands
-        self.fieldset1.grid_columnconfigure(0, weight=1)
+        self.mood_frame.grid_rowconfigure(0, weight=1)  # Ensure row expands
+        self.mood_frame.grid_columnconfigure(0, weight=1)
         # db = Database()
         usermoodlog = db.getRelation('MoodEntry').getRowsWhereEqual('patient_id', self.current_user_id)
         self.lastmood = usermoodlog[-1][2]
         self.lastcomment = usermoodlog[-1][3]
-        self.update_title = tk.Label(self.fieldset1, text=f"Congratulations! You have recorded your mood today",
+        self.update_title = tk.Label(self.mood_frame, text=f"Congratulations! You have recorded your mood today",
                                     font=("Arial", 18, "bold"), anchor="n")
-        self.update_text = tk.Label(self.fieldset1, text=f"You mood score: {self.lastmood}\n"
+        self.update_text = tk.Label(self.mood_frame, text=f"You mood score: {self.lastmood}\n"
                                                          f"You Comment: {self.lastcomment}\n",
 
                                     font=("Arial", 14,))
-        self.update_button = tk.Button(self.fieldset1, text="Delete and Redo", command=lambda: self.resetmood())
+        self.update_button = tk.Button(self.mood_frame, text="Delete and Redo", command=lambda: self.resetmood())
         self.update_title.grid(row=0, column=0, stick="nsew")
         self.update_text.grid(row=1, column=0, stick="nsew")
         self.update_button.grid(row=2, column=0, pady=5)
@@ -248,7 +278,13 @@ class Patient:
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while disabling widgets: {e}")
 
-
+    def disable_mhwp_widgets(self):
+        ###disable mhwp functions if user is not allocated yet
+        if not self.allocated:
+            self.ratemhwp.config(state=tk.DISABLED)
+            self.openchat.config(state=tk.DISABLED)
+            self.appointments.config(state=tk.DISABLED)
+            
     def disable_mood(self):
         #Remove some functionalities for disabled users
         try:
