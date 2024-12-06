@@ -49,7 +49,7 @@ class Patient:
         self.main_frame.grid(row=1, column=0, padx=10, pady=10) 
 
         # MOOD FRAME
-        self.mood_frame = tk.LabelFrame(self.main_frame, text="How are you feeling today?", labelanchor="n",font=("Arial", 12), padx=10, pady=10,width=550,height=200)
+        self.mood_frame = tk.LabelFrame(self.main_frame, text="How are you feeling today?", labelanchor="n",font=("Arial", 12), padx=10, pady=10,width=500,height=200)
         self.mood_frame.grid(row=0, column=0, padx=10, pady=10)
         self.mood_frame.grid_propagate(False)
 
@@ -144,8 +144,6 @@ class Patient:
         self.root.mainloop()
 
     def showmoodselection(self,fieldset1):
-        self.exercise_frame = tk.Frame(self.root)
-        self.exercise_frame.grid(row=4, column=2, columnspan=5, padx = 10, pady=10)
         self.radio_var = tk.IntVar()
         self.radio_var.set("")  # Default to no selection
         # Create the mood selection options
@@ -153,17 +151,17 @@ class Patient:
         self.radio2 = tk.Radiobutton(self.mood_frame, text="Great", variable=self.radio_var, value="5", fg="black")
         self.radio3 = tk.Radiobutton(self.mood_frame, text="Good", variable=self.radio_var, value="4", fg="black")
         self.radio4 = tk.Radiobutton(self.mood_frame, text="Okay", variable=self.radio_var, value="3", fg="black")
-        self.radio5 = tk.Radiobutton(self.mood_frame, text="Could be better", variable=self.radio_var, value="2",
+        self.radio5 = tk.Radiobutton(self.mood_frame, text="Bad", variable=self.radio_var, value="2",
                                      fg="black")
         self.radio6 = tk.Radiobutton(self.mood_frame, text="Terrible", variable=self.radio_var, value="1", fg="black")
 
         # Grid the radio buttons
-        self.radio1.grid(row=2, column=0, padx = 5)
-        self.radio2.grid(row=2, column=1, padx = 5)
-        self.radio3.grid(row=2, column=2, padx = 5)
-        self.radio4.grid(row=2, column=3, padx = 5)
-        self.radio5.grid(row=2, column=4, padx = 5)
-        self.radio6.grid(row=2, column=5, padx = 5)
+        self.radio1.grid(row=2, column=0, padx = 7)
+        self.radio2.grid(row=2, column=1, padx = 7)
+        self.radio3.grid(row=2, column=2, padx = 7)
+        self.radio4.grid(row=2, column=3, padx = 7)
+        self.radio5.grid(row=2, column=4, padx = 7)
+        self.radio6.grid(row=2, column=5, padx = 7)
 
         # Mood comment
         self.mood_comment_frame = tk.Frame(self.mood_frame)
