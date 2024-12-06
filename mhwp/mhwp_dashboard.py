@@ -22,7 +22,6 @@ global global_db
 db=global_db
 
 def open_review():
-    # Create the main application window
     sess = Session()
     sess.open()
     userID = sess.getId()
@@ -40,7 +39,6 @@ def open_review():
     tree.heading("Review", text="Review")
     tree.heading("Rate", text="Rate")
 
-    # Define column widths
     tree.column("Time", width=100, anchor="center")
     tree.column("Review", width=200, anchor="w")
     tree.column("Rate", width=50, anchor="center")
@@ -50,50 +48,38 @@ def open_review():
     for row in reviews:
         tree.insert("", "end", values=(row[5].strftime("%Y-%m-%d"),row[4],row[3]))
 
-    # Add a scrollbar
     scrollbar = ttk.Scrollbar(root, orient="vertical", command=tree.yview)
     scrollbar.pack(side="right", fill="y")
     tree.configure(yscrollcommand=scrollbar.set)
 
-    # Run the main Tkinter event loop
     root.mainloop()
 
 class MHWPDashboard:
     def __init__(self):
-        # Initialize session and database
         self.db=db
         self.sess = Session()
         self.sess.open()
         self.userID = self.sess.getId()
-        # Initialize Tkinter root
         self.root = tk.Tk()
         self.root.title("MHWP Dashboard")
 
-        # Configure main grid
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
-        # Fetch initial data
         self.patient_data = []
         self.message_counter = 0
         self.my_rating_score = "NA"
         self.fetch_data()
 
-        # Build the GUI
         self.create_widgets()
 
-        # Set up periodic refresh
         self.root.after(1000, self.refresh)
 
-        # Handle window close
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # Start the Tkinter main loop
         self.root.mainloop()
 
     def fetch_data(self):
-        """Fetch all data needed for the dashboard."""
-        # Fetch patient and notification data
         patient_list = self.db.getRelation('Allocation').getRowsWhereEqual('mhwp_id', self.userID)
         patient_ids = [i[2] for i in patient_list]
 
@@ -116,15 +102,12 @@ class MHWPDashboard:
         self.message_counter = sum(1 for n in notifications if n[1] == self.userID)
 
     def create_widgets(self):
-        """Create all widgets in the GUI."""
-        # Title frame
         title_frame = tk.Frame(self.root, width=600)
         title_frame.grid(row=0, column=0, sticky="nsew")
         self.user = self.db.getRelation("User").getRowsWhereEqual("user_id", self.userID)[0]
         self.name = f"{self.user[User.FNAME]}. {self.user[User.LNAME]}" if self.user[User.FNAME] == "Dr" else f"{self.user[User.FNAME]} {self.user[User.LNAME]}"
         tk.Label(title_frame, text=f"Welcome Back, {self.name}!", font=("Arial", 24, "bold")).pack(pady=10)
 
-        # Main frame
         main_frame = tk.Frame(self.root, width=600)
         main_frame.grid(row=1, column=0, sticky="nsew")
         main_frame.grid_columnconfigure(0, weight=0, uniform="group")  # Left fieldset
@@ -190,7 +173,6 @@ class MHWPDashboard:
         logout_button = tk.Button(self.root, text="Logout", command=self.logout, width=15)
         logout_button.grid(row=2, column=0, pady=10)  
     def on_row_selected(self, event):
-        """Handle double-click on a row in the treeview."""
         selected_item = self.tree.selection()[0]
         item_values = self.tree.item(selected_item, "values")
         display_id = int(item_values[0])
@@ -203,9 +185,6 @@ class MHWPDashboard:
         subprocess.Popen(["python3", "login/login.py"])  # Open the login screen
 
     def refresh(self):
-        # print(self.db._is_closed)
-        # if self.db._is_closed:
-        #     self.db=Database()
         print("Refreshing")
         notifications = self.db.getRelation('Notification').getRowsWhereEqual('new', True)
         self.message_counter = sum(1 for n in notifications if n[1] == self.userID)

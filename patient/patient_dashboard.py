@@ -27,30 +27,20 @@ def openpatientdashboard():
             messagecounter+=1
 
     def clickbutton():
-        # label3.config(text="You have 0 new massage",fg="black")
         opennotification()
-
-
 
     root = tk.Tk()
     root.title("Patient Dashboard")
 
-    # Configure main grid
-
     winwidth = 500
     winheight = 300
 
-    # Set window size to match the canvas width
-    root.geometry(f"{winwidth+50}x{winheight+600}")  # Add extra height and width for padding
+    root.geometry(f"{winwidth+50}x{winheight+600}")
 
-    # Create main frame
-    # Main frame configuration
     main_frame = tk.Frame(root)
     main_frame.grid(row=0, column=0, sticky="nsew")
     main_frame.grid_columnconfigure(0, weight=1)  # Left fieldset
-    # main_frame.grid_columnconfigure(1, weight=1)
 
-    # Left fieldset
     fieldset1 = tk.LabelFrame(main_frame, text="My exercises", padx=10, pady=10,labelanchor="n")
     fieldset1.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
 
@@ -78,15 +68,13 @@ def openpatientdashboard():
     start_angle = 0
 
     for i, value in enumerate(exercisedata):
-        # Calculate the extent of the slice
         extent = (value / total) * 360
-        # Draw the slice
         execanv.create_arc(x-radius, y - radius, x + radius, y + radius,start=start_angle, extent=extent,fill=colors[i], outline="black")
         start_angle += extent
     execanv.grid(row=0,column=0)
 
-    box_size = 10  # Size of the color box
-    padding = 5  # Spacing between items
+    box_size = 10
+    padding = 5
     legendx=canwidth-130
     legendy=20
     for i, (label, color) in enumerate(zip(labels, colors)):
@@ -136,17 +124,8 @@ def openpatientdashboard():
             appcount+=1
     label3 = tk.Label(fieldset2, text=f"Appointments: {appcount}")
     label3.grid(row=2, column=0, sticky="w")
-    # label3 = tk.Label(fieldset2, text=f"My Rating: {myratingscore}")
-    # label3.grid(row=2, column=0, sticky="w")
-    # btn = Button(fieldset2, text="View my review", command=lambda: create_treeview_window(),width=15)
-    # btn.grid(row=3, column=0, sticky="w")
-
-    # Treeview within its own frame
 
 
-
-    # tree_frame = tk.Frame(main_frame)
-    # tree_frame.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
     tree_frame = tk.LabelFrame(main_frame, text="Mood Tracker", padx=10, pady=10, labelanchor="n")
     tree_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
@@ -202,50 +181,36 @@ def openpatientdashboard():
         dates.append(i[0])
         values.append(i[1])
 
-    # Create a Canvas to draw the chart
 
     barcanv = Canvas(fieldset1, width=250, height=150, bg="white")
     barcanv.grid(row=0, column=1, columnspan=2, pady=10)
-    # Draw the bar chart
     def draw_bar_chart():
-        # Dimensions
         chart_width = 200
         chart_height = 90
         padding = 30
         bar_width = 20
         max_value = max(values)
 
-        # Calculate scaling factor
         scale = chart_height / max_value if max_value > 0 else 1
 
-        # Draw X-axis and Y-axis
-
-
-        # Draw bars and labels
         for i in range(num_bars):
             x0 = padding + i * (bar_width + 10)
             y0 = chart_height + padding - (values[i] * scale)
             x1 = x0 + bar_width
             y1 = chart_height + padding
 
-            # Draw the bar
             barcanv.create_rectangle(x0, y0, x1, y1, fill="lightblue", outline="lightblue")
-
-            # Add text labels (value)
             barcanv.create_text(
                 (x0 + x1) / 2, y0 - 10, text=str(values[i]), anchor="s", font=("Arial", 8)
             )
 
-            # Add text labels (date)
             barcanv.create_text(
                 (x0 + x1) / 2, chart_height + padding + 15, text=dates[i], anchor="n", font=("Arial", 5)
             )
         barcanv.create_line(
             padding, chart_height + padding, chart_width + padding, chart_height + padding, width=1
         )
-        # barcanv.create_line(
-        #     padding, padding, padding, chart_height + padding, width=1
-        # )
+
 
     draw_bar_chart()
 
@@ -256,5 +221,5 @@ def openpatientdashboard():
     root.mainloop()
 
 
-# if __name__ == "__main__":
-#     openpatientdashboard()
+if __name__ == "__main__":
+    openpatientdashboard()

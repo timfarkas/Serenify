@@ -50,14 +50,6 @@ def openrating():
             db.insert_review_entry(newreviewentry)
             messagebox.showinfo("Review created","A new review has been successfully created.")
 
-
-        # if user_input.strip():  # Check if the input is not empty
-        #     print(f"User Review: {user_input}")  # Display the input (you can save or process it)
-        #     input_box.delete(0, tk.END)  # Clear the entry box
-        # else:
-        #     print("No input provided!")
-
-    # H1 equivalent
     h1_label = tk.Label(root, text="MHWP Review", font=("Arial", 24, "bold"),width=20)
     h1_label.pack()
 
@@ -70,11 +62,6 @@ def openrating():
     spe_label.grid(row=1, column=0)
     ema_label = tk.Label(fieldset, text="Email: "+email)
     ema_label.grid(row=2, column=0)
-    #
-    # age_label = tk.Label(text="Email:")
-    # age_label.grid(row=2, column=0)
-    # age_entry = tk.Entry()
-    # age_entry.grid(row=2, column=1)
 
     fieldset2 = tk.LabelFrame(root, text="Rating on MHWP (Scale 1-5):", padx=10, pady=10)
     fieldset2.pack(padx=10, pady=10)
@@ -95,5 +82,5 @@ def openrating():
     root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
 
-# if __name__ == "__main__":
-#     openrating()
+if __name__ == "__main__":
+    openrating()

@@ -36,7 +36,6 @@ def openforsum():
             self.tree.column("Post Date", width=50, anchor="center") # Hide the content column
             self.tree.pack(fill="both", expand=True, pady=(10, 0))
 
-            # Text widget to display selected content
             self.text_frame = tk.Frame(root)
             self.text_frame.pack(fill="both", expand=False, pady=10)
 
@@ -46,7 +45,6 @@ def openforsum():
             self.text_box = tk.Text(self.text_frame, wrap="word", height=8)
             self.text_box.pack(fill="both", expand=True, padx=5, pady=5)
 
-            # Input area
             self.input_frame1 = tk.Frame(root)
             self.input_frame1.pack(fill="x", pady=5)
             self.input_label = tk.Label(self.input_frame1, text="Enter Topic:",width=10)
@@ -60,7 +58,7 @@ def openforsum():
             self.input_label_content.pack(side="left", padx=5)
             self.content_entry = tk.Text(self.input_frame2, width=60,height=5)
             self.content_entry.pack(side="left", padx=5)
-            # Sub-frame for buttons
+
             self.input_frame3 = tk.Frame(root)
             self.input_frame3.pack(fill="x", pady=5)
             self.button_frame = tk.Frame(self.input_frame3)
@@ -69,15 +67,13 @@ def openforsum():
             self.add_thread_btn.pack(side="right", pady=2)
             self.reply_btn = tk.Button(self.button_frame, text="Reply", command=self.add_reply,width=10)
             self.reply_btn.pack(side="right", pady=2)
-            # Populate the forum with example threads
+
             self.populate_forum()
             self.tree.tag_configure("me", foreground="green")  # For the current user
             self.tree.tag_configure("other", foreground="black")  # For others
-            # Bind selection event to display content in the text box
             self.tree.bind("<<TreeviewSelect>>", self.display_selected_content)
 
         def populate_forum(self):
-            """Add example data to the forum."""
             forumdata = db.getRelation('Forum')
             parent_threads = forumdata.getRowsWhereEqual('parent_id', 0)
             parent_threads.sort(key = lambda x:x[5],reverse=True)
@@ -96,14 +92,7 @@ def openforsum():
                     # print(userName)
                     self.tree.insert(thread, "end", text=child_threads[j][2],values=(("You" if user_id==userID else userName), child_threads[j][3], child_threads[j][5].strftime("%Y-%m-%d %H:%M"),parent_threads[i][0]),tags=("me" if user_id==userID else "other"))
 
-            # for i in parents:
-            #     thread = self.tree.insert("", "end", text=i[2],values=(i[4],i[3],i[5]))
-            #     for j in childs:
-            #         if j[1] == i[0]:
-            #             self.tree.insert(thread, "end", text=j[2],
-            #                              values=(j[4], j[3],j[5]))
         def add_thread(self):
-            """Add a new thread to the forum."""
             topic = self.topic_entry.get().strip()
             content = self.content_entry.get("1.0","end").strip()
             time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -126,7 +115,6 @@ def openforsum():
                 messagebox.showwarning("Empty Input", "Please enter both a topic and content.")
 
         def add_reply(self):
-            """Add a reply to the selected thread."""
             selected_item = self.tree.selection()
             time = datetime.now().strftime("%Y-%m-%d %H:%M")
             if not selected_item:
@@ -144,7 +132,6 @@ def openforsum():
                 parent_thread = selected_item[0]
             parent_id = self.tree.item(parent_thread, "values")[3]
 
-            # Add the reply to the parent thread
             author = self.tree.item(selected_item[0], "values")[0]
             replytopic = self.topic_entry.get().strip()
             replycontent = self.content_entry.get("1.0","end").strip()
@@ -164,17 +151,15 @@ def openforsum():
                 messagebox.showwarning("Empty Input", "Please enter a reply.")
 
         def display_selected_content(self, event):
-            """Display the content of the selected thread or reply in the text box."""
             selected_item = self.tree.selection()
             if not selected_item:
                 return
             title = self.tree.item(selected_item[0])["text"]
-            content = self.tree.item(selected_item[0], "values")[1]  # Get the content from values
+            content = self.tree.item(selected_item[0], "values")[1]
             author = self.tree.item(selected_item[0], "values")[0]
             time = self.tree.item(selected_item[0], "values")[2]
 
-            # Display the content and author in the text box
-            self.text_box.delete("1.0", tk.END)  # Clear the text box
+            self.text_box.delete("1.0", tk.END)
             self.text_box.insert(tk.END, f"[Title] {title}\n")
             self.text_box.insert(tk.END, f"[Author] {author}   {time} \n{content}")
 
@@ -186,4 +171,3 @@ def openforsum():
     root.mainloop()
 if __name__ == "__main__":
     openforsum()
-#note: need to tell which user is logged in when show user name

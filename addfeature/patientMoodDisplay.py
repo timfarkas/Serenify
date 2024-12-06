@@ -15,10 +15,7 @@ global global_db
 db=global_db
 
 def startchat():
-
     startchatroom()
-    """This function is triggered by the button."""
-
 
 def displaymood(patientID):
     sess.open()
