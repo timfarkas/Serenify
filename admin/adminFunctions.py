@@ -959,8 +959,6 @@ class AdminMainPage(tk.Tk):
         from main import App
         self.destroy()
         app = App()
-        root.mainloop()
-
 
 if __name__ == "__main__":
     
