@@ -28,16 +28,12 @@ class LoginPage:
         h1_label.pack()
 
         # Radio buttons for role selection
-        self.user_role = tk.StringVar(value="admin")  # Default radio button is "admin"
+        self.user_role = tk.StringVar(value="Admin")  # Default radio button is "admin"
         self.role_label = tk.Label(root, text="Please select your user type:")
         self.role_label.pack()
         roles = ["Admin", "MHWP", "Patient"]
         for role in roles:
-            tk.Radiobutton(root, text=role.capitalize(), variable=self.user_role, value=role).pack()
-
-        # New patient button
-        self.new_button = tk.Button(root, text="New Patient", command=self.newPatientPage)
-        self.new_button.pack()
+            tk.Radiobutton(root, text=role, variable=self.user_role, value=role).pack()
 
         # Username and password fields
         self.username_label = tk.Label(root, text="Username:")
@@ -53,8 +49,15 @@ class LoginPage:
         self.login_button = tk.Button(root, text="Login", command=self.handle_login)
         self.login_button.pack()
 
+        spacer = tk.Label(root, text="", height=1)
+        spacer.pack()
+
+        # New patient button
+        self.new_button = tk.Button(root, text="Sign up as new patient", command=self.newPatientPage)
+        self.new_button.pack()
+
         # Reset password button
-        self.reset_button = tk.Button(root, text="Forgotten your password?", command=self.passwordResetPage)
+        self.reset_button = tk.Button(root, text="Forgot password?", command=self.passwordResetPage)
         self.reset_button.pack()
 
     def handle_login(self):

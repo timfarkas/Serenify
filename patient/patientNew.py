@@ -10,7 +10,7 @@ from database.entities import Patient
 class New_patient():
     def __init__(self, root):
         self.root = root
-        self.root.title("New Patient Submission")
+        self.root.title("Sign up as new patient")
         # self.root.geometry("400x600") # Used if we want to set a particular width and height for the page
 
         self.db = Database(verbose=True)
@@ -18,7 +18,7 @@ class New_patient():
         h1_label = tk.Label(self.root, text="Sign up", font=("Arial", 24, "bold"))
         h1_label.grid(row=0, column=0, columnspan=2, pady=(10, 5), sticky="nsew")
         # Subheading
-        h2_label = tk.Label(self.root, text="Welcome! Please fill out the below:", font=("Arial", 18, "bold"))
+        h2_label = tk.Label(self.root, text="Welcome! Please fill out the details below:", font=("Arial", 18, "bold"))
         h2_label.grid(row=1, column=0, columnspan=2, pady=(0, 10))
 
         # Personal information fieldset
@@ -41,12 +41,12 @@ class New_patient():
         self.email_entry.grid(row=5, column=1, padx=5, pady=5)
 
         # ICE email information collected
-        tk.Label(fieldset, text="ICE Email:").grid(row=7, column=0, sticky="w", padx=5, pady=5)
+        tk.Label(fieldset, text="ICE Email (Optional):").grid(row=7, column=0, sticky="w", padx=5, pady=5)
         self.ice_entry = tk.Entry(fieldset)
         self.ice_entry.grid(row=7, column=1, padx=5, pady=5)
 
         # ICE name information collected
-        tk.Label(fieldset, text="ICE Name:").grid(row=8, column=0, sticky="w", padx=5, pady=5)
+        tk.Label(fieldset, text="ICE Name (Optional):").grid(row=8, column=0, sticky="w", padx=5, pady=5)
         self.iceName_entry = tk.Entry(fieldset)
         self.iceName_entry.grid(row=8, column=1, padx=5, pady=5)
 
@@ -65,7 +65,7 @@ class New_patient():
         complete_button.grid(row=3, column=0, columnspan=2, pady=(10, 5))
 
         # Login button
-        login_button = tk.Button(self.root, text="Login", command=self.backToLogin)
+        login_button = tk.Button(self.root, text="Return to login page", command=self.backToLogin)
         login_button.grid(row=4, column=0, columnspan=2, pady=(0, 10))
 
     
@@ -81,22 +81,29 @@ class New_patient():
         password = self.password_entry.get()
 
         # Validate inputs to ensure required fields are filled
-        if not fName or not lName or not email:
+        if not fName or not lName or not email or not username or not password:
             tk.messagebox.showerror("Error", "Please fill out all required fields.")
             return
-        
-        attributeList = (username, email, password, fName, lName, 'Patient', emergency_contact_email, emergency_contact_name, None, False)
-        
+
         try:
-            # Try to perform the update
+            patient = Patient(username=username,email=email,password=password,fName=fName,lName=lName,emergency_contact_email=emergency_contact_email,emergency_contact_name=emergency_contact_name,is_disabled=False) 
             db = Database()
-            user = db.getRelation("User")
-            user.insertRow(attributeList=list(attributeList))
-            db.close() # Save the database
+            
+            ### check if patient username or email already exist
+            users=db.getRelation("User")
+            if len(users.getWhereEqual('username',username).getWhereEqual('email',email))>0:
+                raise Exception("Username or e-mail already exist!")
+            
+            ## if not, proceed to add patient to DB and save by closing 
+            db.insert_patient(patient)
+            db.close() 
+
             messagebox.showinfo(
-            "Information Updated",
-            'Information updated successfully')
-        except (IndexError, ValueError, TypeError) as e:
+            "Success!",
+            'Successfully signed up! Please login now.')
+
+            self.backToLogin()
+        except Exception as e:
             # Handle specific exceptions raised by editRow
             messagebox.showerror("Update Failed", f"Error adding new patient: {str(e)}")
 
