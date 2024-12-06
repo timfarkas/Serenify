@@ -3,7 +3,7 @@ import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-import subprocess # This allows us to open other files
+import subprocess 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.entities import Allocation,User,Patient, JournalEntry, MoodEntry,Notification
 from addfeature.chatroom import startchatroom
@@ -21,13 +21,9 @@ import pandas as pd
 from addfeature.globaldb import global_db
 db=global_db
 
-
+# LOADING DUMMY DATA
 # from database.initDummyData import initDummyDatabase
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-#
-
-##### DB INIT FOR TESTING
-### Initialize the database with dummy data and save it
+# ## Initialize the database with dummy data and save it
 # db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
 # initDummyDatabase(db, printOut=True)
 # db.close()
@@ -41,7 +37,7 @@ class Patient:
         self.current_user_id = self.session.getId()
         self.root = tk.Tk()
         self.root.title("Patient")
-        self.root.geometry("600x600")
+        self.root.geometry("600x650")
 
         # db = Database()
         self.patientName = db.getRelation("User").getRowsWhereEqual("user_id",self.current_user_id)[0][4]
@@ -53,7 +49,7 @@ class Patient:
         self.main_frame.grid(row=1, column=0, padx=10, pady=10) 
 
         # MOOD FRAME
-        self.mood_frame = tk.LabelFrame(self.main_frame, text="How are you feeling today?", labelanchor="n",font=("Arial", 12), padx=10, pady=10,width=550,height=200)
+        self.mood_frame = tk.LabelFrame(self.main_frame, text="How are you feeling today?", labelanchor="n",font=("Arial", 12), padx=10, pady=10,width=500,height=200)
         self.mood_frame.grid(row=0, column=0, padx=10, pady=10)
         self.mood_frame.grid_propagate(False)
 
@@ -82,8 +78,8 @@ class Patient:
             mhwp_name = f"{mhwp_info[0][User.FNAME]} {mhwp_info[0][User.LNAME]}"  
             self.mhwp_text = f"Your MHWP: {mhwp_name}"
 
-        mhwp_frame = tk.LabelFrame(self.main_frame,text=self.mhwp_text,labelanchor="n",font=("Arial", 12), width=550)
-        mhwp_frame.grid(row=1, column=0, pady=20)
+        mhwp_frame = tk.LabelFrame(self.main_frame,text=self.mhwp_text,labelanchor="n",font=("Arial", 12), padx=10, pady=10)
+        mhwp_frame.grid(row=1, column=0, padx=20, pady=20)
         
         self.ratemhwp = tk.Button(mhwp_frame, text="Rate", command=lambda: openrating(), padx=5, width=12)
         self.ratemhwp.grid(row=2, column=2)
@@ -148,8 +144,6 @@ class Patient:
         self.root.mainloop()
 
     def showmoodselection(self,fieldset1):
-        self.exercise_frame = tk.Frame(self.root)
-        self.exercise_frame.grid(row=4, column=2, columnspan=6, pady=20)
         self.radio_var = tk.IntVar()
         self.radio_var.set("")  # Default to no selection
         # Create the mood selection options
@@ -157,17 +151,17 @@ class Patient:
         self.radio2 = tk.Radiobutton(self.mood_frame, text="Great", variable=self.radio_var, value="5", fg="black")
         self.radio3 = tk.Radiobutton(self.mood_frame, text="Good", variable=self.radio_var, value="4", fg="black")
         self.radio4 = tk.Radiobutton(self.mood_frame, text="Okay", variable=self.radio_var, value="3", fg="black")
-        self.radio5 = tk.Radiobutton(self.mood_frame, text="Could be better", variable=self.radio_var, value="2",
+        self.radio5 = tk.Radiobutton(self.mood_frame, text="Bad", variable=self.radio_var, value="2",
                                      fg="black")
         self.radio6 = tk.Radiobutton(self.mood_frame, text="Terrible", variable=self.radio_var, value="1", fg="black")
 
         # Grid the radio buttons
-        self.radio1.grid(row=2, column=0)
-        self.radio2.grid(row=2, column=1)
-        self.radio3.grid(row=2, column=2)
-        self.radio4.grid(row=2, column=3)
-        self.radio5.grid(row=2, column=4)
-        self.radio6.grid(row=2, column=5)
+        self.radio1.grid(row=2, column=0, padx = 7)
+        self.radio2.grid(row=2, column=1, padx = 7)
+        self.radio3.grid(row=2, column=2, padx = 7)
+        self.radio4.grid(row=2, column=3, padx = 7)
+        self.radio5.grid(row=2, column=4, padx = 7)
+        self.radio6.grid(row=2, column=5, padx = 7)
 
         # Mood comment
         self.mood_comment_frame = tk.Frame(self.mood_frame)
@@ -274,7 +268,7 @@ class Patient:
                 self.openchat.config(state=tk.DISABLED)
                 self.openforum.config(state=tk.DISABLED)
                 self.messagebox.config(state=tk.DISABLED)
-                self.opendashboard.config(state=tk.DISABLED)
+                # self.opendashboard.config(state=tk.DISABLED) #disabled user can see statistics dashnoard
 
                 # Show message that the user is disabled
                 messagebox.showinfo("Access Restricted", "Your account is disabled. You cannot make changes or submit new information.")
@@ -726,12 +720,3 @@ class Patient:
 if __name__ == "__main__":
     Patient()
 
-# #### DB OPENING
-# ## reopen database
-# db = Database()
-
-# #### DB QUERIES
-# ## get User relation (table) via db.getRelation(entityName)
-# print("Getting and printing relation 'User':")
-# userRelation = db.getRelation('User')
-# print(userRelation)
