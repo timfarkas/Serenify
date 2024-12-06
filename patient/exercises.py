@@ -163,7 +163,7 @@ class Exercises:
         self.root2 = tk.Tk()
         self.root2.title("Search")
         row = 1
-
+        print(searchresults)
         for exercises,link,category in searchresults:
             if row==9:
                 break

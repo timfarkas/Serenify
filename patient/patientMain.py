@@ -274,11 +274,107 @@ class Patient:
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while disabling widgets: {e}")
 
+    def exitUser(self):
+        db.close()
+        subprocess.Popen(["python3", "main.py"])
+        self.root.destroy()
+
+    def apply_initial_colors(self):
+        # Define color mapping based on mood values
+        color_mapping = {
+            6: "green",  # Amazing (Green)
+            5: "light green",  # Great (Light Green)
+            4: "yellow",  # Good (Yellow)
+            3: "orange",  # Okay (Orange)
+            2: "red",  # Could be better (Red)
+            1: "dark red",  # Terrible (Dark Red)
+        }
+
+        # Apply color to all radio buttons initially
+        self.radio1.config(bg=color_mapping[6])
+        self.radio2.config(bg=color_mapping[5])
+        self.radio3.config(bg=color_mapping[4])
+        self.radio4.config(bg=color_mapping[3])
+        self.radio5.config(bg=color_mapping[2])
+        self.radio6.config(bg=color_mapping[1])
+
+    def submit_mood(self):
+        # Get the selected mood
+        self.selected_mood = self.radio_var.get()
+        # Get the comment
+        mood_comment = self.mood_comment_text.get("1.0", "end-1c").strip()
+
+        if not self.selected_mood:
+            messagebox.showwarning("No Mood Selected", "Please select a mood before submitting.")
+            return
+        else:
+            mood_entry = MoodEntry(
+                moodentry_id=None,
+                patient_id=self.current_user_id,
+                moodscore=self.selected_mood,
+                comment=mood_comment,
+                timestamp=datetime.now()
+            )
+            db.insert_mood_entry(mood_entry)
+            self.mood_comment_text.delete("1.0", "end")
+            self.moodlevelcheck()
+
+        # Ask the user if they want to proceed to exercises
+        self.response = messagebox.askquestion(
+            title="Proceed to Exercises",
+            message="Thank you for submitting your mood.\nWould you like to view recommended exercises?"
+        )
+
+        # Handle the response
+        if self.response == 'yes':
+            self.show_recommended_exercises()
+
+        # Clear the content of `fieldset1` but keep the size
+        self.cleanmoodwindow()
+        self.printlastmood()
+
+    def show_recommended_exercises(self):
+        # Clear any existing exercise widgets
+        # for widget in self.exercise_frame.winfo_children():
+        #     widget.destroy()
+        self.root2= tk.Tk()
+        self.root2.title("Exercise Recommendations")
+        self.exercise_frame = tk.Frame(self.root2)
+        self.exercise_frame.grid(row=0, column=0, columnspan=6, pady=20)
+
+        # Based on the selected mood, show appropriate exercises
+        if self.selected_mood in [6, 5]:
+            exercise_text = "Recommended exercises for a positive mood:\n- Gratitude journaling\n- Mindful walk\n- You can also try some physical exercise and meditation!"
+        elif self.selected_mood in [4, 3]:
+            exercise_text = "Recommended exercises for moderate mood:\n- Meditation\n- Journaling\n- Breathing exercises\n- Calling a friend or a family member\n- Physical activity such as yoga or even just going on a walk"
+        elif self.selected_mood in [2, 1]:
+            exercise_text = "Recommended emergency exercises:\n- Calling emergency helpline\n- Scheduling a therapy session\n- If you would rather talk to someone you know, try calling a friend or a family member\n- Deep breathing and meditation\n- Physical activity and meditation can help as well!"
+        else:
+            exercise_text = "No exercises available."
+
+        # Display the exercise recommendations in the exercise frame
+        exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 16), justify="left")
+        exercises_label.pack()
+        back_button = tk.Button(self.exercise_frame, text="Go to Exercises", command=self.exercises,width=20)
+        back_button.pack(pady=10)
+        # Add a button to go back to mood selection
+        back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood,width=20)
+        back_button.pack(pady=10)
+
+    def back_to_mood(self):
+        self.root2.destroy()
+        # Clear any exercise-related content and show the mood selection again
+        # for widget in self.exercise_frame.winfo_children():
+        #     widget.destroy()
+        #
+        # self.title_label.config(text="Welcome back")
+        # self.submit_button.config(state=tk.NORMAL)
+
     def openjournal(self):
         # Create a new Toplevel window for the journal
         root3 = tk.Toplevel(self.root)
         root3.title("Journal")  # Set the title of the journal window
-        root3.geometry("600x500")  # Set a fixed size for the window
+        root3.geometry("650x500")  # Set a fixed size for the window
 
         # Journaling Section Frame
         self.journal_frame = tk.Frame(root3, padx=10, pady=10)
@@ -313,14 +409,6 @@ class Patient:
             self.journal_frame, text="Search", command=self.search_journal_entries
         )
         self.search_button.grid(row=2, column=1, padx=10, pady=5, sticky="w")
-
-        # View All Entries Button
-        self.view_entries_button = tk.Button(
-            self.journal_frame,
-            text="View All Journal Entries",
-            command=self.view_all_journal_entries,
-        )
-        self.view_entries_button.grid(row=3, column=1, padx=10, pady=5, sticky="w")
 
         # Treeview Section Frame
         self.tree_frame = tk.Frame(root3, padx=10, pady=10)
@@ -361,12 +449,17 @@ class Patient:
 
         # Reload the data into the Treeview
         self.load_journal_entries()
+
     def load_journal_entries(self):
-        """Load journal entries into the Treeview."""
+        """Load all journal entries into the Treeview."""
+        # Clear the Treeview
+        for item in self.journal_tree.get_children():
+            self.journal_tree.delete(item)
+
         # Fetch journal entries from the database
         journal_entries = db.getRelation("JournalEntry").getRowsWhereEqual("patient_id", self.current_user_id)
 
-        # Insert entries into the Treeview
+        # Insert all entries into the Treeview
         for entry in journal_entries:
             self.journal_tree.insert("", "end", values=(entry[2][:50], entry[3].strftime("%Y-%m-%d %H:%M")))
 
@@ -400,6 +493,7 @@ class Patient:
 
             close_button = tk.Button(popup, text="Close", command=popup.destroy)
             close_button.pack(pady=10)
+
     def exitUser(self):
         db.close()
         subprocess.Popen(["python3", "main.py"])
@@ -515,25 +609,32 @@ class Patient:
         self.refresh_treeview()
 
     def search_journal_entries(self):
-        # Get search term and search the journal entries
+        """Search for journal entries and display matching results in the Treeview."""
         search_term = self.search_entry.get().strip().lower()
 
+        # Clear the Treeview
+        for item in self.journal_tree.get_children():
+            self.journal_tree.delete(item)
+
         if search_term:
-            # Fetch journal entries
-            journal_entries = db.getRelation("JournalEntry")
-            filtered_rows = journal_entries.getRowsWhereEqual('patient_id', self.current_user_id)
+          
+            # Fetch all journal entries
+            journal_entries = db.getRelation("JournalEntry").getRowsWhereEqual("patient_id", self.current_user_id)
+            # journal_entries = db.getRelation("JournalEntry")
+            filtered_rows = journal_entries
             self.journal_df = pd.DataFrame(filtered_rows)
 
-            # Search the DataFrame for the term
-            matching_entries = self.journal_df[self.journal_df[2].str.contains(search_term, case=False, na=False)]
+            # Filter entries that match the search term
+            matching_entries = [
+                entry for entry in journal_entries if search_term in entry[2].lower()
+            ]
 
-            if not matching_entries.empty:
-                results_text = "\n\n".join([f"Entry on {entry[3]}: {entry[2]}" for _, entry in matching_entries.iterrows()])
-                messagebox.showinfo("Search Results", f"Found matching entries:\n\n{results_text}")
-            else:
-                messagebox.showinfo("Search Results", "No matching entries found.")
+            # Reload the Treeview with matching entries
+            for entry in matching_entries:
+                self.journal_tree.insert("", "end", values=(entry[2][:50], entry[3].strftime("%Y-%m-%d %H:%M")))
         else:
-            messagebox.showwarning("Empty Search", "Please enter a term to search.")
+            # If no search term, reload all entries
+            self.load_journal_entries()
 
     def view_all_journal_entries(self):
         journal_entries = db.getRelation("JournalEntry")
@@ -556,6 +657,10 @@ class Patient:
         # Edit information
         db.close()
         self.root.destroy()
+        try:
+            self.root2.destroy()
+        except:
+            pass
         Exercises()
 
     def book(self):
