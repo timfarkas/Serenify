@@ -21,17 +21,9 @@ import pandas as pd
 from addfeature.globaldb import global_db
 db=global_db
 
-# LOADING DUMMY DATA
-# from database.initDummyData import initDummyDatabase
-# ## Initialize the database with dummy data and save it
-# db = Database(overwrite=True)  ### this causes the database to be initialized from scratch and overwrites any changes
-# initDummyDatabase(db, printOut=True)
-# db.close()
-
 
 class Patient:
     def __init__(self,user_id=None):
-        # Initialize the session instance
         self.session = Session()
         self.session.open()
         self.current_user_id = self.session.getId()
@@ -145,8 +137,7 @@ class Patient:
 
     def showmoodselection(self,fieldset1):
         self.radio_var = tk.IntVar()
-        self.radio_var.set("")  # Default to no selection
-        # Create the mood selection options
+        self.radio_var.set("")
         self.radio1 = tk.Radiobutton(self.mood_frame, text="Amazing", variable=self.radio_var, value="6", fg="black")
         self.radio2 = tk.Radiobutton(self.mood_frame, text="Great", variable=self.radio_var, value="5", fg="black")
         self.radio3 = tk.Radiobutton(self.mood_frame, text="Good", variable=self.radio_var, value="4", fg="black")
@@ -155,7 +146,6 @@ class Patient:
                                      fg="black")
         self.radio6 = tk.Radiobutton(self.mood_frame, text="Terrible", variable=self.radio_var, value="1", fg="black")
 
-        # Grid the radio buttons
         self.radio1.grid(row=2, column=0, padx = 7)
         self.radio2.grid(row=2, column=1, padx = 7)
         self.radio3.grid(row=2, column=2, padx = 7)
@@ -163,7 +153,6 @@ class Patient:
         self.radio5.grid(row=2, column=4, padx = 7)
         self.radio6.grid(row=2, column=5, padx = 7)
 
-        # Mood comment
         self.mood_comment_frame = tk.Frame(self.mood_frame)
         self.mood_comment_frame.grid(row=3, column=0, columnspan=6, pady=10)
 
@@ -173,12 +162,10 @@ class Patient:
         self.mood_comment_text = tk.Text(self.mood_frame, height=2, width=40)
         self.mood_comment_text.grid(row=5, column=0, padx=10, pady=5, columnspan=6)
 
-        # Create a submit button to process the selected mood
         self.submit_button = tk.Button(self.mood_frame, text="Submit Mood", command=self.submit_mood)
         self.submit_button.grid(row=6, column=0, columnspan=6, pady=10)
 
         self.apply_initial_colors()
-        # Turn off widgets if user is disabled
         self.disable_mood()
 
     def cleanmoodwindow(self):
@@ -192,11 +179,11 @@ class Patient:
             allmoods = db.getRelation('MoodEntry')
             usermood = allmoods.getRowsWhereEqual("patient_id", self.current_user_id)
             lastmoodindex = usermood[-1][0]
-            print(lastmoodindex)
+            # print(lastmoodindex)
             allmoods.data.drop(allmoods.data[allmoods.data['moodentry_id'] == lastmoodindex].index, inplace=True)
             allmoods.data.reset_index(drop=True, inplace=True)
             messagebox.showinfo("Success", f"Mood record deleted successfully.")
-            print(db.getRelation('MoodEntry'))
+            # print(db.getRelation('MoodEntry'))
             # db.close()
             self.cleanmoodwindow()
             self.showmoodselection(self.mood_frame)
@@ -207,14 +194,13 @@ class Patient:
         allmoods = db.getRelation('MoodEntry')
         usermood = allmoods.getRowsWhereEqual("patient_id", self.current_user_id)
         moodsum=0
-        print("checkmood")
+        # print("checkmood")
         if len(usermood)>=3:
-            print("have three")
             for i in range(-1,-4,-1):
                 moodsum+=usermood[i][2]
-                print(moodsum)
+                # print(moodsum)
             if (moodsum/3)<=2:
-                print("bad mood found")
+                # print("bad mood found")
                 matchingmhwp=db.getRelation('Allocation').getRowsWhereEqual('patient_id',self.current_user_id)
                 mhwp_id=matchingmhwp[0][3]
                 newnotify = Notification(
@@ -225,7 +211,7 @@ class Patient:
                     timestamp=datetime.now(),
                 )
                 db.insert_notification(newnotify)
-                print("message sent")
+                # print("message sent")
                 
     def printlastmood(self):
         self.mood_frame.grid_rowconfigure(0, weight=1)  # Ensure row expands
@@ -313,7 +299,6 @@ class Patient:
         self.root.destroy()
 
     def apply_initial_colors(self):
-        # Define color mapping based on mood values
         color_mapping = {
             6: "green",  # Amazing (Green)
             5: "light green",  # Great (Light Green)
@@ -322,8 +307,6 @@ class Patient:
             2: "red",  # Could be better (Red)
             1: "dark red",  # Terrible (Dark Red)
         }
-
-        # Apply color to all radio buttons initially
         self.radio1.config(bg=color_mapping[6])
         self.radio2.config(bg=color_mapping[5])
         self.radio3.config(bg=color_mapping[4])
@@ -332,9 +315,7 @@ class Patient:
         self.radio6.config(bg=color_mapping[1])
 
     def submit_mood(self):
-        # Get the selected mood
         self.selected_mood = self.radio_var.get()
-        # Get the comment
         mood_comment = self.mood_comment_text.get("1.0", "end-1c").strip()
 
         if not self.selected_mood:
@@ -352,24 +333,18 @@ class Patient:
             self.mood_comment_text.delete("1.0", "end")
             self.moodlevelcheck()
 
-        # Ask the user if they want to proceed to exercises
         self.response = messagebox.askquestion(
             title="Proceed to Exercises",
             message="Thank you for submitting your mood.\nWould you like to view recommended exercises?"
         )
 
-        # Handle the response
         if self.response == 'yes':
             self.show_recommended_exercises()
 
-        # Clear the content of `fieldset1` but keep the size
         self.cleanmoodwindow()
         self.printlastmood()
 
     def show_recommended_exercises(self):
-        # Clear any existing exercise widgets
-        # for widget in self.exercise_frame.winfo_children():
-        #     widget.destroy()
         self.root2= tk.Tk()
         self.root2.title("Exercise Recommendations")
         self.exercise_frame = tk.Frame(self.root2)
@@ -385,51 +360,36 @@ class Patient:
         else:
             exercise_text = "No exercises available."
 
-        # Display the exercise recommendations in the exercise frame
         exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 16), justify="left")
         exercises_label.pack()
         back_button = tk.Button(self.exercise_frame, text="Go to Exercises", command=self.exercises,width=20)
         back_button.pack(pady=10)
-        # Add a button to go back to mood selection
+
         back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood,width=20)
         back_button.pack(pady=10)
 
     def back_to_mood(self):
         self.root2.destroy()
-        # Clear any exercise-related content and show the mood selection again
-        # for widget in self.exercise_frame.winfo_children():
-        #     widget.destroy()
-        #
-        # self.title_label.config(text="Welcome back")
-        # self.submit_button.config(state=tk.NORMAL)
 
     def openjournal(self):
-        # Create a new Toplevel window for the journal
         root3 = tk.Toplevel(self.root)
-        root3.title("Journal")  # Set the title of the journal window
-        root3.geometry("650x500")  # Set a fixed size for the window
+        root3.title("Journal")
+        root3.geometry("650x500")
 
-        # Journaling Section Frame
         self.journal_frame = tk.Frame(root3, padx=10, pady=10)
         self.journal_frame.grid(row=0, column=0, columnspan=6, pady=(10, 0), padx=10, sticky="nsew")
-
-        # Journal Entry Label
         self.journal_label = tk.Label(
             self.journal_frame, text="Journal Entry:", font=("Arial", 12)
         )
         self.journal_label.grid(row=0, column=0, padx=10, pady=(0, 5), sticky="w")
-
-        # Journal Entry Textbox
         self.journal_text = tk.Text(self.journal_frame, height=5, width=40)
         self.journal_text.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
-        # Save Button
         self.save_button = tk.Button(
             self.journal_frame, text="Save Journal Entry", command=self.save_journal_entry
         )
         self.save_button.grid(row=2, column=0, padx=10, pady=5, sticky="w")
 
-        # Search Functionality
         self.search_label = tk.Label(
             self.journal_frame, text="Search Journal Entries:", font=("Arial", 12)
         )
@@ -443,84 +403,65 @@ class Patient:
         )
         self.search_button.grid(row=2, column=1, padx=10, pady=5, sticky="w")
 
-        # Treeview Section Frame
         self.tree_frame = tk.Frame(root3, padx=10, pady=10)
         self.tree_frame.grid(row=1, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
 
-        # Treeview Widget
         self.journal_tree = ttk.Treeview(
             self.tree_frame, columns=("Text", "Time"), show="headings", height=10
         )
         self.journal_tree.pack(fill="both", expand=True)
 
-        # Define Treeview Headings
         self.journal_tree.heading("Text", text="Text")
         self.journal_tree.heading("Time", text="Time")
 
-        # Define Treeview Columns
         self.journal_tree.column("Text", anchor="w", width=400)
         self.journal_tree.column("Time", anchor="center", width=150)
 
-        # Treeview Scrollbar
         scrollbar = tk.Scrollbar(
             self.tree_frame, orient="vertical", command=self.journal_tree.yview
         )
         scrollbar.pack(side="right", fill="y")
         self.journal_tree.configure(yscrollcommand=scrollbar.set)
 
-        # Bind click event to the Treeview
         self.journal_tree.bind("<Double-1>", self.show_full_entry)
 
-        # Load Journal Entries into Treeview
         self.load_journal_entries()
 
     def refresh_treeview(self):
-        """Clear and reload the Treeview with updated journal entries."""
-        # Clear all existing items in the Treeview
         for item in self.journal_tree.get_children():
             self.journal_tree.delete(item)
 
-        # Reload the data into the Treeview
         self.load_journal_entries()
 
     def load_journal_entries(self):
-        """Load all journal entries into the Treeview."""
-        # Clear the Treeview
         for item in self.journal_tree.get_children():
             self.journal_tree.delete(item)
 
-        # Fetch journal entries from the database
         journal_entries = db.getRelation("JournalEntry").getRowsWhereEqual("patient_id", self.current_user_id)
 
-        # Insert all entries into the Treeview
         for entry in journal_entries:
-            self.journal_tree.insert("", "end", values=(entry[2][:50], entry[3].strftime("%Y-%m-%d %H:%M")))
+            self.journal_tree.insert("", "end", values=(entry[2][:], entry[3].strftime("%Y-%m-%d %H:%M")))
 
     def show_full_entry(self, event):
-        """Display the full content of a journal entry."""
-        # Get selected item
         selected_item = self.journal_tree.selection()
         if selected_item:
             item_values = self.journal_tree.item(selected_item, "values")
 
-            # Show full text in a popup
-            full_text = item_values[0]  # Extract full text
-            timestamp = item_values[1]  # Extract timestamp
+            full_text = item_values[0]
+            timestamp = item_values[1]
 
             popup = tk.Toplevel(self.root)
             popup.title("Journal Entry")
             popup.geometry("400x300")
 
-            # Display text
             text_label = tk.Label(popup, text="Full Entry:", font=("Arial", 12, "bold"))
             text_label.pack(pady=10)
 
             text_box = tk.Text(popup, wrap="word", height=10, width=40)
             text_box.pack(pady=10, padx=10)
             text_box.insert("1.0", full_text)
-            text_box.config(state="disabled")  # Make it read-only
+            text_box.config(state="disabled")
 
-            # Display timestamp
             timestamp_label = tk.Label(popup, text=f"Date: {timestamp}", font=("Arial", 10, "italic"))
             timestamp_label.pack(pady=5)
 
@@ -614,11 +555,8 @@ class Patient:
         self.root2.destroy()
 
     def save_journal_entry(self):
-        """Save the journal entry to the database and refresh"""
-        # Get the journal text
         journal_text = self.journal_text.get("1.0", "end-1c").strip()
 
-        # Check if the entry is empty
         if not journal_text:
             messagebox.showwarning("Empty Entry", "Please write something in the journal.")
             return
@@ -632,41 +570,32 @@ class Patient:
         )
         db.insert_journal_entry(journal_entry)
 
-        # Clear the Text widget
         self.journal_text.delete("1.0", "end")
 
         # Show a success message
         messagebox.showinfo("Journal Entry Saved", "Your journal entry has been saved.")
 
-        # Refresh the Treeview
         self.refresh_treeview()
 
     def search_journal_entries(self):
-        """Search for journal entries and display matching results in the Treeview."""
         search_term = self.search_entry.get().strip().lower()
 
-        # Clear the Treeview
         for item in self.journal_tree.get_children():
             self.journal_tree.delete(item)
 
         if search_term:
-          
-            # Fetch all journal entries
+
             journal_entries = db.getRelation("JournalEntry").getRowsWhereEqual("patient_id", self.current_user_id)
-            # journal_entries = db.getRelation("JournalEntry")
             filtered_rows = journal_entries
             self.journal_df = pd.DataFrame(filtered_rows)
 
-            # Filter entries that match the search term
             matching_entries = [
                 entry for entry in journal_entries if search_term in entry[2].lower()
             ]
 
-            # Reload the Treeview with matching entries
             for entry in matching_entries:
-                self.journal_tree.insert("", "end", values=(entry[2][:50], entry[3].strftime("%Y-%m-%d %H:%M")))
+                self.journal_tree.insert("", "end", values=(entry[2][:], entry[3].strftime("%Y-%m-%d %H:%M")))
         else:
-            # If no search term, reload all entries
             self.load_journal_entries()
 
     def view_all_journal_entries(self):
@@ -681,13 +610,11 @@ class Patient:
             messagebox.showinfo("No Entries", "You don't have any journal entries.")
 
     def edit_information(self):
-        # Edit information
         db.close()
         self.root.destroy()
         EditInfo()
 
     def exercises(self):
-        # Edit information
         db.close()
         self.root.destroy()
         try:
@@ -697,17 +624,15 @@ class Patient:
         Exercises()
 
     def book(self):
-        # Book an appointement
         db.close()
         self.root.destroy()
         AppointmentBooking()
 
     def patientdashboard(self):
-        # Edit information
         openpatientdashboard()
 
     def refresh(self):
-        print("Refreshing")
+        # print("Refreshing")
         notifications = db.getRelation('Notification').getRowsWhereEqual('new', True)
         self.message_counter = sum(1 for n in notifications if n[1] == self.current_user_id)
         self.messagenum.config(text=f"You have {self.message_counter} new messages")

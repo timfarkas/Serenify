@@ -17,19 +17,18 @@ db=global_db
 def startchat():
 
     startchatroom()
-    """This function is triggered by the button."""
-
 
 def displaymood(patientID):
     sess.open()
     identity= sess.getRole()
-    print(identity)
+    # print(identity)
     userdata = db.getRelation('User').getRowsWhereEqual('user_id', patientID)
     userName = str(userdata[0][4]) + ' ' + str(userdata[0][5])
     Moodrecord = db.getRelation('MoodEntry')
     usermood = Moodrecord.getRowsWhereEqual('patient_id', patientID)
     length = len(usermood)
     dotdata=[]
+
     winwidth=500
     winhight=300
     interval=winwidth//(length+1)
@@ -54,6 +53,7 @@ def displaymood(patientID):
     label4 = Label(fieldset2, text=f"Emergency Contact Email: {patientinfo[0][7]}")
     label4.grid(row=3, column=0, sticky="w")
 
+    # Draw the chart
     canv = Canvas(root, width=winwidth, height=winhight, bg="white")
     if len(dotdata)>0:
         for i in dotdata:
@@ -71,7 +71,6 @@ def displaymood(patientID):
         canv.create_text(winwidth/2,winhight/2, text="No Record", fill="Gray", font=("Arial", 20, "bold"))
     canv.pack()
     if identity=="MHWP":
-        print("a mhwp---")
         # print("before start",userId,"m")
         btn = Button(root, text="Start Chat",  command=lambda: startchatroom(patientID))
         btn.pack(pady=10)
