@@ -140,7 +140,13 @@ class PatientRecords:
             self.record_text.config(state=tk.DISABLED)
         else:
             # If no records are found
-            messagebox.showerror("Error", "User not found in the database.")
+            # Show empty diagnosis
+            self.record_text.config(state=tk.NORMAL)
+            self.record_text.delete("1.0", tk.END)
+            self.record_text.insert(tk.END, f"Most Recent Diagnosis: None \n\n")
+            # Show lack of notes
+            self.record_text.insert(tk.END, "No notes available.\n")
+            self.record_text.config(state=tk.DISABLED)
 
     def save_note(self):
         """Saves the notes for the selected patient."""
