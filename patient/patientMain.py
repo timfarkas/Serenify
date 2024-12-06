@@ -274,6 +274,7 @@ class Patient:
                 self.openchat.config(state=tk.DISABLED)
                 self.openforum.config(state=tk.DISABLED)
                 self.messagebox.config(state=tk.DISABLED)
+                self.opendashboard.config(state=tk.DISABLED)
 
                 # Show message that the user is disabled
                 messagebox.showinfo("Access Restricted", "Your account is disabled. You cannot make changes or submit new information.")

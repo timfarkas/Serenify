@@ -23,7 +23,8 @@ def initDummyDatabase(db, printOut = False):
         fName='John',
         lName='Doe',
         email='johndoe@example.com',
-        emergency_contact_name='some',
+        emergency_contact_name='Mary Doe',
+        emergency_contact_email='marydoe@example.com',
         is_disabled=False,
     )
     patient_user2 = Patient(
@@ -32,7 +33,8 @@ def initDummyDatabase(db, printOut = False):
         fName='Jane',
         lName='Smith',
         email='janesmith@example.com',
-        emergency_contact_name='some',
+        emergency_contact_name='Robert Smith',
+        emergency_contact_email='robertsmith@example.com',
         is_disabled=False,
     )
     patient_user3 = Patient(
@@ -41,7 +43,8 @@ def initDummyDatabase(db, printOut = False):
         fName='Tony',
         lName='Wills',
         email='tonywills@example.com',
-        emergency_contact_name='some',
+        emergency_contact_name=None,
+        emergency_contact_email=None,
         is_disabled=False,
     )
     patient_user4 = Patient(
@@ -50,7 +53,8 @@ def initDummyDatabase(db, printOut = False):
         fName='Alice',
         lName='Johnson',
         email='alicejohnson@example.com',
-        emergency_contact_name='some',
+        emergency_contact_name='Emily Johnson',
+        emergency_contact_email='emilyjohnson@example.com',
         is_disabled=False,
     )
     patient_user5 = Patient(
@@ -59,16 +63,18 @@ def initDummyDatabase(db, printOut = False):
         fName='Bob',
         lName='Brown',
         email='bobbrown@example.com',
-        emergency_contact_name='some',
+        emergency_contact_name=None,
+        emergency_contact_email=None,
         is_disabled=False,
     )
     patient_disabled = Patient(
         username='disabled',
-        password='pass123456',
+        password='',
         fName='Rob',
         lName='Smith',
         email='rob@example.com',
-        emergency_contact_name='some',
+        emergency_contact_name='Laura Smith',
+        emergency_contact_email='laurasmith@example.com',
         is_disabled=True,
     )
 
@@ -148,13 +154,14 @@ def initDummyDatabase(db, printOut = False):
         start_date=datetime.datetime.now(),
         end_date=datetime.datetime.now()
     )
-    db.insert_allocation(allocation1)
-    db.insert_allocation(allocation2)
-    db.insert_allocation(allocation3)
-    db.insert_allocation(allocation4)
-    db.insert_allocation(allocation5)
+    db.insert_allocation(allocation1) ## 1
+    db.insert_allocation(allocation2) ## 2
+    db.insert_allocation(allocation3) ## 3
+    db.insert_allocation(allocation4) ## 4 
+    db.insert_allocation(allocation5) ## 5
 
     ### CHAT CONTENT
+    # Chat content for allocation 1
     chat1 = ChatContent(
         allocation_id=1,
         user_id=6,
@@ -176,6 +183,98 @@ def initDummyDatabase(db, printOut = False):
     db.insert_chatcontent(chat1)
     db.insert_chatcontent(chat2)
     db.insert_chatcontent(chat3)
+
+    # Chat content for allocation 2
+    chat11 = ChatContent(
+        allocation_id=2,
+        user_id=7,
+        text="Hi, I have been feeling a bit stressed lately.",
+        timestamp=datetime.datetime.now(),
+    )
+    chat12 = ChatContent(
+        allocation_id=2,
+        user_id=9,
+        text="I'm sorry to hear that. Let's discuss some strategies to help you manage stress.",
+        timestamp=datetime.datetime.now(),
+    )
+    chat13 = ChatContent(
+        allocation_id=2,
+        user_id=7,
+        text="That would be great, thank you.",
+        timestamp=datetime.datetime.now(),
+    )
+    db.insert_chatcontent(chat11)
+    db.insert_chatcontent(chat12)
+    db.insert_chatcontent(chat13)
+
+    # Chat content for allocation 3
+    chat4 = ChatContent(
+        allocation_id=3,
+        user_id=8,
+        text="Hi, I have some questions about my treatment.",
+        timestamp=datetime.datetime.now(),
+    )
+    chat5 = ChatContent(
+        allocation_id=3,
+        user_id=10,
+        text="Sure, I'm here to help. What would you like to know?",
+        timestamp=datetime.datetime.now(),
+    )
+    chat6 = ChatContent(
+        allocation_id=3,
+        user_id=8,
+        text="Can we adjust the schedule for my sessions?",
+        timestamp=datetime.datetime.now(),
+    )
+    db.insert_chatcontent(chat4)
+    db.insert_chatcontent(chat5)
+    db.insert_chatcontent(chat6)
+
+    # Chat content for allocation 4
+    chat7 = ChatContent(
+        allocation_id=4,
+        user_id=4,
+        text="Good morning, doctor.",
+        timestamp=datetime.datetime.now(),
+    )
+    chat8 = ChatContent(
+        allocation_id=4,
+        user_id=11,
+        text="Good morning! How are you feeling today?",
+        timestamp=datetime.datetime.now(),
+    )
+    chat9 = ChatContent(
+        allocation_id=4,
+        user_id=4,
+        text="I'm feeling a bit anxious.",
+        timestamp=datetime.datetime.now(),
+    )
+    db.insert_chatcontent(chat7)
+    db.insert_chatcontent(chat8)
+    db.insert_chatcontent(chat9)
+
+    # Chat content for allocation 5
+    chat10 = ChatContent(
+        allocation_id=5,
+        user_id=5,
+        text="Hello, I need to discuss my progress.",
+        timestamp=datetime.datetime.now(),
+    )
+    chat11 = ChatContent(
+        allocation_id=5,
+        user_id=11,
+        text="Of course, let's go over your recent sessions.",
+        timestamp=datetime.datetime.now(),
+    )
+    chat12 = ChatContent(
+        allocation_id=5,
+        user_id=5,
+        text="I think I'm improving, but I have some concerns.",
+        timestamp=datetime.datetime.now(),
+    )
+    db.insert_chatcontent(chat10)
+    db.insert_chatcontent(chat11)
+    db.insert_chatcontent(chat12)
 
     ### MOOD ENTRIES
     # Create MoodEntry objects and insert
@@ -257,7 +356,31 @@ def initDummyDatabase(db, printOut = False):
         comment='Still bad.',
         timestamp=datetime.datetime(year=2024, month=11, day=29, hour=12, minute=0, second=0)
     )
-
+    
+    mood_entry14 = MoodEntry(
+        patient_id=12,
+        moodscore=3,
+        comment='Feeling okay.',
+        timestamp=datetime.datetime(year=2024, month=12, day=1, hour=9, minute=0, second=0)
+    )
+    mood_entry15 = MoodEntry(
+        patient_id=12,
+        moodscore=2,
+        comment='Not a great day.',
+        timestamp=datetime.datetime(year=2024, month=12, day=2, hour=14, minute=0, second=0)
+    )
+    mood_entry16 = MoodEntry(
+        patient_id=12,
+        moodscore=4,
+        comment='Better than yesterday.',
+        timestamp=datetime.datetime(year=2024, month=12, day=3, hour=11, minute=0, second=0)
+    )
+    mood_entry17 = MoodEntry(
+        patient_id=12,
+        moodscore=5,
+        comment='Feeling good!',
+        timestamp=datetime.datetime(year=2024, month=12, day=4, hour=16, minute=0, second=0)
+    )
 
     # Insert into database
     db.insert_mood_entry(mood_entry1)
@@ -273,6 +396,10 @@ def initDummyDatabase(db, printOut = False):
     db.insert_mood_entry(mood_entry11)
     db.insert_mood_entry(mood_entry12)
     db.insert_mood_entry(mood_entry13)
+    db.insert_mood_entry(mood_entry14)
+    db.insert_mood_entry(mood_entry15)
+    db.insert_mood_entry(mood_entry16)
+    db.insert_mood_entry(mood_entry17)
 
     ### JOURNAL ENTRIES
     journal_entry1 = JournalEntry(
@@ -331,35 +458,35 @@ def initDummyDatabase(db, printOut = False):
         record_id=1,
         patient_id=6,
         mhwp_id=9,
-        notes='Initial assessment notes.',
+        notes='Patient exhibits symptoms of anxiety; initial assessment conducted.',
         conditions=['Anxiety']
     )
     patient_record2 = PatientRecord(
         record_id=2,
         patient_id=7,
         mhwp_id=9,
-        notes='Follow-up assessment notes.',
+        notes='Patient shows signs of improvement; follow-up assessment completed.',
         conditions=['Depression']
     )
     patient_record3 = PatientRecord(
         record_id=3,
         patient_id=8,
         mhwp_id=10,
-        notes='Second round of follow-up assessment notes.',
+        notes='Continued monitoring of depressive symptoms; second follow-up conducted.',
         conditions=['Depression']
     )
     patient_record4 = PatientRecord(
         record_id=4,
         patient_id=4,
         mhwp_id=11,
-        notes='Initial assessment notes.',
+        notes='Initial assessment reveals symptoms consistent with bipolar disorder.',
         conditions=['Bipolar Disorder']
     )
     patient_record5 = PatientRecord(
         record_id=5,
         patient_id=5,
         mhwp_id=11,
-        notes='Initial assessment notes.',
+        notes='Patient reports anxiety symptoms; initial evaluation performed.',
         conditions=['Anxiety']
     )
 
@@ -368,16 +495,17 @@ def initDummyDatabase(db, printOut = False):
     db.insert_patient_record(patient_record3)
     db.insert_patient_record(patient_record4)
     db.insert_patient_record(patient_record5)
-    appointmentRelation = db.getRelation('Appointment')
+    
 
     ### APPOINTMENTS
+    appointmentRelation = db.getRelation('Appointment')
     # Create Appointment objects and insert them into the database
     appointment1 = Appointment(
         appointment_id=1,
         room_name="Room A",
         patient_id=6,
         mhwp_id=9,
-        date=datetime.datetime(year=2024, month=12, day=5, hour=10, minute=0, second=0),
+        date=(datetime.datetime.now() + datetime.timedelta(days=5)).replace(hour=10, minute=0, second=0, microsecond=0),
         status='active',
         appointmentRelation=appointmentRelation
     )
@@ -386,7 +514,7 @@ def initDummyDatabase(db, printOut = False):
         room_name="Room B",
         patient_id=8,
         mhwp_id=10,
-        date=datetime.datetime(year=2024, month=12, day=25, hour=10, minute=0, second=0),
+        date=(datetime.datetime.now() + datetime.timedelta(days=25)).replace(hour=10, minute=0, second=0, microsecond=0),
         status='active',
         appointmentRelation=appointmentRelation
     )
@@ -395,7 +523,7 @@ def initDummyDatabase(db, printOut = False):
         room_name="Room C",
         patient_id=4,
         mhwp_id=11,
-        date=datetime.datetime(year=2024, month=12, day=15, hour=11, minute=0, second=0),
+        date=(datetime.datetime.now() + datetime.timedelta(days=15)).replace(hour=11, minute=0, second=0, microsecond=0),
         status='active',
         appointmentRelation=appointmentRelation
     )
@@ -404,7 +532,7 @@ def initDummyDatabase(db, printOut = False):
         room_name="Room D",
         patient_id=5,
         mhwp_id=11,
-        date=datetime.datetime(year=2024, month=12, day=20, hour=9, minute=0, second=0),
+        date=(datetime.datetime.now() + datetime.timedelta(days=20)).replace(hour=9, minute=0, second=0, microsecond=0),
         status='active',
         appointmentRelation=appointmentRelation
     )
@@ -424,13 +552,37 @@ def initDummyDatabase(db, printOut = False):
     )
     reviewentry2 = MHWPReview(
         patient_id=7,
-        mhwp_id=10,
+        mhwp_id=9,
         reviewscore=4,
         reviewcomment="Good",
         timestamp=datetime.datetime(year=2024, month=11, day=21, hour=10, minute=0, second=0)
     )
+    reviewentry3 = MHWPReview(
+        patient_id=8,
+        mhwp_id=10,
+        reviewscore=3,
+        reviewcomment="Average experience",
+        timestamp=datetime.datetime(year=2024, month=12, day=5, hour=14, minute=0, second=0)
+    )
+    reviewentry4 = MHWPReview(
+        patient_id=4,
+        mhwp_id=11,
+        reviewscore=2,
+        reviewcomment="Not satisfied",
+        timestamp=datetime.datetime(year=2024, month=12, day=10, hour=9, minute=0, second=0)
+    )
+    reviewentry5 = MHWPReview(
+        patient_id=5,
+        mhwp_id=11,
+        reviewscore=5,
+        reviewcomment="Excellent service",
+        timestamp=datetime.datetime(year=2024, month=12, day=15, hour=11, minute=0, second=0)
+    )
     db.insert_review_entry(reviewentry1)
     db.insert_review_entry(reviewentry2)
+    db.insert_review_entry(reviewentry3)
+    db.insert_review_entry(reviewentry4)
+    db.insert_review_entry(reviewentry5)
 
     ### FORUM ENTRIES
     forumentry1 = Forum(
