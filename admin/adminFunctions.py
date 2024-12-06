@@ -626,7 +626,6 @@ class AllocationSelection(UserSelectionApp):
             if mhwp_allocation_id:
                 assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
                 assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
-                print(assigned_mhwp_name)
             else:
                 assigned_mhwp_name = "Unassigned"
 
