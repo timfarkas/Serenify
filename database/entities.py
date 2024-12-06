@@ -35,9 +35,15 @@ class User:
 
     USER_ID = 0
     USERNAME = 1
-    PASSWORD = 2
-    TYPE = 3
-    IS_DISABLED = 4
+    EMAIL = 2
+    PASSWORD = 3
+    FNAME = 4
+    LNAME = 5
+    TYPE = 6
+    EMERGENCY_CONTACT_EMAIL = 7
+    EMERGENCY_CONTACT_NAME = 8
+    SPECIALIZATION = 9
+    IS_DISABLED = 10
 
     def __init__(self, user_id: int = None, username: str = '', password: str = '', user_type: str = '',
                  is_disabled: bool = False):
@@ -117,16 +123,6 @@ class Admin(User):
 
 class Patient(User):
     """A class to represent a patient user."""
-
-    USER_ID = 0
-    USERNAME = 1
-    EMAIL = 2
-    PASSWORD = 3
-    FNAME = 4
-    LNAME = 5
-    EMERGENCY_CONTACT_EMAIL = 6
-    EMERGENCY_CONTACT_NAME = 7
-    IS_DISABLED = 8
 
     def __init__(self,
                  user_id: int = None,
@@ -209,15 +205,6 @@ class Patient(User):
 
 class MHWP(User):
     """A class to represent a mental health worker professional (MHWP) user."""
-
-    USER_ID = 0
-    USERNAME = 1
-    EMAIL = 2
-    PASSWORD = 3
-    FNAME = 4
-    LNAME = 5
-    SPECIALIZATION = 6
-    IS_DISABLED = 7
 
     def __init__(self,
                  user_id: int = None,
@@ -305,7 +292,6 @@ class MHWP(User):
                                          self.type, self.specialization, self.is_disabled) 
         success = success and self.checkValidSpecialization(self.specialization) ## check if specialization is valid
         return success 
-    
 class JournalEntry:
     """A class to represent a journal entry."""
 
