@@ -402,9 +402,10 @@ class MHWPAppointmentManager():
                message = f"The appointment request for {appointment_date} has been declined. Please check your dashboard for more details."
            else:
                subject = "Appointment Update"
-               notifyinfo = "AppointmentUpated"
+               notifyinfo = "Appointment Upated"
                message = f"The appointment status for {appointment_date} has been updated. Please check your dashboard for more details."
 
+           # Notify patient
            newnotify = Notification(
                user_id=patient_id,
                notifycontent=notifyinfo,
@@ -413,6 +414,17 @@ class MHWPAppointmentManager():
                timestamp=datetime.now(),
            )
            self.db.insert_notification(newnotify)
+
+           # Notify MHWP
+           mhwp_notify = Notification(
+               user_id=self.mhwp_id,
+               notifycontent=notifyinfo,
+               source_id=0,
+               new=True,
+               timestamp=datetime.now(),
+           )
+           self.db.insert_notification(mhwp_notify)
+
            # Send emails using SMTP
            with smtplib.SMTP(smtp_server, smtp_port) as server:
                server.starttls()  # Enable TLS
@@ -432,12 +444,6 @@ class MHWPAppointmentManager():
                mhwp_msg['To'] = mhwp[2]
                server.send_message(mhwp_msg)
 
-       except smtplib.SMTPAuthenticationError:
-           print("Failed to authenticate with Gmail. Please check credentials.")
-       except smtplib.SMTPException as e:
-           print(f"SMTP error occurred: {str(e)}")
-       except Exception as e:
-           print(f"Failed to send email notifications: {str(e)}")
 
        except smtplib.SMTPAuthenticationError:
            print("Failed to authenticate with Gmail. Please check credentials.")
@@ -445,6 +451,7 @@ class MHWPAppointmentManager():
            print(f"SMTP error occurred: {str(e)}")
        except Exception as e:
            print(f"Failed to send email notifications: {str(e)}")
+
 
 
    def refresh_lists(self):
