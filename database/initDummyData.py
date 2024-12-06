@@ -378,7 +378,7 @@ def initDummyDatabase(db, printOut = False):
         patient_id=6,
         mhwp_id=9,
         date=datetime.datetime(year=2024, month=12, day=5, hour=10, minute=0, second=0),
-        status='active',
+        status='Confirmed',
         appointmentRelation=appointmentRelation
     )
     appointment2 = Appointment(
@@ -387,7 +387,7 @@ def initDummyDatabase(db, printOut = False):
         patient_id=8,
         mhwp_id=10,
         date=datetime.datetime(year=2024, month=12, day=25, hour=10, minute=0, second=0),
-        status='active',
+        status='Confirmed',
         appointmentRelation=appointmentRelation
     )
     appointment3 = Appointment(
@@ -396,7 +396,7 @@ def initDummyDatabase(db, printOut = False):
         patient_id=4,
         mhwp_id=11,
         date=datetime.datetime(year=2024, month=12, day=15, hour=11, minute=0, second=0),
-        status='active',
+        status='Confirmed',
         appointmentRelation=appointmentRelation
     )
     appointment4 = Appointment(
@@ -405,7 +405,7 @@ def initDummyDatabase(db, printOut = False):
         patient_id=5,
         mhwp_id=11,
         date=datetime.datetime(year=2024, month=12, day=20, hour=9, minute=0, second=0),
-        status='active',
+        status='Confirmed',
         appointmentRelation=appointmentRelation
     )
     # Insert appointments into the database
