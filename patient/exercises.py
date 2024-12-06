@@ -36,7 +36,7 @@ class Exercises:
 
         #Back button
         self.back_button = tk.Button(self.root, text="Back to the main page", command= self.backButton)
-        self.back_button.grid(row=0, column=0, pady=10)
+        self.back_button.grid(row=17, column=3, pady=10,sticky="se")
         
         # H1 equivalent
         h1_label = tk.Label(self.root, text="Mental Health Exercises", font=("Arial", 24, "bold"), fg = "light pink")
