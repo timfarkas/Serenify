@@ -1,17 +1,16 @@
 import tkinter as tk
-from tkinter import ttk
-from tkinter import *
-from tkinter import messagebox, ttk
+from tkinter import ttk, messagebox
 import math
 import subprocess
-
+from datetime import datetime
 
 import os
 import sys
-from datetime import datetime
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database
+from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
 from addfeature.globaldb import global_db
 from addfeature.globaldb import global_db
@@ -19,13 +18,13 @@ from addfeature.globaldb import global_db
 db=global_db
 
 
+# on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.=======
 
 
-from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
-# on a temporary basis might need to run the adminSessionTest.py file first to initialise the sessions.
 
-class AdminMainPage(tk.Toplevel):
+
+class AllocationEdit(tk.Toplevel):
     def __init__(self, patient_id, parent, db):
         super().__init__()
         self.db = db
@@ -626,7 +625,6 @@ class AllocationSelection(UserSelectionApp):
             if mhwp_allocation_id:
                 assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
                 assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
-                print(assigned_mhwp_name)
             else:
                 assigned_mhwp_name = "Unassigned"
 
@@ -637,7 +635,7 @@ class AllocationSelection(UserSelectionApp):
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = AdminMainPage(self.selected_user_id, self, db=self.db)
+            app = AllocationEdit(self.selected_user_id, self, db=self.db)
         else:
             messagebox.showinfo("No Patient Selected", "Please select a patient to continue.")
 
@@ -988,6 +986,6 @@ if __name__ == "__main__":
         app = AdminMainPage()
         app.mainloop()
     else:
-        root = tk.Tk()
-        app = LoginPage(root)
-        root.mainloop()
+        from main import App
+        app = App()
+
