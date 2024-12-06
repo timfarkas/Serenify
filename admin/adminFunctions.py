@@ -849,7 +849,7 @@ class KeyStatistics(tk.Toplevel):
 
         canvas.create_text(x_center + 55, y_center - radius - 85, text="Patients per MHWP", font=("Arial", 16, "bold"))
 
-        colors = ["lightgreen", "lavender", "mistyrose", "palegreen", "lightpink", "lightblue"]
+        colors = ["lightgreen", "lavender", "mistyrose", "palegreen", "lightpink", "lightblue", "peachpuff", "thistle", "honeydew", "powderblue", "mintcream", "lemonchiffon", "cornsilk", "skyblue", "plum1")
         color_index = 0
 
         start_angle = 0
