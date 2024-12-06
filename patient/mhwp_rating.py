@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database,MHWPReview
 from sessions import Session
+from tkinter import messagebox
 from addfeature.globaldb import global_db
 global global_db
 db=global_db
@@ -37,6 +38,7 @@ def openrating():
             reviewlist.editFieldInRow(reviewid, "reviewcomment",reviewcomment)
             reviewlist.editFieldInRow(reviewid, "timestamp", datetime.datetime.now())
             print("review updated")
+            messagebox.showinfo("Review updated","You already have a review. Review has been updated.")
         else:
             newreviewentry = MHWPReview(
                 patient_id=userID,
@@ -46,7 +48,7 @@ def openrating():
                 timestamp=datetime.datetime.now()
             )
             db.insert_review_entry(newreviewentry)
-            print("new review created")
+            messagebox.showinfo("Review created","A new review has been successfully created.")
 
 
         # if user_input.strip():  # Check if the input is not empty

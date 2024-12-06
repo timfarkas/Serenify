@@ -38,7 +38,7 @@ print(db._is_closed)
 # room1.editFieldInRow(1, 'lName',str("AAA"))
 # room2 = db.getRelation('User')
 
-room1=db.getRelation('Appointment')
+room1=db.getRelation('Allocation')
 # print(room1[0][3]>datetime.now())
 print(room1)
     # exercisedata.append(i[2])

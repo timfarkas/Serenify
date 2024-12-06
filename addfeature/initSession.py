@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sessions import Session
 from database.database import Database
+import subprocess
 import tkinter as tk
 from mhwp.mhwp_dashboard import MHWPDashboard
 # from addfeature.chatroom import startch
@@ -20,7 +21,7 @@ db=Database()
 sess = Session()
 sess._initialize()
 sess.open()
-sess.setId(3)
+sess.setId(6)
 sess.setRole(db.getRelation('User').getRowsWhereEqual("user_id",sess.getId())[0][6])
 sess.close()
 db.close()

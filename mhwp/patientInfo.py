@@ -25,8 +25,8 @@ class PatientRecords:
         self.title_label.grid(row=0, column=0, columnspan=2, pady=5)
 
         #Back button
-        self.back_button = tk.Button(self.root, text="Back", command= self.backButton)
-        self.back_button.grid(row=0, column=0, padx=2, pady=5)
+        self.back_button = tk.Button(self.root, text="Back", command= self.backButton,width=10)
+        self.back_button.grid(row=3, column=1, padx=2, pady=5,sticky="se")
 
         # Load conditions from conditions.txt
         self.conditions_list = self.load_conditions("conditions.txt")
@@ -258,7 +258,7 @@ class PatientRecords:
 
     def backButton(self):
         import subprocess
-        subprocess.Popen(["python3", "patient/patientMain.py"])
+        subprocess.Popen(["python3", "mhwp/mhwp_dashboard.py"])
         self.db.close()
         self.root.destroy()
 
