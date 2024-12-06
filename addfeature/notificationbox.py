@@ -57,7 +57,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have a new chat",
+                    values=("You have a new message!",
                             f"{sourceuser[0][4]} {sourceuser[0][5]}",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -68,7 +68,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have a new appointment",
+                    values=("You have a new appointment request!",
                             "System",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -79,7 +79,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have a new patient review",
+                    values=("You have a new patient review!",
                             "System",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -90,7 +90,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have a patient showing bad mood",
+                    values=("Your patient has logged a low mood score!",
                             f"{sourceuser[0][4]} {sourceuser[0][5]}",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -101,7 +101,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have an appointment updated",
+                    values=("Your appointment has been updated!",
                             f"System",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -112,7 +112,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have an appointment confirmed",
+                    values=("Your appointment has been confirmed!",
                             f"System",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -123,7 +123,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have an appointment declined",
+                    values=("Your appointment has been declined!",
                             f"System",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -174,28 +174,17 @@ def opennotification():
             patientID = item_values[3]
         elif identity == "Patient":
             patientID = userID
-        print("p",patientID,"iden",identity)
-        if item_values[0]=="You have a new chat":
+        print("p", patientID, "iden", identity)
+        if item_values[0] == "You have a new message!":
             startchatroom(int(patientID))
-        elif item_values[0] == "You have a new appointment":
-            messagebox.showinfo("Notification", f"Please go back dashboard to see appointment.")
-            # db.close()
-            # MHWPAppointmentManager()
-        elif item_values[0] == "You have a patient showing bad mood":
-            displaymood(int(patientID),"MHWP")
-        elif item_values[0] == "You have a new patient review":
-            messagebox.showinfo("Notification", f"Please go back dashboard to see review.")
-        elif item_values[0] in ["You have an appointment updated","You have an appointment declined","You have an appointment confirmed"]:
-            messagebox.showinfo("Notification", f"Please go back dashboard to see appointment.")
-            # db.close()
-            # AppointmentBooking()
-
-            # opeen(userID)
-            # Update the 'new' field in the Notification relation
-
-
-        # Start the chatroom
-
+        elif item_values[0] == "You have a new appointment request!":
+            messagebox.showinfo("Notification", "Please return to the dashboard to view the appointment.")
+        elif item_values[0] == "Your patient has logged a low mood score!":
+            displaymood(int(patientID), "MHWP")
+        elif item_values[0] == "You have a new patient review!":
+            messagebox.showinfo("Notification", "Please return to the dashboard to view the review.")
+        elif item_values[0] in ["Your appointment has been updated!", "Your appointment has been declined!", "Your appointment has been confirmed!"]:
+            messagebox.showinfo("Notification", "Please return to the dashboard to view the appointment.")
 
     # Configure tag styles
     tree.tag_configure("old", foreground="gray")
