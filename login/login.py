@@ -5,6 +5,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database  # Import Database
+from database.entities import User
 from admin.adminFunctions import AdminMainPage # Linking our admin module to the login
 from mhwp.mhwp_dashboard import MHWPDashboard # Linking our mhwp module to the login
 from patient.patientMain import Patient # Linking our patient module to the login
@@ -77,12 +78,12 @@ class LoginPage:
             # Otherwise, if found, retrieve the user information.
             user_data = user_data[0]
             # Verify the password
-            if user_data[3] != password:  # Now we check the password used is correct
+            if user_data[User.PASSWORD] != password:  # Now we check the password used is correct
                 messagebox.showerror("Login Failed", "Invalid password. Please try again.")
                 return
             
-            if user_data[6] != role:  # Check the role chosen is also correct to the users type
-                messagebox.showerror("Login Failed", "Incorrect role. Please try again.")
+            if user_data[User.TYPE] != role:  # Check the role chosen is also correct to the users type
+                messagebox.showerror("Login Failed", "Your selected role does not match your user role.")
                 return
             
             # If username, password, and role are valid, extract user details as session variables

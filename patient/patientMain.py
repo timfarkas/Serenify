@@ -85,15 +85,17 @@ class Patient:
         mhwp_frame = tk.LabelFrame(self.main_frame,text=self.mhwp_text,labelanchor="n",font=("Arial", 12), width=550)
         mhwp_frame.grid(row=1, column=0, pady=20)
         
+        self.ratemhwp = tk.Button(mhwp_frame, text="Rate", command=lambda: openrating(), padx=5, width=12)
+        self.ratemhwp.grid(row=2, column=2)
+
+        self.openchat = tk.Button(mhwp_frame, text="Chat", command=lambda:startchatroom(self.current_user_id), padx=5, width=12)
+        self.openchat.grid(row=2, column=1)
+
+        self.appointments = tk.Button(mhwp_frame, text="Appointments", command=self.book, padx=5, width=12)
+        self.appointments.grid(row=2, column=0)
+
+
         
-        self.ratemhwp = tk.Button(mhwp_frame, text="Rate", command=lambda: openrating(), width=12)
-        self.ratemhwp.grid(row=1, column=2)
-
-        self.openchat = tk.Button(mhwp_frame, text="Chat", command=lambda:startchatroom(self.current_user_id), width=12)
-        self.openchat.grid(row=1, column=1)
-
-        self.appointments = tk.Button(mhwp_frame, text="Appointments", command=self.book, width=12)
-        self.appointments.grid(row=1, column=0)
 
         ### PERSONAL FUNCTIONS
         self.personal_frame = tk.Frame(self.main_frame)
