@@ -1,27 +1,21 @@
 import tkinter as tk
-from tkinter import ttk
-from tkinter import *
-from tkinter import messagebox, ttk
+from tkinter import ttk, messagebox
 import math
 import subprocess
-
+from datetime import datetime
 
 import os
 import sys
-from datetime import datetime
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database
+from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
 from addfeature.globaldb import global_db
 from addfeature.globaldb import global_db
 # global global_db
 db=global_db
-
-
-
-
-from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
 ## on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.
 
