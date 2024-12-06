@@ -5,7 +5,7 @@ from tkinter import ttk
 from tkinter import messagebox
 import subprocess # This allows us to open other files
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from database.entities import Patient, JournalEntry, MoodEntry,Notification
+from database.entities import User,Patient, JournalEntry, MoodEntry,Notification
 from addfeature.chatroom import startchatroom
 from addfeature.forum import openforsum
 from patient.exercises import Exercises
@@ -50,6 +50,22 @@ class Patient:
         self.title_label = tk.Label(self.root, text=f"Welcome back, {self.patientName}!", font=("Arial", 24, "bold"))
         self.title_label.grid(row=0, column=0, columnspan=6, pady=10)
         self.main_frame = tk.Frame(self.root, width=200)  # Define width for main_frame
+
+        ## get allocations of current patient where mhwp id is not deleted 
+        allocation = db.getRelation("Allocation").getWhereEqual("patient_id", self.current_user_id).getRowsWhereLarger('mhwp_id',0)
+        
+        if not allocation:
+            self.mhwp_text = tk.Label(self.main_frame, text="You are currently not allocated to any MHWP. Please contact an administrator.", 
+                                          font=("Arial", 10), bg="yellow", wraplength=400)
+            self.mhwp_text.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
+        else:
+            mhwp_id = allocation[0][3]  # Assuming the MHWP ID is in the 4th column of the allocation relation
+            mhwp_info = db.getRelation("User").getRowsWhereEqual("user_id", mhwp_id)
+            mhwp_name = f"{mhwp_info[0][User.FNAME]} {mhwp_info[0][User.LNAME]}"  
+
+            self.mhwp_text = tk.Label(self.main_frame, text=f"Your MHWP: {mhwp_name}", 
+                                       font=("Arial", 12), wraplength=400)
+            self.mhwp_text.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
 
         # Mood of the day
         self.main_frame.grid(row=1, column=0, padx=10, pady=10) 
