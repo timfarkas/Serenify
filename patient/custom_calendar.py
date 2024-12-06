@@ -1,4 +1,4 @@
-import tkinter as tk
+"""Custom calendar interface to manage appointments"""
 from tkinter import ttk
 import calendar
 from datetime import datetime, date, timedelta
