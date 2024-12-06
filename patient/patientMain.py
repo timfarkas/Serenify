@@ -19,8 +19,8 @@ from sessions import Session
 from datetime import datetime
 import pandas as pd
 from addfeature.globaldb import global_db
-global global_db
 db=global_db
+
 
 # from database.initDummyData import initDummyDatabase
 # sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -496,7 +496,7 @@ class Patient:
 
     def exitUser(self):
         db.close()
-        subprocess.Popen(["python3", "main.py"])
+        subprocess.Popen(["python3", "-m" "login.login"])
         self.root.destroy()
 
     def apply_initial_colors(self):
