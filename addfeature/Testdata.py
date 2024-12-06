@@ -38,10 +38,9 @@ print(db._is_closed)
 # room1.editFieldInRow(1, 'lName',str("AAA"))
 # room2 = db.getRelation('User')
 
-room1=db.getRelation('MHWPReview')
+room1=db.getRelation('Appointment')
+# print(room1[0][3]>datetime.now())
 print(room1)
-# userdata=room1.getRowsWhereEqual("user_id",3)
-
     # exercisedata.append(i[2])
 
 # for i in range(-1,-4,-1):
@@ -55,3 +54,5 @@ print(room1)
 #
 # print(room1)
 # db.close()
+
+

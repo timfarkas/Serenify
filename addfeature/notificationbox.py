@@ -101,7 +101,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have a appointment updated",
+                    values=("You have an appointment updated",
                             f"System",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -112,7 +112,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have a appointment confirmed",
+                    values=("You have an appointment confirmed",
                             f"System",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -123,7 +123,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("You have a appointment declined",
+                    values=("You have an appointment declined",
                             f"System",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -185,7 +185,7 @@ def opennotification():
             displaymood(int(patientID),"MHWP")
         elif item_values[0] == "You have a new patient review":
             messagebox.showinfo("Notification", f"Please go back dashboard to see review.")
-        elif item_values[0] in ["You have a appointment updated","You have a appointment declined","You have a appointment confirmed"]:
+        elif item_values[0] in ["You have an appointment updated","You have an appointment declined","You have an appointment confirmed"]:
             messagebox.showinfo("Notification", f"Please go back dashboard to see appointment.")
             # db.close()
             # AppointmentBooking()
