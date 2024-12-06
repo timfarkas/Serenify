@@ -23,7 +23,7 @@ db=global_db
 
 from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
 
-## on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.
+# on a temporary basis might need to run the adminSessionTest.py file first to initialise the sessions.
 
 class AdminMainPage(tk.Toplevel):
     def __init__(self, patient_id, parent, db):
@@ -803,7 +803,7 @@ class KeyStatistics(tk.Toplevel):
         mhwp_row_count = len(mhwps)
 
         # calculating the number of patients per MHWPs
-        patient_per_MHWP = patient_row_count / mhwp_row_count
+        patient_per_MHWP = round((patient_row_count / mhwp_row_count), 1)
 
         # calculating the number of disabled accounts
         disabled_accounts = self.db.getRelation('User').getRowsWhereEqual('is_disabled', True)
