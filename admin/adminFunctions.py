@@ -25,7 +25,7 @@ from database.entities import Admin, Patient, MHWP, PatientRecord, Allocation, J
 
 ## on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.
 
-class AdminMainPage(tk.Toplevel):
+class AllocationEdit(tk.Toplevel):
     def __init__(self, patient_id, parent, db):
         super().__init__()
         self.db = db
@@ -637,7 +637,7 @@ class AllocationSelection(UserSelectionApp):
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0])
             self.withdraw()
-            app = AdminMainPage(self.selected_user_id, self, db=self.db)
+            app = AllocationEdit(self.selected_user_id, self, db=self.db)
         else:
             messagebox.showinfo("No Patient Selected", "Please select a patient to continue.")
 
@@ -990,3 +990,4 @@ if __name__ == "__main__":
     else:
         from main import App
         app = App()
+
