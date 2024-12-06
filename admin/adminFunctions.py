@@ -988,6 +988,5 @@ if __name__ == "__main__":
         app = AdminMainPage()
         app.mainloop()
     else:
-        root = tk.Tk()
-        app = LoginPage(root)
-        root.mainloop()
+        from main import App
+        app = App()
