@@ -1,8 +1,8 @@
+"""Appointment management script for mhwps"""
 import os
 import sys
 import tkinter as tk
 from tkinter import ttk, messagebox
-from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
@@ -12,12 +12,12 @@ from database.database import Database, Notification
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
 from database.entities import Appointment
-from database.dataStructs import Row
 from sessions import Session
 
 
 
 class MHWPAppointmentManager():
+   """Initialise the appointment manager for mhwps"""
    def __init__(self):
        sess = Session()
        sess.open()
@@ -41,6 +41,7 @@ class MHWPAppointmentManager():
        self.root.mainloop()
 
    def setup_ui(self):
+       """Create and configure the graphical user interface components for the mhwp."""
        # Title
        h1_label = ttk.Label(
            self.root,
@@ -114,6 +115,7 @@ class MHWPAppointmentManager():
        ).pack(side='left', padx=5)
 
    def show_day_appointments(self):
+       """Display appointments for the selected day in the calendar"""
        selected_date = self.calendar.get_date()
        try:
            appointments_relation = self.db.getRelation("Appointment")
@@ -159,6 +161,7 @@ class MHWPAppointmentManager():
            print(f"Error loading appointments: {str(e)}")
 
    def get_day_appointments(self, date_str):
+       """Retrieve all appointments for specified day"""
        appointments = []
        try:
            appointments_relation = self.db.getRelation("Appointment")
@@ -174,10 +177,9 @@ class MHWPAppointmentManager():
        return appointments
 
    def setup_appointment_list(self, parent, status):
+       """Set up the appointment list interface, including a Treeview for displaying appointments"""
        main_frame = ttk.Frame(parent)
        main_frame.pack(fill="both", expand=True)
-
-       # Calendar frame removed since it's now in setup_ui
 
        list_frame = ttk.Frame(main_frame)
        list_frame.pack(side="right", fill="both", expand=True)
@@ -305,6 +307,7 @@ class MHWPAppointmentManager():
            tree.insert("", "end", values=("", "Error loading appointments", "", "", ""))
 
    def update_appointment_status(self, new_status):
+       """Updates the status of a specific appointment in the database"""
        current_tab = self.notebook.select()
        status = "pending" if new_status in ["Confirmed", "Declined"] else new_status.lower()
        current_tree = getattr(self, f"{status}_tree")

@@ -506,7 +506,7 @@ def initDummyDatabase(db, printOut = False):
         patient_id=6,
         mhwp_id=9,
         date=(datetime.datetime.now() + datetime.timedelta(days=5)).replace(hour=10, minute=0, second=0, microsecond=0),
-        status='active',
+        status='Confirmed',
         appointmentRelation=appointmentRelation
     )
     appointment2 = Appointment(
@@ -514,8 +514,8 @@ def initDummyDatabase(db, printOut = False):
         room_name="Room B",
         patient_id=8,
         mhwp_id=10,
+        status='Confirmed',
         date=(datetime.datetime.now() + datetime.timedelta(days=25)).replace(hour=10, minute=0, second=0, microsecond=0),
-        status='active',
         appointmentRelation=appointmentRelation
     )
     appointment3 = Appointment(
@@ -523,8 +523,8 @@ def initDummyDatabase(db, printOut = False):
         room_name="Room C",
         patient_id=4,
         mhwp_id=11,
+        status='Confirmed',
         date=(datetime.datetime.now() + datetime.timedelta(days=15)).replace(hour=11, minute=0, second=0, microsecond=0),
-        status='active',
         appointmentRelation=appointmentRelation
     )
     appointment4 = Appointment(
@@ -532,8 +532,8 @@ def initDummyDatabase(db, printOut = False):
         room_name="Room D",
         patient_id=5,
         mhwp_id=11,
+        status='Confirmed',
         date=(datetime.datetime.now() + datetime.timedelta(days=20)).replace(hour=9, minute=0, second=0, microsecond=0),
-        status='active',
         appointmentRelation=appointmentRelation
     )
     # Insert appointments into the database

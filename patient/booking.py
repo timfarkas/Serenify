@@ -1,3 +1,5 @@
+"""Appointment booking script for patients"""
+
 import sys
 import os
 import tkinter as tk
@@ -7,22 +9,20 @@ import traceback
 import smtplib
 from email.mime.text import MIMEText
 from sessions import Session
-import subprocess
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from database import Database
 from database.entities import Appointment, InvalidDataError
-from database.dataStructs import Row
 from patient.custom_calendar import Calendar
 from database.database import Database, Notification
 
 
 class AppointmentBooking:
+    """Initialize the Appointment Booking system and set up the UI."""
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Appointment Booking System")
 
-        # Get ids from session
+        # Get patient ID from the current session session
         sess = Session()
         sess.open()
         self.patient_id = sess.getId()
@@ -53,12 +53,15 @@ class AppointmentBooking:
         self.room_var = tk.StringVar()
         self.room_var.set(self.available_rooms[0])  # Set default room
 
+        # Set up the user interface
         self.setup_ui()
 
         # Ensure database is closed when window is closed
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.mainloop()
+
     def setup_ui(self):
+        """Create and configure the graphical user interface components for the patient."""
         # Title
         h1_label = ttk.Label(
             self.root,
@@ -145,6 +148,7 @@ class AppointmentBooking:
         self.load_appointments()
 
     def update_available_times(self):
+        """Updates the list of available time slots based on the selected date"""
         selected_date = self.calendar.get_date()
         all_times = [f"{hour:02d}:00" for hour in range(9, 17)]
 
@@ -172,6 +176,7 @@ class AppointmentBooking:
                 ).pack(anchor='w', padx=5)
 
     def get_booked_times(self, date_str):
+        """Retrieves the booked time slots for the given date"""
         booked_times = set()
         try:
             appointments_relation = self.db.getRelation("Appointment")
@@ -202,6 +207,7 @@ class AppointmentBooking:
         return True
 
     def request_appointment(self):
+        """Handles the process of requesting a new appointment"""
         date_str = self.calendar.get_date()
         time_str = self.time_var.get()
         room = self.room_var.get()
@@ -290,6 +296,7 @@ class AppointmentBooking:
                 self.appointments_list.insert('', 'end', values=(formatted_date, room_name, status))
 
     def cancel_appointment(self):
+        """Cancelled the selected appointment"""
         selected_item = self.appointments_list.selection()
         if not selected_item:
             messagebox.showerror("Error", "Please select an appointment to cancel")
@@ -327,6 +334,7 @@ class AppointmentBooking:
             print(f"Detailed error: {str(e)}")
 
     def update_appointment_status(self, appointment_id, new_status):
+        """Updates the status of a specific appointment in the database"""
         try:
             appointments_relation = self.db.getRelation("Appointment")
             current_apt = appointments_relation.getRowsWhereEqual("appointment_id", appointment_id)[0]
@@ -344,6 +352,7 @@ class AppointmentBooking:
             print(f"Detailed error: {str(e)}")
 
     def send_email_notification(self, notification_type):
+        """Sends email notifications related to appointments."""
         try:
             users_relation = self.db.getRelation("User")
             patient = users_relation.getRowsWhereEqual("user_id", self.patient_id)[0]
@@ -449,13 +458,6 @@ class AppointmentBooking:
 
         import subprocess
         subprocess.Popen(["python3", "patient/patientMain.py"])
-
-        # try:
-        #     if hasattr(self, 'db'):
-        #         self.db.close()
-        # # except Exception as e:
-        #     print(f"Error closing database: {str(e)}")
-        # self.root.destroy()
 
 
 if __name__ == "__main__":
