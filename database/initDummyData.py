@@ -18,7 +18,7 @@ def initDummyDatabase(db, printOut = False):
     admin_user2 = Admin(username='admin2', password='')
     
     patient_user1 = Patient(
-        username='patient1',
+        username='patient3',
         password='',
         fName='John',
         lName='Doe',
@@ -28,7 +28,7 @@ def initDummyDatabase(db, printOut = False):
         is_disabled=False,
     )
     patient_user2 = Patient(
-        username='patient2',
+        username='patient4',
         password='',
         fName='Jane',
         lName='Smith',
@@ -38,7 +38,7 @@ def initDummyDatabase(db, printOut = False):
         is_disabled=False,
     )
     patient_user3 = Patient(
-        username='patient3',
+        username='patient1',
         password='',
         fName='Tony',
         lName='Wills',
@@ -48,7 +48,7 @@ def initDummyDatabase(db, printOut = False):
         is_disabled=False,
     )
     patient_user4 = Patient(
-        username='patient4',
+        username='patient2',
         password='',
         fName='Alice',
         lName='Johnson',
@@ -180,9 +180,16 @@ def initDummyDatabase(db, printOut = False):
         text="I feel alright. Thanks.",
         timestamp=datetime.datetime.now(),
     )
+    chat4 = ChatContent(
+        allocation_id=1,
+        user_id=9,
+        text="I'm happy to hear that",
+        timestamp=datetime.datetime.now(),
+    )
     db.insert_chatcontent(chat1)
     db.insert_chatcontent(chat2)
     db.insert_chatcontent(chat3)
+    db.insert_chatcontent(chat4)
 
     # Chat content for allocation 2
     chat11 = ChatContent(
@@ -288,7 +295,7 @@ def initDummyDatabase(db, printOut = False):
         patient_id=6,
         moodscore=5,
         comment='Had a productive session today.',
-        timestamp=datetime.datetime.now()
+        timestamp=datetime.datetime(year=2024, month=9, day=25, hour=15, minute=30, second=0)
     )
     mood_entry3 = MoodEntry(
         patient_id=6,
@@ -344,6 +351,24 @@ def initDummyDatabase(db, printOut = False):
         comment='OK, get back to normal.',
         timestamp=datetime.datetime(year=2024, month=11, day=5, hour=12, minute=0, second=0)
     )
+    mood_entry14 = MoodEntry(
+        patient_id=6,
+        moodscore=3,
+        comment='Feeling okay.',
+        timestamp=datetime.datetime(year=2024, month=12, day=1, hour=9, minute=0, second=0)
+    )
+    mood_entry15 = MoodEntry(
+        patient_id=6,
+        moodscore=4,
+        comment='Better than yesterday.',
+        timestamp=datetime.datetime(year=2024, month=12, day=3, hour=11, minute=0, second=0)
+    )
+    mood_entry16 = MoodEntry(
+        patient_id=6,
+        moodscore=5,
+        comment='Feeling good!',
+        timestamp=datetime.datetime(year=2024, month=12, day=4, hour=16, minute=0, second=0)
+    )
     mood_entry12 = MoodEntry(
         patient_id=7,
         moodscore=1,
@@ -352,34 +377,27 @@ def initDummyDatabase(db, printOut = False):
     )
     mood_entry13 = MoodEntry(
         patient_id=7,
-        moodscore=1,
-        comment='Still bad.',
+        moodscore=3,
+        comment='Alright.',
         timestamp=datetime.datetime(year=2024, month=11, day=29, hour=12, minute=0, second=0)
     )
-    
-    mood_entry14 = MoodEntry(
-        patient_id=12,
-        moodscore=3,
-        comment='Feeling okay.',
-        timestamp=datetime.datetime(year=2024, month=12, day=1, hour=9, minute=0, second=0)
-    )
-    mood_entry15 = MoodEntry(
-        patient_id=12,
+    mood_entry18 = MoodEntry(
+        patient_id=7,
         moodscore=2,
-        comment='Not a great day.',
-        timestamp=datetime.datetime(year=2024, month=12, day=2, hour=14, minute=0, second=0)
-    )
-    mood_entry16 = MoodEntry(
-        patient_id=12,
-        moodscore=4,
-        comment='Better than yesterday.',
-        timestamp=datetime.datetime(year=2024, month=12, day=3, hour=11, minute=0, second=0)
-    )
-    mood_entry17 = MoodEntry(
-        patient_id=12,
-        moodscore=5,
-        comment='Feeling good!',
+        comment='Not getting better',
         timestamp=datetime.datetime(year=2024, month=12, day=4, hour=16, minute=0, second=0)
+    )
+    mood_entry19 = MoodEntry(
+        patient_id=7,
+        moodscore=2,
+        comment='Feeling bad!',
+        timestamp=datetime.datetime(year=2024, month=12, day=5, hour=16, minute=0, second=0)
+    )
+    mood_entry20 = MoodEntry(
+        patient_id=7,
+        moodscore=1,
+        comment='Feel Terrible',
+        timestamp=datetime.datetime(year=2024, month=12, day=6, hour=16, minute=0, second=0)
     )
 
     # Insert into database
@@ -395,11 +413,14 @@ def initDummyDatabase(db, printOut = False):
     db.insert_mood_entry(mood_entry10)
     db.insert_mood_entry(mood_entry11)
     db.insert_mood_entry(mood_entry12)
+    db.insert_mood_entry(mood_entry12)
     db.insert_mood_entry(mood_entry13)
     db.insert_mood_entry(mood_entry14)
     db.insert_mood_entry(mood_entry15)
     db.insert_mood_entry(mood_entry16)
-    db.insert_mood_entry(mood_entry17)
+    db.insert_mood_entry(mood_entry18)
+    db.insert_mood_entry(mood_entry19)
+    db.insert_mood_entry(mood_entry20)
 
     ### JOURNAL ENTRIES
     journal_entry1 = JournalEntry(
@@ -521,17 +542,17 @@ def initDummyDatabase(db, printOut = False):
     appointment3 = Appointment(
         appointment_id=3,
         room_name="Room C",
-        patient_id=4,
-        mhwp_id=11,
-        status='Confirmed',
+        patient_id=6,
+        mhwp_id=9,
+        status='Pending',
         date=(datetime.datetime.now() + datetime.timedelta(days=15)).replace(hour=11, minute=0, second=0, microsecond=0),
         appointmentRelation=appointmentRelation
     )
     appointment4 = Appointment(
         appointment_id=4,
         room_name="Room D",
-        patient_id=5,
-        mhwp_id=11,
+        patient_id=7,
+        mhwp_id=9,
         status='Confirmed',
         date=(datetime.datetime.now() + datetime.timedelta(days=20)).replace(hour=9, minute=0, second=0, microsecond=0),
         appointmentRelation=appointmentRelation
@@ -590,56 +611,56 @@ def initDummyDatabase(db, printOut = False):
         topic="hello everyone, it's nice to be here",
         content="I'm new to here. What are we going to do here?",
         user_id=6,
-        timestamp=datetime.datetime.now()
+        timestamp=datetime.datetime(year=2024, month=11, day=26, hour=10, minute=0, second=0)
     )
     forumentry2 = Forum(
         parent_id=0,
         topic="Welcome to the garden!",
         content="The garden is a place for everyone to share their feelings,thoughts,anything. But please be gentel and polite",
-        user_id=8,
-        timestamp=datetime.datetime.now()
+        user_id=9,
+        timestamp=datetime.datetime(year=2024, month=11, day=25, hour=10, minute=0, second=0)
     )
     forumentry3 = Forum(
         parent_id=1,
         topic="Nice to know you",
         content="I'm new here too, but feel excited",
         user_id=7,
-        timestamp=datetime.datetime.now()
+        timestamp=datetime.datetime(year=2024, month=11, day=26, hour=12, minute=0, second=0)
     )
     forumentry4 = Forum(
         parent_id=1,
         topic="Welcome!",
         content="Hope you can enjoy this place",
         user_id=4,
-        timestamp=datetime.datetime.now()
+        timestamp=datetime.datetime(year=2024, month=11, day=27, hour=12, minute=0, second=0)
     )
     forumentry5 = Forum(
         parent_id=2,
         topic="Roger that, boss",
         content="",
-        user_id=5,
-        timestamp=datetime.datetime.now()
+        user_id=10,
+        timestamp=datetime.datetime(year=2024, month=11, day=28, hour=12, minute=0, second=0)
     )
     forumentry6 = Forum(
         parent_id=2,
         topic="Thank you, I'm happy to join.",
         content="",
         user_id=8,
-        timestamp=datetime.datetime.now()
+        timestamp=datetime.datetime(year=2024, month=11, day=29, hour=12, minute=0, second=0)
     )
     forumentry7 = Forum(
         parent_id=0,
         topic="Tips Sharing: Ten ways to relieve pressures",
         content="1.Deep Breathing: Practice mindful breathing exercises 2.Exercise: Engage in physical activity like jogging or yoga. 3.Meditation: Spend a few minutes daily meditating. 4.Time Management: Prioritize and plan tasks. 5.Nature Breaks: Spend time outdoors. 6.Social Support: Talk with friends or family. 7.Journaling: Write down your thoughts and feelings. 8.Music: Listen to calming or uplifting music. 9.Hobbies: Engage in activities you enjoy. 10.Sleep: Ensure you get adequate rest.",
-        user_id=5,
-        timestamp=datetime.datetime.now()
+        user_id=11,
+        timestamp=datetime.datetime(year=2024, month=12, day=1, hour=12, minute=0, second=0)
     )
     forumentry8 = Forum(
         parent_id=7,
         topic="Thank you for sharing!",
         content="",
         user_id=4,
-        timestamp=datetime.datetime.now()
+        timestamp=datetime.datetime(year=2024, month=12, day=2, hour=12, minute=0, second=0)
     )
     db.insert_forum(forumentry1)
     db.insert_forum(forumentry2)
@@ -652,7 +673,7 @@ def initDummyDatabase(db, printOut = False):
 
     ### NOTIFICATIONS
     notify1 = Notification(
-        user_id=4,
+        user_id=9,
         notifycontent="Newappointment",
         source_id=0,
         new=True,
@@ -666,23 +687,41 @@ def initDummyDatabase(db, printOut = False):
         timestamp=datetime.datetime.now(),
     )
     notify3 = Notification(
-        user_id=4,
+        user_id=9,
         notifycontent="Newreview",
         source_id=0,
         new=True,
         timestamp=datetime.datetime.now(),
     )
     notify4 = Notification(
-        user_id=4,
+        user_id=9,
         notifycontent="Newchat",
-        source_id=6,
+        source_id=7,
         new=True,
         timestamp=datetime.datetime.now(),
     )
+    notify5 = Notification(
+        user_id=6,
+        notifycontent="AppointmentConfirmed",
+        source_id=0,
+        new=True,
+        timestamp=datetime.datetime(year=2024, month=12, day=7, hour=10, minute=0, second=0),
+    )
+    notify6 = Notification(
+        user_id=9,
+        notifycontent="MoodAlert",
+        source_id=7,
+        new=True,
+        timestamp=datetime.datetime(year=2024, month=12, day=6, hour=16, minute=0, second=0),
+    )
+
+
     db.insert_notification(notify1)
     db.insert_notification(notify2)
     db.insert_notification(notify3)
     db.insert_notification(notify4)
+    db.insert_notification(notify5)
+    db.insert_notification(notify6)
 
     ### EXERCISE RECORDS
     exer1 = ExerRecord(

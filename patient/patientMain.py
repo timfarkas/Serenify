@@ -386,13 +386,14 @@ class Patient:
             exercise_text = "No exercises available."
 
         # Display the exercise recommendations in the exercise frame
-        exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 16), justify="left")
+        exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 22,"bold"), justify="left")
         exercises_label.pack()
+
         back_button = tk.Button(self.exercise_frame, text="Go to Exercises", command=self.exercises,width=20)
-        back_button.pack(pady=10)
+        back_button.pack(pady=2)
         # Add a button to go back to mood selection
         back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood,width=20)
-        back_button.pack(pady=10)
+        back_button.pack(pady=2)
 
     def back_to_mood(self):
         self.root2.destroy()
@@ -494,7 +495,7 @@ class Patient:
 
         # Insert all entries into the Treeview
         for entry in journal_entries:
-            self.journal_tree.insert("", "end", values=(entry[2][:50], entry[3].strftime("%Y-%m-%d %H:%M")))
+            self.journal_tree.insert("", "end", values=(entry[2][:], entry[3].strftime("%Y-%m-%d %H:%M")))
 
     def show_full_entry(self, event):
         """Display the full content of a journal entry."""
@@ -606,8 +607,11 @@ class Patient:
         exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 12), justify="left")
         exercises_label.pack()
 
+        back_button = tk.Button(self.exercise_frame, text="Go to Exercises", command=self.exercises, width=15)
+        back_button.pack(pady=10)
+
         # Add a button to go back to mood selection
-        back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood)
+        back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood, width=15)
         back_button.pack(pady=10)
 
     def back_to_mood(self):
@@ -664,7 +668,7 @@ class Patient:
 
             # Reload the Treeview with matching entries
             for entry in matching_entries:
-                self.journal_tree.insert("", "end", values=(entry[2][:50], entry[3].strftime("%Y-%m-%d %H:%M")))
+                self.journal_tree.insert("", "end", values=(entry[2][:], entry[3].strftime("%Y-%m-%d %H:%M")))
         else:
             # If no search term, reload all entries
             self.load_journal_entries()
