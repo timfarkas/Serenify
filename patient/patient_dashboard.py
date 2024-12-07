@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import *
 import os
 import sys
@@ -126,15 +127,15 @@ def openpatientdashboard():
     fieldset2.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
     label1 = tk.Label(fieldset2, text=f"Exercises in 30 days: {exercount}")
-    label1.grid(row=0, column=0, sticky="w")
+    label1.grid(row=1, column=0, sticky="w")
     label2 = tk.Label(fieldset2, text=f"Average mood in 7 days: {averagescore}")
-    label2.grid(row=1, column=0, sticky="w")
+    label2.grid(row=0, column=0, sticky="w")
     appointments = db.getRelation('Appointment').getRowsWhereEqual('patient_id', userID)
     appcount=0
     for i in appointments:
-        if (i[5]=="Confirmed") and(i[3]>datetime.now()):
+        if (i[5]=="Confirmed") and(i[3]>datetime.datetime.now()):
             appcount+=1
-    label3 = tk.Label(fieldset2, text=f"Appointments: {appcount}")
+    label3 = tk.Label(fieldset2, text=f"Upcoming appointments: {appcount}")
     label3.grid(row=2, column=0, sticky="w")
     # label3 = tk.Label(fieldset2, text=f"My Rating: {myratingscore}")
     # label3.grid(row=2, column=0, sticky="w")
@@ -149,16 +150,21 @@ def openpatientdashboard():
     # tree_frame.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
     tree_frame = tk.LabelFrame(main_frame, text="Mood Tracker", padx=10, pady=10, labelanchor="n")
     tree_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+    usermood.sort(key=lambda x:x[4])
 
-    length = len(usermood)
-    dotdata = []
-    interval = winwidth // (len(usermood) + 1)
-    radius = 5
-    cord = interval
-
-    for i in usermood:
-        dotdata.append([cord, winheight - 40 - i[2] * 30])  # Adjust height for mood visualization
-        cord += interval
+    maxdots = 10
+    showmood = usermood[-min(maxdots,len(usermood)):]
+    print(showmood)
+    length = len(showmood)
+    dotdata=[]
+    winwidth=500
+    winhight=300
+    interval=winwidth//(length+1)
+    radius=5
+    cord=interval
+    for i in showmood:
+        dotdata.append([cord, 260-i[2]*30])
+        cord+=interval
     canv = Canvas(tree_frame, width=winwidth, height=winheight, bg="white")
     canv.grid(row=0, column=0, sticky="nsew")
 
@@ -169,16 +175,42 @@ def openpatientdashboard():
             if i >= 1:
                 canv.create_line(dotdata[i][0], dotdata[i][1], dotdata[i - 1][0], dotdata[i - 1][1], width=2,
                                  fill="pink")
-            canv.create_text(dotdata[i][0], winheight - 20, text=usermood[i][4].strftime("%b %d"), fill="gray",
+            canv.create_text(dotdata[i][0], winheight - 40, text=showmood[i][4].strftime("%b %d"), fill="gray",
                              font=("Arial", 10))
-            canv.create_text(dotdata[i][0], dotdata[i][1] - 20, text=usermood[i][2], fill="gray", font=("Arial", 10))
+            canv.create_text(dotdata[i][0], dotdata[i][1] - 20, text=showmood[i][2], fill="gray", font=("Arial", 10))
         canv.create_rectangle(15, 40, winwidth - 15, winheight - 15, outline="gray")
         canv.create_text(20, 20, text=f"Name: {userName}", fill="Lightseagreen", font=("Arial", 20, "bold"),anchor="w")
     else:
         canv.create_text(winwidth / 2, winheight / 2, text="No Record", fill="Gray", font=("Arial", 20, "bold"))
+    mood_btn = Button(tree_frame, text="View Full Mood Records", command=lambda: open_mood_records_window(userID))
+    mood_btn.grid(row=1)
 
+    def open_mood_records_window(userID):
+        mood_window = Toplevel()
+        mood_window.title("Mood Records")
+        mood_window.geometry("600x400")
 
+        tree = ttk.Treeview(mood_window, columns=("Date", "Score", "Comments"), show="headings")
+        tree.heading("Date", text="Date")
+        tree.heading("Score", text="Score")
+        tree.heading("Comments", text="Comments")
+        tree.column("Date", width=150, anchor="center")
+        tree.column("Score", width=100, anchor="center")
+        tree.column("Comments", width=300, anchor="w")
 
+        Moodrecord = db.getRelation('MoodEntry')
+        usermood = Moodrecord.getRowsWhereEqual('patient_id', userID)
+
+        for mood in usermood:
+            date = mood[4].strftime("%Y-%m-%d")
+            score = mood[2]
+            comments = mood[3]
+            tree.insert("", "end", values=(date, score, comments))
+
+        tree.pack(fill="both", expand=True)
+
+        close_btn = Button(mood_window, text="Close", command=mood_window.destroy)
+        close_btn.pack(pady=10)
 
     allexer = db.getRelation('ExerRecord').getRowsWhereEqual('user_id', userID)
     exerrecords = dict()
@@ -187,10 +219,10 @@ def openpatientdashboard():
             exerrecords[i[3].strftime("%Y-%m-%d")] += 1
         else:
             exerrecords[i[3].strftime("%Y-%m-%d")] = 1
-    print(exerrecords)
+    # print(exerrecords)
     # userdata=room1.getRowsWhereEqual("user_id",3)
     sorted_list = sorted(exerrecords.items(), key=lambda x:x[0])
-    print(sorted_list)
+    # print(sorted_list)
     displaynum = 7
     if len(sorted_list) > displaynum:
         sorted_list = sorted_list[-displaynum:]

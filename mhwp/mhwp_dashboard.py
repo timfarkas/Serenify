@@ -9,12 +9,10 @@ import sys
 from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
-from database.database import Database
 from database.entities import User
 from addfeature.notificationbox import opennotification
 from addfeature.forum import openforsum
-from addfeature.patientMoodDisplay import displaymood
-from addfeature.globaldb import global_db
+from mhwp.patientMoodDisplay import displaymood
 from mhwp.booking import MHWPAppointmentManager
 from mhwp.patientInfo import PatientRecords
 from addfeature.globaldb import global_db
