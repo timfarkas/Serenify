@@ -5,6 +5,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database  # Import Database
+from database.entities import User
 from admin.adminFunctions import AdminMainPage # Linking our admin module to the login
 from mhwp.mhwp_dashboard import MHWPDashboard # Linking our mhwp module to the login
 from patient.patientMain import Patient # Linking our patient module to the login
@@ -28,16 +29,12 @@ class LoginPage:
         h1_label.pack()
 
         # Radio buttons for role selection
-        self.user_role = tk.StringVar(value="admin")  # Default radio button is "admin"
+        self.user_role = tk.StringVar(value="Admin")  # Default radio button is "admin"
         self.role_label = tk.Label(root, text="Please select your user type:")
         self.role_label.pack()
         roles = ["Admin", "MHWP", "Patient"]
         for role in roles:
-            tk.Radiobutton(root, text=role.capitalize(), variable=self.user_role, value=role).pack()
-
-        # New patient button
-        self.new_button = tk.Button(root, text="New Patient", command=self.newPatientPage)
-        self.new_button.pack()
+            tk.Radiobutton(root, text=role, variable=self.user_role, value=role).pack()
 
         # Username and password fields
         self.username_label = tk.Label(root, text="Username:")
@@ -53,8 +50,15 @@ class LoginPage:
         self.login_button = tk.Button(root, text="Login", command=self.handle_login)
         self.login_button.pack()
 
+        spacer = tk.Label(root, text="", height=1)
+        spacer.pack()
+
+        # New patient button
+        self.new_button = tk.Button(root, text="Sign up as new patient", command=self.newPatientPage)
+        self.new_button.pack()
+
         # Reset password button
-        self.reset_button = tk.Button(root, text="Forgotten your password?", command=self.passwordResetPage)
+        self.reset_button = tk.Button(root, text="Forgot password?", command=self.passwordResetPage)
         self.reset_button.pack()
 
     def handle_login(self):
@@ -74,12 +78,12 @@ class LoginPage:
             # Otherwise, if found, retrieve the user information.
             user_data = user_data[0]
             # Verify the password
-            if user_data[3] != password:  # Now we check the password used is correct
+            if user_data[User.PASSWORD] != password:  # Now we check the password used is correct
                 messagebox.showerror("Login Failed", "Invalid password. Please try again.")
                 return
             
-            if user_data[6] != role:  # Check the role chosen is also correct to the users type
-                messagebox.showerror("Login Failed", "Incorrect role. Please try again.")
+            if user_data[User.TYPE] != role:  # Check the role chosen is also correct to the users type
+                messagebox.showerror("Login Failed", "Your selected role does not match your user role.")
                 return
             
             # If username, password, and role are valid, extract user details as session variables

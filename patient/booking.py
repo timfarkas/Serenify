@@ -345,7 +345,6 @@ class AppointmentBooking:
 
             self.load_appointments()
             self.update_available_times()
-            self.send_email_notification('cancel')
 
 
         except Exception as e:

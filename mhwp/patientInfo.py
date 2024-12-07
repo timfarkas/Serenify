@@ -25,8 +25,8 @@ class PatientRecords:
         self.title_label.grid(row=0, column=0, columnspan=2, pady=5)
 
         #Back button
-        self.back_button = tk.Button(self.root, text="Back", command= self.backButton)
-        self.back_button.grid(row=0, column=0, padx=2, pady=5)
+        self.back_button = tk.Button(self.root, text="Back", command= self.backButton,width=10)
+        self.back_button.grid(row=3, column=1, padx=2, pady=5,sticky="se")
 
         # Load conditions from conditions.txt
         self.conditions_list = self.load_conditions("conditions.txt")
@@ -140,7 +140,13 @@ class PatientRecords:
             self.record_text.config(state=tk.DISABLED)
         else:
             # If no records are found
-            messagebox.showerror("Error", "User not found in the database.")
+            # Show empty diagnosis
+            self.record_text.config(state=tk.NORMAL)
+            self.record_text.delete("1.0", tk.END)
+            self.record_text.insert(tk.END, f"Most Recent Diagnosis: None \n\n")
+            # Show lack of notes
+            self.record_text.insert(tk.END, "No notes available.\n")
+            self.record_text.config(state=tk.DISABLED)
 
     def save_note(self):
         """Saves the notes for the selected patient."""
@@ -258,7 +264,7 @@ class PatientRecords:
 
     def backButton(self):
         import subprocess
-        subprocess.Popen(["python3", "patient/patientMain.py"])
+        subprocess.Popen(["python3", "mhwp/mhwp_dashboard.py"])
         self.db.close()
         self.root.destroy()
 

@@ -10,6 +10,7 @@ from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database
+from database.entities import User
 from addfeature.notificationbox import opennotification
 from addfeature.forum import openforsum
 from addfeature.patientMoodDisplay import displaymood
@@ -116,9 +117,16 @@ class MHWPDashboard:
 
     def create_widgets(self):
         """Create all widgets in the GUI."""
+        # Title frame
+        title_frame = tk.Frame(self.root, width=600)
+        title_frame.grid(row=0, column=0, sticky="nsew")
+        self.user = self.db.getRelation("User").getRowsWhereEqual("user_id", self.userID)[0]
+        self.name = f"{self.user[User.FNAME]}. {self.user[User.LNAME]}" if self.user[User.FNAME] == "Dr" else f"{self.user[User.FNAME]} {self.user[User.LNAME]}"
+        tk.Label(title_frame, text=f"Welcome Back, {self.name}!", font=("Arial", 24, "bold")).pack(pady=10)
+
         # Main frame
         main_frame = tk.Frame(self.root, width=600)
-        main_frame.grid(row=0, column=0, sticky="nsew")
+        main_frame.grid(row=1, column=0, sticky="nsew")
         main_frame.grid_columnconfigure(0, weight=0, uniform="group")  # Left fieldset
         main_frame.grid_columnconfigure(1, weight=0, uniform="group")  # Right fieldset
 
@@ -132,31 +140,31 @@ class MHWPDashboard:
             PatientRecords()
 
         # Left fieldset
-        fieldset1 = tk.LabelFrame(main_frame, text="MHWP Key Feature", padx=10, pady=10)
+        fieldset1 = tk.LabelFrame(main_frame, text="MHWP Functions", padx=10, pady=10)
         fieldset1.grid(row=0, column=0, padx=10, pady=10)
-        Button(fieldset1, text="Manage Patients", command=openpatientedit, width=15).grid(row=1, column=0, sticky="w")
-        Button(fieldset1, text="Review Booking", command=openappointment, width=15).grid(row=2, column=0, sticky="w")
-        Button(fieldset1, text="Enter Forum", command=openforsum, width=15).grid(row=3, column=0, sticky="w")
-        Button(fieldset1, text="Open Message", command=opennotification, width=15).grid(row=4, column=0, sticky="w")
+        Button(fieldset1, text="Patient Records", command=openpatientedit, width=15).grid(row=1, column=0, sticky="w")
+        Button(fieldset1, text="Appointments", command=openappointment, width=15).grid(row=2, column=0, sticky="w")
+        Button(fieldset1, text="Patient Forum", command=openforsum, width=15).grid(row=3, column=0, sticky="w")
+        Button(fieldset1, text="My Messages", command=opennotification, width=15).grid(row=4, column=0, sticky="w")
         self.label3 = tk.Label(fieldset1, text=f"You have {self.message_counter} new messages")
         self.label3.grid(row=5, column=0, sticky="w")
 
 
         # Right fieldset
-        fieldset2 = tk.LabelFrame(main_frame, text="MHWP Data", padx=10, pady=10)
+        fieldset2 = tk.LabelFrame(main_frame, text="Your Statistics", padx=10, pady=10)
         fieldset2.grid(row=0, column=1, padx=10, pady=10)
-        tk.Label(fieldset2, text=f"Total Patients: {len(self.patient_data)}").grid(row=0, column=0, sticky="w")
+        tk.Label(fieldset2, text=f"Allocated Patients: {len(self.patient_data)}").grid(row=0, column=0, sticky="w")
         appointments = self.db.getRelation('Appointment').getRowsWhereEqual('mhwp_id', self.userID)
         appcount=0
         for i in appointments:
             if (i[5] == "Confirmed") and (i[3]>datetime.now()):
                 appcount += 1
-        tk.Label(fieldset2, text=f"Appointments: {appcount}").grid(row=1, column=0, sticky="w")
+        tk.Label(fieldset2, text=f"Upcoming Appointments: {appcount}").grid(row=1, column=0, sticky="w")
         tk.Label(fieldset2, text=f"My Rating: {self.my_rating_score}").grid(row=2, column=0, sticky="w")
-        Button(fieldset2, text="View my review", command=open_review, width=15).grid(row=3, column=0, sticky="w")
+        Button(fieldset2, text="View Reviews", command=open_review, width=15).grid(row=3, column=0, sticky="w")
 
         # Treeview
-        tree_frame = tk.Frame(main_frame)
+        tree_frame = tk.LabelFrame(main_frame, text="My Patients", padx=10, pady=10)
         tree_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
         self.tree = ttk.Treeview(tree_frame, columns=("#1", "#2", "#3", "#4", "#5"), show="headings", height=10)
         self.tree.pack(fill="x", padx=10, pady=10)
@@ -175,10 +183,12 @@ class MHWPDashboard:
             self.tree.insert("", tk.END, values=item)
         self.tree.bind("<Double-1>", self.on_row_selected)
 
-        Label(self.root, text="Note: Double click to show mood tracker", anchor="e").grid()
-
+        note = Label(tree_frame, text="Note: Double click to show mood tracker", anchor="e")
+        note.pack(side=LEFT)
+        
+        
         logout_button = tk.Button(self.root, text="Logout", command=self.logout, width=15)
-        logout_button.grid(row=2, column=0, pady=10)  # Positioned at the bottom
+        logout_button.grid(row=2, column=0, pady=10)  
     def on_row_selected(self, event):
         """Handle double-click on a row in the treeview."""
         selected_item = self.tree.selection()[0]

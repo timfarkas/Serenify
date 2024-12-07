@@ -8,11 +8,12 @@ class Calendar(ttk.Frame):
     def __init__(self, parent, **kwargs):
         super().__init__(parent)
 
-        # Initialize variables
+        # Initialise variables
         self._mindate = kwargs.get('mindate', None)
         self._maxdate = kwargs.get('maxdate', None)
         self._pattern = kwargs.get('date_pattern', 'yyyy-mm-dd')
         self._selected_date = datetime.now().date()
+        self._current_month = self._selected_date
 
         # Month and year navigation
         header_frame = ttk.Frame(self)
@@ -31,7 +32,7 @@ class Calendar(ttk.Frame):
                 days_frame,
                 text=day,
                 anchor='center',
-                width=8  # Set fixed width
+                width=8
             ).grid(row=0, column=i, sticky='nsew', padx=1, pady=1)
 
         # Configure grid columns to be equal width
@@ -51,16 +52,16 @@ class Calendar(ttk.Frame):
             widget.destroy()
 
         # Update header
-        self.header_label.config(text=self._selected_date.strftime('%B %Y'))
+        self.header_label.config(text=self._current_month.strftime('%B %Y'))
 
         # Get calendar for current month
-        cal = calendar.monthcalendar(self._selected_date.year, self._selected_date.month)
+        cal = calendar.monthcalendar(self._current_month.year, self._current_month.month)
 
         # Create calendar grid
         for week_num, week in enumerate(cal):
             for day_num, day in enumerate(week):
                 if day != 0:
-                    date_obj = date(self._selected_date.year, self._selected_date.month, day)
+                    date_obj = date(self._current_month.year, self._current_month.month, day)
                     disabled = self._is_date_disabled(date_obj)
 
                     btn = ttk.Button(
@@ -71,7 +72,7 @@ class Calendar(ttk.Frame):
 
                     if disabled:
                         btn.state(['disabled'])
-                    if date_obj == self._selected_date:
+                    if self._selected_date and date_obj == self._selected_date:
                         btn.state(['pressed'])
 
                     btn.grid(row=week_num, column=day_num, padx=1, pady=1, sticky='nsew')
@@ -80,7 +81,6 @@ class Calendar(ttk.Frame):
         for i in range(7):
             self.cal_frame.grid_columnconfigure(i, weight=1)
 
-    # Validity checks added for date and time selection on calendar
     def _is_date_disabled(self, date_obj):
         now = datetime.now()
         today = now.date()
@@ -103,14 +103,20 @@ class Calendar(ttk.Frame):
             self.event_generate('<<CalendarSelected>>')
 
     def _prev_month(self):
-        first_day = date(self._selected_date.year, self._selected_date.month, 1)
-        self._selected_date = (first_day - timedelta(days=1)).replace(day=1)
+        first_day = date(self._current_month.year, self._current_month.month, 1)
+        prev_month = (first_day - timedelta(days=1)).replace(day=1)
+
+        # Don't allow navigation if prev month is before current month
+        if prev_month < datetime.now().date().replace(day=1):
+            return
+
+        self._current_month = prev_month
         self._update_calendar()
 
     def _next_month(self):
-        days_in_month = calendar.monthrange(self._selected_date.year, self._selected_date.month)[1]
-        last_day = date(self._selected_date.year, self._selected_date.month, days_in_month)
-        self._selected_date = (last_day + timedelta(days=1)).replace(day=1)
+        days_in_month = calendar.monthrange(self._current_month.year, self._current_month.month)[1]
+        last_day = date(self._current_month.year, self._current_month.month, days_in_month)
+        self._current_month = (last_day + timedelta(days=1)).replace(day=1)
         self._update_calendar()
 
     def get_date(self):
