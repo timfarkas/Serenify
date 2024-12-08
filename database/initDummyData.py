@@ -102,6 +102,15 @@ def initDummyDatabase(db, printOut = False):
         email='drwhite@example.com',
         specialization='Cognitive Behavioral Therapy'
     )
+    mhwp_disabled = MHWP(
+        username='mhwp4',
+        password='',
+        fName='Dr',
+        lName='Jim',
+        email='Jim@example.com',
+        specialization='Cognitive Behavioral Therapy',
+        is_disabled=True,
+    )
 
     # Insert Admin, Patient & User
     db.insert_admin(admin_user0) ## ID 1
@@ -116,6 +125,7 @@ def initDummyDatabase(db, printOut = False):
     db.insert_mhwp(mhwp_user2) ## ID 10
     db.insert_mhwp(mhwp_user3) ## ID 11
     db.insert_patient(patient_disabled) ## ID 12
+    db.insert_mhwp(mhwp_disabled)## ID 13
 
     ### ALLOCATIONS
     # Allocate mhwp to patient and insert allocation into database
