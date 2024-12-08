@@ -25,28 +25,17 @@ sess.setId(6)
 sess.setRole(db.getRelation('User').getRowsWhereEqual("user_id",sess.getId())[0][6])
 sess.close()
 db.close()
-#
+
 exec(open("patient/patientMain.py").read())
 # MHWPDashboard()
 # Exercises()
 # subprocess.Popen(["python3", "mhwp/mhwp_dashboard.py"])
-
-
 # Patient()
-
 # exec(open("patient/patientMain.py").read())
-
 # openpatientdashboard()
 # openrating()
 # opennotification()
 # openforsum()
-#
 # startchatroom(userID,"Patient")
 # MHWPAppointmentManager(root,userID)
 
-# db.close()
-
-
-
-# print("program finished")
-# userID= 5

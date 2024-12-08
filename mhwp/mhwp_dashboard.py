@@ -21,25 +21,21 @@ global global_db
 db=global_db
 
 def open_review():
-    # Create the main application window
     sess = Session()
     sess.open()
     userID = sess.getId()
     identity = sess.getRole()
     root = tk.Tk()
     root.title("My Patient Review")
-    root.geometry("600x200")  # Set window size (optional)
+    root.geometry("600x200")
 
-    # Create a Treeview widget
     tree = ttk.Treeview(root, columns=("Time", "Review", "Rate"), show="headings")
     tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-    # Define column headings
     tree.heading("Time", text="Time")
     tree.heading("Review", text="Review")
     tree.heading("Rate", text="Rate")
 
-    # Define column widths
     tree.column("Time", width=100, anchor="center")
     tree.column("Review", width=200, anchor="w")
     tree.column("Rate", width=50, anchor="center")
@@ -49,50 +45,36 @@ def open_review():
     for row in reviews:
         tree.insert("", "end", values=(row[5].strftime("%Y-%m-%d"),row[4],row[3]))
 
-    # Add a scrollbar
     scrollbar = ttk.Scrollbar(root, orient="vertical", command=tree.yview)
     scrollbar.pack(side="right", fill="y")
     tree.configure(yscrollcommand=scrollbar.set)
 
-    # Run the main Tkinter event loop
     root.mainloop()
 
 class MHWPDashboard:
     def __init__(self):
-        # Initialize session and database
         self.db=db
         self.sess = Session()
         self.sess.open()
         self.userID = self.sess.getId()
-        # Initialize Tkinter root
         self.root = tk.Tk()
         self.root.title("MHWP Dashboard")
 
-        # Configure main grid
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
-        # Fetch initial data
         self.patient_data = []
         self.message_counter = 0
         self.my_rating_score = "NA"
         self.fetch_data()
 
-        # Build the GUI
         self.create_widgets()
 
-
-        # Set up periodic refresh
         self.root.after(1000, self.refresh)
-        # Handle window close
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
-        self.disable_interactive_widgets()
-        # Start the Tkinter main loop
         self.root.mainloop()
 
     def fetch_data(self):
-        """Fetch all data needed for the dashboard."""
-        # Fetch patient and notification data
         patient_list = self.db.getRelation('Allocation').getRowsWhereEqual('mhwp_id', self.userID)
         patient_ids = [i[2] for i in patient_list]
 
@@ -115,19 +97,16 @@ class MHWPDashboard:
         self.message_counter = sum(1 for n in notifications if n[1] == self.userID)
 
     def create_widgets(self):
-        """Create all widgets in the GUI."""
-        # Title frame
         title_frame = tk.Frame(self.root, width=600)
         title_frame.grid(row=0, column=0, sticky="nsew")
         self.user = self.db.getRelation("User").getRowsWhereEqual("user_id", self.userID)[0]
         self.name = f"{self.user[User.FNAME]}. {self.user[User.LNAME]}" if self.user[User.FNAME] == "Dr" else f"{self.user[User.FNAME]} {self.user[User.LNAME]}"
         tk.Label(title_frame, text=f"Welcome Back, {self.name}!", font=("Arial", 24, "bold")).pack(pady=10)
 
-        # Main frame
         main_frame = tk.Frame(self.root, width=600)
         main_frame.grid(row=1, column=0, sticky="nsew")
-        main_frame.grid_columnconfigure(0, weight=0, uniform="group")  # Left fieldset
-        main_frame.grid_columnconfigure(1, weight=0, uniform="group")  # Right fieldset
+        main_frame.grid_columnconfigure(0, weight=0, uniform="group")
+        main_frame.grid_columnconfigure(1, weight=0, uniform="group")
 
         def openappointment():
             db.close()
@@ -167,7 +146,7 @@ class MHWPDashboard:
         self.viewbutton=Button(fieldset2, text="View Reviews", command=open_review, width=15)
         self.viewbutton.grid(row=3, column=0, sticky="w")
 
-        # Treeview
+        # Treeview for patient list
         tree_frame = tk.LabelFrame(main_frame, text="My Patients", padx=10, pady=10)
         tree_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=10, pady=10)
         self.tree = ttk.Treeview(tree_frame, columns=("#1", "#2", "#3", "#4", "#5"), show="headings", height=10)
@@ -200,16 +179,13 @@ class MHWPDashboard:
         displaymood(display_id)
 
     def logout(self):
-        self.db.close()  # Close the database
-        self.sess.close()  # Close the session
-        self.root.destroy()  # Destroy the current window
-        subprocess.Popen(["python3", "login/login.py"])  # Open the login screen
+        self.db.close()
+        self.sess.close()
+        self.root.destroy()
+        subprocess.Popen(["python3", "login/login.py"])
 
     def refresh(self):
-        # print(self.db._is_closed)
-        # if self.db._is_closed:
-        #     self.db=Database()
-        print("Refreshing")
+        # print("Refreshing")
         notifications = self.db.getRelation('Notification').getRowsWhereEqual('new', True)
         self.message_counter = sum(1 for n in notifications if n[1] == self.userID)
         self.label3.config(text=f"You have {self.message_counter} new messages")

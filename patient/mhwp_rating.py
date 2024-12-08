@@ -25,7 +25,7 @@ def openrating():
     email = mhwpdata[0][2]
 
     def submit_review():
-        ratingscore = rating_entry.get()  # Get the input from the entry box
+        ratingscore = rating_entry.get()
         reviewcomment = input_box.get("1.0", tk.END).strip()
         reviewlist=db.getRelation('MHWPReview')
         mhwpidreview=reviewlist.getRowsWhereEqual('mhwp_id', MHWPID)
@@ -37,7 +37,7 @@ def openrating():
             reviewlist.editFieldInRow(reviewid, "reviewscore", int(ratingscore))
             reviewlist.editFieldInRow(reviewid, "reviewcomment",reviewcomment)
             reviewlist.editFieldInRow(reviewid, "timestamp", datetime.datetime.now())
-            print("review updated")
+            # print("review updated")
             messagebox.showinfo("Review updated","You already have a review. Review has been updated.")
         else:
             newreviewentry = MHWPReview(
@@ -69,11 +69,6 @@ def openrating():
     spe_label.grid(row=1, column=0)
     ema_label = tk.Label(fieldset, text="Email: "+email)
     ema_label.grid(row=2, column=0)
-    #
-    # age_label = tk.Label(text="Email:")
-    # age_label.grid(row=2, column=0)
-    # age_entry = tk.Entry()
-    # age_entry.grid(row=2, column=1)
 
     fieldset2 = tk.LabelFrame(root, text="Rating on MHWP (Scale 1-5):", padx=10, pady=10)
     fieldset2.pack(padx=10, pady=10)

@@ -27,19 +27,17 @@ def displaymood(patientID):
     userName = str(userdata[0][4]) + ' ' + str(userdata[0][5])
     Moodrecord = db.getRelation('MoodEntry')
     usermood = Moodrecord.getRowsWhereEqual('patient_id', patientID)
-    usermood.sort(key=lambda x:x[4])
-    maxdots = 10
-    showmood = usermood[-maxdots:]
-    length = len(showmood)
-    dotdata = []
-    winwidth = 500
-    winhight = 300
-    interval = winwidth // (length + 1)
-    radius = 5
-    cord = interval
-    for i in showmood:
-        dotdata.append([cord, 260 - i[2] * 30])
-        cord += interval
+    length = len(usermood)
+    dotdata=[]
+    winwidth=500
+    winhight=300
+    interval=winwidth//(length+1)
+    radius=5
+    cord=interval
+    for i in usermood:
+        dotdata.append([cord, 260-i[2]*30])
+        cord+=interval
+
     root = Tk()
     root.title("Patient Info")
     fieldset2 = LabelFrame(root, text="Patient Info", padx=5, pady=5, labelanchor="n",width=winwidth,height=winhight)
@@ -55,6 +53,7 @@ def displaymood(patientID):
     label4 = Label(fieldset2, text=f"Emergency Contact Email: {patientinfo[0][7]}")
     label4.grid(row=3, column=0, sticky="w")
 
+    # Draw the chart
     canv = Canvas(root, width=winwidth, height=winhight, bg="white")
     if len(dotdata)>0:
         for i in dotdata:
