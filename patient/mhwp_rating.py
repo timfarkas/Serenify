@@ -49,8 +49,14 @@ def openrating():
             )
             db.insert_review_entry(newreviewentry)
             messagebox.showinfo("Review created","A new review has been successfully created.")
+        root.destroy()
+        # if user_input.strip():  # Check if the input is not empty
+        #     print(f"User Review: {user_input}")  # Display the input (you can save or process it)
+        #     input_box.delete(0, tk.END)  # Clear the entry box
+        # else:
+        #     print("No input provided!")
 
-
+    # H1 equivalent
     h1_label = tk.Label(root, text="MHWP Review", font=("Arial", 24, "bold"),width=20)
     h1_label.pack()
 

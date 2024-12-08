@@ -1,11 +1,12 @@
 from tkinter import *
+from tkinter import ttk
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 
 from database.database import Database
-from .chatroom import startchatroom
+from addfeature.chatroom import startchatroom
 
 sess = Session()
 sess.open()
@@ -28,7 +29,6 @@ def displaymood(patientID):
     usermood = Moodrecord.getRowsWhereEqual('patient_id', patientID)
     length = len(usermood)
     dotdata=[]
-
     winwidth=500
     winhight=300
     interval=winwidth//(length+1)
@@ -62,18 +62,50 @@ def displaymood(patientID):
         for i in range(len(dotdata)):
             if i>=1:
                 canv.create_line((dotdata[i][0],dotdata[i][1]), (dotdata[i-1][0],dotdata[i-1][1]), width=2, fill="pink")
-            canv.create_text(dotdata[i][0], winhight-40, text=usermood[i][4].strftime("%b %d"), fill="gray", font=("Arial", 12))
-            canv.create_text(dotdata[i][0], dotdata[i][1]-20, text=usermood[i][2], fill="gray", font=("Arial", 12))
+            canv.create_text(dotdata[i][0], winhight-40, text=showmood[i][4].strftime("%b %d"), fill="gray", font=("Arial", 12))
+            canv.create_text(dotdata[i][0], dotdata[i][1]-20, text=showmood[i][2], fill="gray", font=("Arial", 12))
         canv.create_rectangle(15, 40, winwidth-15, winhight-15, outline="gray")
         canv.create_text(20, 20, text=f"Name: {userName}", fill="Lightseagreen", font=("Arial", 20, "bold"),anchor="w")
 
     else:
         canv.create_text(winwidth/2,winhight/2, text="No Record", fill="Gray", font=("Arial", 20, "bold"))
     canv.pack()
+
+    mood_btn = Button(root, text="Full Mood Records", command=lambda: open_mood_records_window(patientID),width=20)
+    mood_btn.pack(pady=3)
+
     if identity=="MHWP":
         # print("before start",userId,"m")
-        btn = Button(root, text="Start Chat",  command=lambda: startchatroom(patientID))
-        btn.pack(pady=10)
+        btn = Button(root, text="Start Chat",  command=lambda: startchatroom(patientID),width=20)
+        btn.pack(pady=5)
+
+    def open_mood_records_window(patientID):
+        mood_window = Toplevel()
+        mood_window.title("Mood Records")
+        mood_window.geometry("600x400")
+
+        tree = ttk.Treeview(mood_window, columns=("Date", "Score", "Comments"), show="headings")
+        tree.heading("Date", text="Date")
+        tree.heading("Score", text="Score")
+        tree.heading("Comments", text="Comments")
+        tree.column("Date", width=150, anchor="center")
+        tree.column("Score", width=100, anchor="center")
+        tree.column("Comments", width=300, anchor="w")
+
+        Moodrecord = db.getRelation('MoodEntry')
+        usermood = Moodrecord.getRowsWhereEqual('patient_id', patientID)
+
+        for mood in usermood:
+            date = mood[4].strftime("%b %d, %Y")
+            score = mood[2]
+            comments = mood[3]
+            tree.insert("", "end", values=(date, score, comments))
+
+        tree.pack(fill="both", expand=True)
+
+        close_btn = Button(mood_window, text="Close", command=mood_window.destroy)
+        close_btn.pack(pady=10)
+
     def on_close():
         # db.close()
         root.destroy()

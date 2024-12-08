@@ -2,19 +2,18 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 import subprocess
-
+import pandas as pd
+from tkinter import messagebox
 
 import os
 import sys
 from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
-from database.database import Database
 from database.entities import User
 from addfeature.notificationbox import opennotification
 from addfeature.forum import openforsum
-from addfeature.patientMoodDisplay import displaymood
-from addfeature.globaldb import global_db
+from mhwp.patientMoodDisplay import displaymood
 from mhwp.booking import MHWPAppointmentManager
 from mhwp.patientInfo import PatientRecords
 from addfeature.globaldb import global_db
@@ -121,10 +120,14 @@ class MHWPDashboard:
         # Left fieldset
         fieldset1 = tk.LabelFrame(main_frame, text="MHWP Functions", padx=10, pady=10)
         fieldset1.grid(row=0, column=0, padx=10, pady=10)
-        Button(fieldset1, text="Patient Records", command=openpatientedit, width=15).grid(row=1, column=0, sticky="w")
-        Button(fieldset1, text="Appointments", command=openappointment, width=15).grid(row=2, column=0, sticky="w")
-        Button(fieldset1, text="Patient Forum", command=openforsum, width=15).grid(row=3, column=0, sticky="w")
-        Button(fieldset1, text="My Messages", command=opennotification, width=15).grid(row=4, column=0, sticky="w")
+        self.patient_button=Button(fieldset1, text="Patient Records", command=openpatientedit, width=15)
+        self.patient_button.grid(row=1, column=0, sticky="w")
+        self.appointment_button=Button(fieldset1, text="Appointments", command=openappointment, width=15)
+        self.appointment_button.grid(row=2, column=0, sticky="w")
+        self.forum_button=Button(fieldset1, text="Forum", command=openforsum, width=15)
+        self.forum_button.grid(row=3, column=0, sticky="w")
+        self.message_button=Button(fieldset1, text="My Messages", command=opennotification, width=15)
+        self.message_button.grid(row=4, column=0, sticky="w")
         self.label3 = tk.Label(fieldset1, text=f"You have {self.message_counter} new messages")
         self.label3.grid(row=5, column=0, sticky="w")
 
@@ -140,7 +143,8 @@ class MHWPDashboard:
                 appcount += 1
         tk.Label(fieldset2, text=f"Upcoming Appointments: {appcount}").grid(row=1, column=0, sticky="w")
         tk.Label(fieldset2, text=f"My Rating: {self.my_rating_score}").grid(row=2, column=0, sticky="w")
-        Button(fieldset2, text="View Reviews", command=open_review, width=15).grid(row=3, column=0, sticky="w")
+        self.viewbutton=Button(fieldset2, text="View Reviews", command=open_review, width=15)
+        self.viewbutton.grid(row=3, column=0, sticky="w")
 
         # Treeview for patient list
         tree_frame = tk.LabelFrame(main_frame, text="My Patients", padx=10, pady=10)
@@ -157,7 +161,6 @@ class MHWPDashboard:
         self.tree.column("#3", width=200, anchor="center")
         self.tree.column("#4", width=100, anchor="center")
         self.tree.column("#5", width=100, anchor="center")
-
         for item in self.patient_data:
             self.tree.insert("", tk.END, values=item)
         self.tree.bind("<Double-1>", self.on_row_selected)
@@ -167,7 +170,7 @@ class MHWPDashboard:
         
         
         logout_button = tk.Button(self.root, text="Logout", command=self.logout, width=15)
-        logout_button.grid(row=2, column=0, pady=10)  
+        logout_button.grid(row=2, column=0, pady=10)
     def on_row_selected(self, event):
         """Handle double-click on a row in the treeview."""
         selected_item = self.tree.selection()[0]
@@ -191,6 +194,28 @@ class MHWPDashboard:
     def on_close(self):
         self.db.close()
         self.root.destroy()
+
+    def disable_interactive_widgets(self):
+        try:
+            user_info = db.getRelation("User")
+            user_info = user_info.getRowsWhereEqual('user_id', self.userID)
+            user_info = pd.DataFrame(user_info)
+            if not user_info.empty:
+                # Accessing the is_disabled column using the numeric index - 10 (True/False)
+                is_disabled = user_info.iloc[0][10]
+            else:
+                is_disabled = False
+            if is_disabled:
+                self.appointment_button.config(state=tk.DISABLED)
+                self.patient_button.config(state=tk.DISABLED)
+                self.forum_button.config(state=tk.DISABLED)
+                self.message_button.config(state=tk.DISABLED)
+                self.viewbutton.config(state=tk.DISABLED)
+                for item in self.tree.get_children():
+                        self.tree.delete(item)
+                messagebox.showinfo("Access Restricted", "Your account is disabled. You cannot make changes or submit new information.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while disabling widgets: {e}")
 
 
 if __name__ == "__main__":

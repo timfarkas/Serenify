@@ -94,7 +94,7 @@ def openforsum():
         def add_thread(self):
             topic = self.topic_entry.get().strip()
             content = self.content_entry.get("1.0","end").strip()
-            time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            time = datetime.now().strftime("%Y-%m-%d %H:%M")
             if topic and content:
                 self.topic_entry.delete(0, tk.END)
                 self.content_entry.delete("1.0", tk.END)

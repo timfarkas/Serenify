@@ -1,17 +1,11 @@
 from tkinter import Tk, ttk
-import tkinter as tk
-from datetime import datetime
-from tkinter import scrolledtext
 import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from .chatroom import startchatroom
-from mhwp.booking import MHWPAppointmentManager
-from patient.booking import AppointmentBooking
-from addfeature.patientMoodDisplay import displaymood
-from database.database import Database
+from mhwp.patientMoodDisplay import displaymood
 from tkinter import messagebox
 from addfeature.globaldb import global_db
 global global_db
@@ -74,7 +68,7 @@ def opennotification():
                 tree.insert(
                     "",
                     "end",
-                    values=("Your patient has logged a low mood score!",
+                    values=("Your patient has low mood scores!",
                             f"{sourceuser[0][4]} {sourceuser[0][5]}",
                             i[5].strftime("%Y-%m-%d %H:%M:%S"),
                             i[3],
@@ -155,8 +149,8 @@ def opennotification():
             startchatroom(int(patientID))
         elif item_values[0] == "You have a new appointment request!":
             messagebox.showinfo("Notification", "Please return to the dashboard to view the appointment.")
-        elif item_values[0] == "Your patient has logged a low mood score!":
-            displaymood(int(patientID), "MHWP")
+        elif item_values[0] == "Your patient has low mood scores!":
+            displaymood(int(patientID))
         elif item_values[0] == "You have a new patient review!":
             messagebox.showinfo("Notification", "Please return to the dashboard to view the review.")
         elif item_values[0] in ["Your appointment has been updated!", "Your appointment has been declined!", "Your appointment has been confirmed!"]:

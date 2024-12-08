@@ -360,13 +360,15 @@ class Patient:
         else:
             exercise_text = "No exercises available."
 
-        exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 16), justify="left")
+        # Display the exercise recommendations in the exercise frame
+        exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 22,"bold"), justify="left")
         exercises_label.pack()
-        back_button = tk.Button(self.exercise_frame, text="Go to Exercises", command=self.exercises,width=20)
-        back_button.pack(pady=10)
 
+        back_button = tk.Button(self.exercise_frame, text="Go to Exercises", command=self.exercises,width=20)
+        back_button.pack(pady=2)
+        # Add a button to go back to mood selection
         back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood,width=20)
-        back_button.pack(pady=10)
+        back_button.pack(pady=2)
 
     def back_to_mood(self):
         self.root2.destroy()
@@ -547,8 +549,11 @@ class Patient:
         exercises_label = tk.Label(self.exercise_frame, text=exercise_text, font=("Arial", 12), justify="left")
         exercises_label.pack()
 
+        back_button = tk.Button(self.exercise_frame, text="Go to Exercises", command=self.exercises, width=15)
+        back_button.pack(pady=10)
+
         # Add a button to go back to mood selection
-        back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood)
+        back_button = tk.Button(self.exercise_frame, text="Back to Mood Selection", command=self.back_to_mood, width=15)
         back_button.pack(pady=10)
 
     def back_to_mood(self):
