@@ -17,18 +17,6 @@ from addfeature.globaldb import global_db
 global global_db
 db=global_db
 
-# from .mhwp_dashboard import open_review
-
-# def sendnotifiation(senderID,recieverID,Content):
-#     newnotify = Notification(
-#                     user_id=recieverID,
-#                     source_id=senderID,
-#                     notifycontent=Content,
-#                     new=True,
-#                     timestamp=datetime.now(),
-#                 )
-#                 db.insert_notification(newnotify)
-
 def opennotification():
     # db=Database()
     sess = Session()
@@ -37,17 +25,13 @@ def opennotification():
     identity = sess.getRole()
 
     def refresh_treeview():
-        """Clears and refreshes the Treeview with updated data."""
-        # Clear existing rows in the Treeview
         for item in tree.get_children():
             tree.delete(item)
 
-        # Fetch notifications and re-populate
         usernotification = allnotification.getRowsWhereEqual('user_id', userID)
         # print("all noti",usernotification)
         usernotification.sort(key=lambda x: x[-1], reverse=True)
         # print("allnoti",usernotification)
-        # Add rows to Treeview
         counter = 0
         for i in usernotification:
             if counter == 30:
@@ -132,49 +116,41 @@ def opennotification():
                 )
 
             counter += 1
-    # Create the main application window
     root = Tk()
     root.title("My message box")
 
-    # Create a Treeview widget
     tree = ttk.Treeview(root, columns=("Message", "From", "Time", "UserID", "MessageID"), show="headings")
 
-    # Define column headings
     tree.heading("Message", text="Message")
     tree.heading("From", text="From")
     tree.heading("Time", text="Time")
     tree.heading("UserID", text="User ID")  # Hidden column
     tree.heading("MessageID", text="Message ID")  # Hidden column
 
-    # Set column widths
     tree.column("Message", width=250)
     tree.column("From", width=100)
     tree.column("Time", width=200)
     tree.column("UserID", width=0, stretch=False)  # Hide UserID
     tree.column("MessageID", width=0, stretch=False)  # Hide MessageID
 
-    # Fetch notifications
     allnotification = db.getRelation('Notification')
-    refresh_treeview()  # Populate the Treeview initially
+    refresh_treeview()
 
     def on_row_selected(event):
-        """Handles the double-click event on a Treeview row."""
-        # Get the selected item
-
         selected_item = tree.selection()[0]
         item_values = tree.item(selected_item, "values")  # Get the values of the selected item
-        print("Selected item values:", item_values)
-        messageID = int(item_values[4])  # Extract MessageID
+        # print("Selected item values:", item_values)
+        messageID = int(item_values[4])
         # print(f"Updating Message ID: {messageID}")
         allnotification.editFieldInRow(messageID, 'new', False)
-        # Refresh the Treeview after the update
+
         refresh_treeview()
-        print(identity)
+        # print(identity)
         if identity == "MHWP":
             patientID = item_values[3]
         elif identity == "Patient":
             patientID = userID
-        print("p", patientID, "iden", identity)
+        # print("p", patientID, "iden", identity)
         if item_values[0] == "You have a new message!":
             startchatroom(int(patientID))
         elif item_values[0] == "You have a new appointment request!":
@@ -186,14 +162,10 @@ def opennotification():
         elif item_values[0] in ["Your appointment has been updated!", "Your appointment has been declined!", "Your appointment has been confirmed!"]:
             messagebox.showinfo("Notification", "Please return to the dashboard to view the appointment.")
 
-    # Configure tag styles
     tree.tag_configure("old", foreground="gray")
     tree.tag_configure("new", foreground="green")
 
-    # Bind row selection event
     tree.bind("<Double-1>", on_row_selected)
-
-    # Pack the Treeview widget
     tree.pack(fill="both", expand=True)
 
     def on_close():
