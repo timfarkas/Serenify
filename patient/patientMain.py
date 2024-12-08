@@ -230,6 +230,22 @@ class Patient:
         self.update_title.grid(row=0, column=0, stick="nsew")
         self.update_text.grid(row=1, column=0, stick="nsew")
         self.update_button.grid(row=2, column=0, pady=5)
+        #Remove for disabled users
+        try:
+            user_info = db.getRelation("User")
+            user_info = user_info.getRowsWhereEqual('user_id', self.current_user_id)
+            user_info = pd.DataFrame(user_info)
+            if not user_info.empty:
+                #Accessing the is_disabled column using the numeric index - 10 (True/False)
+                is_disabled = user_info.iloc[0][10]
+            else: 
+                is_disabled = False
+                
+            if is_disabled:
+                # Disable button
+                self.update_button.config(state=tk.DISABLED)
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while disabling widgets: {e}")
 
     def disable_interactive_widgets(self):
         #Remove some functionalities for disabled users
