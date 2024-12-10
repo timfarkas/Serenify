@@ -785,10 +785,17 @@ class KeyStatistics(tk.Toplevel):
             length = len(self.total_appointments[elements])
             values.append(length)
 
+        max_value = max(values) if values else 1  # Default to 1 if values is empty
+
         # Dimensions for the bar chart
-        bar_width = (600/no_items) - (no_items * 30)
-        bar_spacing = 20
-        max_value = max(values)
+        canvas_width = 520  
+        bar_spacing = 20  
+        total_spacing = (no_items - 1) * bar_spacing  # Total space needed for gaps
+        bar_width = (canvas_width - total_spacing) / no_items 
+        x_position = 50  # Starting X position (leaving margin for Y-axis labels)
+
+        # Ensure bar_width doesn't become negative or too small
+        bar_width = max(10, bar_width)
 
         x_position = 60
 
@@ -800,15 +807,22 @@ class KeyStatistics(tk.Toplevel):
         for i in range(0, max_value + 1, max(1, max_value // 5)):
             y_position = 350 - (i / max_value) * 300
             canvas.create_text(40, y_position, text=str(i), anchor="e")
-            
-        # Loop through the data and draw bars
+        
+        # Draw bars on the chart
         for i, value in enumerate(values):
-            bar_height = (value / max_value) * 300  # scale to a height of 300
-            # Drawing the bars of the graph
-            canvas.create_rectangle(x_position, 350 - bar_height, x_position + bar_width, 350, fill="skyblue")
-            # Adding the category name below the bar
-            canvas.create_text(x_position + bar_width / 2, 360, text=categories[i])
-            # Update the X position for the next item
+            bar_height = (value / max_value) * 300  # Scale bar height to fit chart area
+            # Draw each bar
+            canvas.create_rectangle(
+                x_position, 350 - bar_height,  # Top-left corner
+                x_position + bar_width, 350,  # Bottom-right corner
+                fill="skyblue"
+            )
+            # Add category labels below the bars
+            canvas.create_text(
+                x_position + bar_width / 2, 360,
+                text=categories[i], anchor="center"
+            )
+            # Move to the position for the next bar
             x_position += bar_width + bar_spacing
 
         canvas.create_text(20, 190, text="Number of Appointments", angle=90, font=("Arial", 14))
