@@ -71,6 +71,7 @@ class MHWPDashboard:
         self.create_widgets()
 
         self.root.after(1000, self.refresh)
+        self.disable_interactive_widgets()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.mainloop()
 
