@@ -1,36 +1,31 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import math
-import subprocess
 from datetime import datetime
-
 import os
 import sys
 
+# Adjust system path to access parent directory modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database
-from database.entities import User,Admin, Patient, MHWP, PatientRecord, Allocation, JournalEntry, Appointment
+from database.entities import User, Admin, Patient, MHWP, Allocation, Appointment
 
+# Global database connection
 from addfeature.globaldb import global_db
-from addfeature.globaldb import global_db
-# global global_db
-db=global_db
-
-
-# on a temporary basis need to run the adminSessionTest.py file first to initialise the sessions.=======
-
-
-
-
+db = global_db
 
 class AllocationEdit(tk.Toplevel):
+    """
+    Window for editing MHWP assignment to a patient.
+    """
+
     def __init__(self, patient_id, parent, db):
         super().__init__()
         self.db = db
         self.patient_id = patient_id
         self.parent = parent
 
+        # Open session and get admin ID
         self.sess = Session()
         self.sess.open()
         self.adminID = self.sess.getId()
@@ -39,16 +34,16 @@ class AllocationEdit(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def create_ui(self):
+        """Set up the UI for MHWP assignment."""
         self.title("Edit MHWP Assignment")
 
-        # H1 equivalent
+        # Header label
         h1_label = tk.Label(self, text="Assign MHWP to Patient", font=("Arial", 24, "bold"))
         h1_label.pack()
-        
-        # Fetch current MHWP assigned to the patient
+
+        # Fetch current MHWP allocation for the patient
         patient_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", self.patient_id)
-        
-        if not patient_allocation: ### patient not allocated to any mhwp yet
+        if not patient_allocation:
             newPatient = self.db.getRelation('User').getRowsWhereEqual("user_id", self.patient_id)
             if not newPatient:
                 messagebox.showerror("Error", "No patient found with the provided ID.")
@@ -56,66 +51,68 @@ class AllocationEdit(tk.Toplevel):
                 self.patientIsNewlyCreated = True
         else:
             self.patientIsNewlyCreated = False
-        
-        if self.patientIsNewlyCreated == False:
+
+        # Set up the current assigned MHWP name
+        if not self.patientIsNewlyCreated:
             assigned_mhwp_id = patient_allocation[0][Allocation.MHWP_ID]
             self.allocation_id = patient_allocation[0][Allocation.ALLOCATION_ID]
-            
             assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", assigned_mhwp_id)
             assigned_mhwp_name = f"{assigned_mhwp[0][User.FNAME]} {assigned_mhwp[0][User.LNAME]}"
         else:
-            assigned_mhwp_name = f"No MHWP assigned yet."
+            assigned_mhwp_name = "No MHWP assigned yet."
             self.new_user_id = newPatient[0][User.USER_ID]
 
-
-        # Fetch list of MHWPs
+        # Fetch list of all MHWPs
         mhwps = self.db.getRelation('User').getRowsWhereEqual("type", "MHWP")
         self.mhwp_dict = {f"{mhwp[User.FNAME]} {mhwp[User.LNAME]}": mhwp[0] for mhwp in mhwps}
         mhwp_names = list(self.mhwp_dict.keys())
 
-        # Create label and dropdown for MHWP selection
+        # MHWP dropdown
         tk.Label(self, text="Select New MHWP:").pack(pady=10)
         self.mhwp_var = tk.StringVar(value=assigned_mhwp_name)
         self.mhwp_dropdown = tk.OptionMenu(self, self.mhwp_var, *mhwp_names)
         self.mhwp_dropdown.pack(pady=10)
 
-        # Save Button
+        # Save and Back buttons
         save_button = tk.Button(self, text="Save", command=self.save_mhwp)
         save_button.pack(pady=0)
-
-        # Back Button
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
     def save_mhwp(self):
-        # Get the new MHWP selection
+        """Save the MHWP assignment to the database."""
         new_mhwp_name = self.mhwp_var.get()
         new_mhwp_id = self.mhwp_dict.get(new_mhwp_name)
 
         try:
             if not self.patientIsNewlyCreated:
-                # Update the patient's MHWP in the database
+                # Update existing MHWP allocation
                 userRelation = self.db.getRelation('Allocation')
                 userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
                 messagebox.showinfo("Success", "MHWP updated successfully.")
             else:
-                ### default to 1yr from now
-                allocation = Allocation(admin_id=self.adminID, patient_id=self.new_user_id, mhwp_id=new_mhwp_id, start_date=datetime.now(), end_date=datetime.now().replace(year=datetime.now().year + 1))
+                # Create new allocation for the patient
+                allocation = Allocation(
+                    admin_id=self.adminID,
+                    patient_id=self.new_user_id,
+                    mhwp_id=new_mhwp_id,
+                    start_date=datetime.now(),
+                    end_date=datetime.now().replace(year=datetime.now().year + 1)
+                )
                 self.db.insert_allocation(allocation)
                 messagebox.showinfo("Success", "MHWP allocated successfully.")
-            
-        
         except Exception as e:
-            messagebox.showerror("Error", str(e)) 
+            messagebox.showerror("Error", str(e))
 
     def go_back(self):
+        """Close the window and refresh parent view."""
         self.destroy()
         self.parent.refresh_treeview()
         self.parent.deiconify()
 
     def on_close(self):
+        """Handle the window close event."""
         self.destroy()
-
 class PatientEditApp(tk.Toplevel):
     def __init__(self, user_id, parent, db):
         super(PatientEditApp, self).__init__()
