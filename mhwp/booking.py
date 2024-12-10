@@ -104,7 +104,13 @@ class MHWPAppointmentManager():
 
        ttk.Button(
            button_frame,
-           text="Refresh",
+           text="Cancel Selected",
+           command=lambda: self.cancel_confirmed_appointment()
+       ).pack(side='left', padx=5)
+
+       ttk.Button(
+           button_frame,
+           text="Show all",
            command=self.refresh_lists
        ).pack(side='left', padx=5)
 
@@ -371,6 +377,39 @@ class MHWPAppointmentManager():
            messagebox.showerror("Error", f"Failed to update appointment: {str(e)}")
            print(f"Detailed error: {str(e)}")
 
+   def cancel_confirmed_appointment(self):
+       selected_item = self.confirmed_tree.selection()
+       if not selected_item:
+           messagebox.showerror("Error", "Please select a confirmed appointment")
+           return
+       try:
+           appointment_id = self.confirmed_tree.item(selected_item)['values'][0]
+
+           # Update the status in the database
+           appointments_relation = self.db.getRelation("Appointment")
+           appointments_relation.validityChecking = False
+           appointments_relation.editFieldInRow(appointment_id, "status", "Cancelled")
+           appointments_relation.validityChecking = True
+           self.selected_patient = self.db.getRelation("Appointment").getRowsWhereEqual('appointment_id',appointment_id)[0][1]
+           # Refresh the appointment lists
+           self.refresh_lists()
+           messagebox.showinfo("Success", "Confirmed appointment canceled successfully")
+           newnotify = Notification(
+               user_id=self.selected_patient,
+               notifycontent="AppointmentCanceled",
+               source_id=0,
+               new=True,
+               timestamp=datetime.now(),
+           )
+           self.db.insert_notification(newnotify)
+           # Optionally send an email notification about the cancellation
+           row = appointments_relation.getRowsWhereEqual("appointment_id", appointment_id)[0]
+           self.send_email_notification('cancel', appointment_id, row[Appointment.PATIENT_ID])
+
+       except Exception as e:
+           messagebox.showerror("Error", f"Failed to cancel appointment: {str(e)}")
+           print(f"Detailed error: {str(e)}")
+
    def send_email_notification(self, notification_type, appointment_id, patient_id):
        """Send email notifications for appointments using Gmail"""
        try:
@@ -393,40 +432,47 @@ class MHWPAppointmentManager():
            # Get appointment date for the message
            appointment_date = appointment_row[3].strftime('%Y-%m-%d %H:%M')
 
-
-
            if notification_type == 'accept':
                subject = "Appointment Confirmed"
                notifyinfo = "AppointmentConfirmed"
                message = f"The appointment request for {appointment_date} has been confirmed. Please check your dashboard for more details."
+               newnotify = Notification(
+                   user_id=patient_id,
+                   notifycontent=notifyinfo,
+                   source_id=0,
+                   new=True,
+                   timestamp=datetime.now(),
+               )
+               self.db.insert_notification(newnotify)
            elif notification_type == 'decline':
                subject = "Appointment Declined"
                notifyinfo = "AppointmentDeclined"
                message = f"The appointment request for {appointment_date} has been declined. Please check your dashboard for more details."
+               newnotify = Notification(
+                   user_id=patient_id,
+                   notifycontent=notifyinfo,
+                   source_id=0,
+                   new=True,
+                   timestamp=datetime.now(),
+               )
+               self.db.insert_notification(newnotify)
+           elif notification_type == 'cancel':
+                subject = "Appointment Cancelled"
+                notifyinfo = "AppointmentCancelled"
+                message = f"The appointment request for {appointment_date} has been cancelled. Please check your dashboard for more details."
+                newnotify = Notification(
+                    user_id=patient_id,
+                    notifycontent=notifyinfo,
+                    source_id=0,
+                    new=True,
+                    timestamp=datetime.now(),
+                )
+                self.db.insert_notification(newnotify)
            else:
                subject = "Appointment Update"
                notifyinfo = "Appointment Upated"
                message = f"The appointment status for {appointment_date} has been updated. Please check your dashboard for more details."
 
-           # Notify patient
-           newnotify = Notification(
-               user_id=patient_id,
-               notifycontent=notifyinfo,
-               source_id=0,
-               new=True,
-               timestamp=datetime.now(),
-           )
-           self.db.insert_notification(newnotify)
-
-           # Notify MHWP
-           mhwp_notify = Notification(
-               user_id=self.mhwp_id,
-               notifycontent=notifyinfo,
-               source_id=0,
-               new=True,
-               timestamp=datetime.now(),
-           )
-           self.db.insert_notification(mhwp_notify)
 
            # Send emails using SMTP
            with smtplib.SMTP(smtp_server, smtp_port) as server:
