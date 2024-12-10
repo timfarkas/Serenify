@@ -104,6 +104,12 @@ class MHWPAppointmentManager():
 
        ttk.Button(
            button_frame,
+           text="Cancel Selected",
+           command=lambda: self.cancel_confirmed_appointment()
+       ).pack(side='left', padx=5)
+
+       ttk.Button(
+           button_frame,
            text="Refresh",
            command=self.refresh_lists
        ).pack(side='left', padx=5)
@@ -371,6 +377,38 @@ class MHWPAppointmentManager():
            messagebox.showerror("Error", f"Failed to update appointment: {str(e)}")
            print(f"Detailed error: {str(e)}")
 
+   def cancel_confirmed_appointment(self):
+       selected_item = self.confirmed_tree.selection()
+       if not selected_item:
+           messagebox.showerror("Error", "Please select a confirmed appointment")
+           return
+       try:
+           appointment_id = self.confirmed_tree.item(selected_item)['values'][0]
+
+           # Update the status in the database
+           appointments_relation = self.db.getRelation("Appointment")
+           appointments_relation.validityChecking = False
+           appointments_relation.editFieldInRow(appointment_id, "status", "Cancelled")
+           appointments_relation.validityChecking = True
+           self.selected_patient = self.db.getRelation("Appointment").getRowsWhereEqual('appointment_id',appointment_id)[0][1]
+           # Refresh the appointment lists
+           self.refresh_lists()
+           messagebox.showinfo("Success", "Confirmed appointment canceled successfully")
+           newnotify = Notification(
+               user_id=self.selected_patient,
+               notifycontent="AppointmentCanceled",
+               source_id=0,
+               new=True,
+               timestamp=datetime.now(),
+           )
+           self.db.insert_notification(newnotify)
+           # Optionally send an email notification about the cancellation
+           row = appointments_relation.getRowsWhereEqual("appointment_id", appointment_id)[0]
+           self.send_email_notification('cancel', appointment_id, row[1])
+
+       except Exception as e:
+           messagebox.showerror("Error", f"Failed to cancel appointment: {str(e)}")
+           print(f"Detailed error: {str(e)}")
    def send_email_notification(self, notification_type, appointment_id, patient_id):
        """Send email notifications for appointments using Gmail"""
        try:
