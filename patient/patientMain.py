@@ -222,8 +222,8 @@ class Patient:
         self.lastcomment = usermoodlog[-1][3]
         self.update_title = tk.Label(self.mood_frame, text=f"Congratulations! You have recorded your mood today",
                                     font=("Arial", 18, "bold"), anchor="n")
-        self.update_text = tk.Label(self.mood_frame, text=f"You mood score: {self.lastmood}\n"
-                                                         f"You Comment: {self.lastcomment}\n",
+        self.update_text = tk.Label(self.mood_frame, text=f"Your mood score: {self.lastmood}\n"
+                                                         f"Your comment: {self.lastcomment}\n",
 
                                     font=("Arial", 14,))
         self.update_button = tk.Button(self.mood_frame, text="Delete and Redo", command=lambda: self.resetmood())

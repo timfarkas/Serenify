@@ -110,7 +110,7 @@ class MHWPAppointmentManager():
 
        ttk.Button(
            button_frame,
-           text="Refresh",
+           text="Show all",
            command=self.refresh_lists
        ).pack(side='left', padx=5)
 
@@ -404,11 +404,12 @@ class MHWPAppointmentManager():
            self.db.insert_notification(newnotify)
            # Optionally send an email notification about the cancellation
            row = appointments_relation.getRowsWhereEqual("appointment_id", appointment_id)[0]
-           self.send_email_notification('cancel', appointment_id, row[1])
+           self.send_email_notification('cancel', appointment_id, row[Appointment.PATIENT_ID])
 
        except Exception as e:
            messagebox.showerror("Error", f"Failed to cancel appointment: {str(e)}")
            print(f"Detailed error: {str(e)}")
+
    def send_email_notification(self, notification_type, appointment_id, patient_id):
        """Send email notifications for appointments using Gmail"""
        try:
@@ -455,6 +456,18 @@ class MHWPAppointmentManager():
                    timestamp=datetime.now(),
                )
                self.db.insert_notification(newnotify)
+           elif notification_type == 'cancel':
+                subject = "Appointment Cancelled"
+                notifyinfo = "AppointmentCancelled"
+                message = f"The appointment request for {appointment_date} has been cancelled. Please check your dashboard for more details."
+                newnotify = Notification(
+                    user_id=patient_id,
+                    notifycontent=notifyinfo,
+                    source_id=0,
+                    new=True,
+                    timestamp=datetime.now(),
+                )
+                self.db.insert_notification(newnotify)
            else:
                subject = "Appointment Update"
                notifyinfo = "Appointment Upated"
