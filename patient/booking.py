@@ -328,7 +328,14 @@ class AppointmentBooking:
             self.update_available_times()
             self.send_email_notification('cancel')
             messagebox.showinfo("Success", "Appointment cancelled successfully")
-
+            newnotify = Notification(
+                user_id=self.mhwp_id,
+                notifycontent="AppointmentCanceled",
+                source_id=0,
+                new=True,
+                timestamp=datetime.now(),
+            )
+            self.db.insert_notification(newnotify)
         except Exception as e:
             messagebox.showerror("Error", f"Failed to cancel appointment: {str(e)}")
             print(f"Detailed error: {str(e)}")

@@ -393,40 +393,35 @@ class MHWPAppointmentManager():
            # Get appointment date for the message
            appointment_date = appointment_row[3].strftime('%Y-%m-%d %H:%M')
 
-
-
            if notification_type == 'accept':
                subject = "Appointment Confirmed"
                notifyinfo = "AppointmentConfirmed"
                message = f"The appointment request for {appointment_date} has been confirmed. Please check your dashboard for more details."
+               newnotify = Notification(
+                   user_id=patient_id,
+                   notifycontent=notifyinfo,
+                   source_id=0,
+                   new=True,
+                   timestamp=datetime.now(),
+               )
+               self.db.insert_notification(newnotify)
            elif notification_type == 'decline':
                subject = "Appointment Declined"
                notifyinfo = "AppointmentDeclined"
                message = f"The appointment request for {appointment_date} has been declined. Please check your dashboard for more details."
+               newnotify = Notification(
+                   user_id=patient_id,
+                   notifycontent=notifyinfo,
+                   source_id=0,
+                   new=True,
+                   timestamp=datetime.now(),
+               )
+               self.db.insert_notification(newnotify)
            else:
                subject = "Appointment Update"
                notifyinfo = "Appointment Upated"
                message = f"The appointment status for {appointment_date} has been updated. Please check your dashboard for more details."
 
-           # Notify patient
-           newnotify = Notification(
-               user_id=patient_id,
-               notifycontent=notifyinfo,
-               source_id=0,
-               new=True,
-               timestamp=datetime.now(),
-           )
-           self.db.insert_notification(newnotify)
-
-           # Notify MHWP
-           mhwp_notify = Notification(
-               user_id=self.mhwp_id,
-               notifycontent=notifyinfo,
-               source_id=0,
-               new=True,
-               timestamp=datetime.now(),
-           )
-           self.db.insert_notification(mhwp_notify)
 
            # Send emails using SMTP
            with smtplib.SMTP(smtp_server, smtp_port) as server:
