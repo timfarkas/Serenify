@@ -91,9 +91,15 @@ class Calendar(ttk.Frame):
         elif date_obj == today:
             current_hour = now.hour
             return True if current_hour >= 16 else False
+        ## block weekends
         if date_obj.weekday() in (5, 6):
             return True
-        if (date_obj.month == 12 and date_obj.day in (24, 25, 26, 31)) or (date_obj.month == 1 and date_obj.day in (1)):
+        ## block major UK holidays
+        if (date_obj.month == 12 and date_obj.day in (24, 25, 26, 31)) or \
+           (date_obj.month == 1 and date_obj.day == 1):
+           #(date_obj.month == 4 and date_obj.day in (GoodFriday, EasterMonday)) or \
+           #(date_obj.month == 5 and date_obj.day in (EarlyMayBankHoliday, SpringBankHoliday)) or \
+           #(date_obj.month == 8 and date_obj.day == SummerBankHoliday):
             return True
         if self._mindate and date_obj < self._mindate.date():
             return True
