@@ -434,6 +434,8 @@ class Appointment:
             equilocalAppointments = simultaneousAppointments.getWhereEqual('room_name', room_name)
             if equilocalAppointments is None or len(equilocalAppointments)-o <= 0: ### simultaneous appointments all happen in different rooms --> no collisions
                 return True
+            elif len(equilocalAppointments.getWhereEqual("status", 'Confirmed') ) + len(equilocalAppointments.getWhereEqual('status', 'Pending')) == 0:
+                return True 
             else:
                 raise InvalidDataError("Appointment Collision: There is already an appointment for this time in this room.")
         return False

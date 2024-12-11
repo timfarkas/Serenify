@@ -11,7 +11,7 @@ from database.database import Database, Notification
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database import Database
-from database.entities import Appointment
+from database.entities import Appointment, User
 from sessions import Session
 
 
@@ -147,9 +147,7 @@ class MHWPAppointmentManager():
                        )
 
                        # Get patient name
-                       users_relation = self.db.getRelation("User")
-                       patient_rows = users_relation.getRowsWhereEqual("user_id", apt.patient_id)
-                       patient_name = patient_rows[0][1] if patient_rows else "Unknown"
+                       patient_name = self.get_patient_name(apt.patient_id)
 
                        # Format date and time
                        date_str = apt.date.strftime('%Y-%m-%d')
@@ -249,7 +247,7 @@ class MHWPAppointmentManager():
    def get_patient_name(self, patient_id):
        """Safely get patient name from database"""
        try:
-           users_relation = self.db.getRelation("Users")
+           users_relation = self.db.getRelation("User")
            if users_relation is None:
                return "Unknown"
 
@@ -259,7 +257,7 @@ class MHWPAppointmentManager():
                return "Unknown"
 
 
-           return patient_rows[0][1]  # Assuming name is in second column
+           return f"{patient_rows[0][User.FNAME]} {patient_rows[0][User.LNAME]}"
        except Exception as e:
            print(f"Error getting patient name: {str(e)}")
            return "Unknown"
@@ -292,10 +290,7 @@ class MHWPAppointmentManager():
 
                # Only process appointments matching requested status
                if apt.status == status:
-                   # Get patient name
-                   users_relation = self.db.getRelation("User")
-                   patient_rows = users_relation.getRowsWhereEqual("user_id", apt.patient_id)
-                   patient_name = patient_rows[0][1] if patient_rows else "Unknown"
+                   patient_name = self.get_patient_name(apt.patient_id)
 
                    # Format date and time
                    date_str = apt.date.strftime('%Y-%m-%d')
