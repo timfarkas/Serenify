@@ -6,8 +6,8 @@ This software was developed for a MSc Computer Science course at UCL.
 ## Login Account
 To experience Serenify, we recommend to use following accounts:
 1. Username: patient1, Passowrd:       #this patient has been allocated to mhwp1
-3. Username: mhwp1, Passowrd:          #this mhwp has patient1 as one of his/her patients
-4. Username: admin1, Passowrd:
+2. Username: mhwp1, Passowrd:          #this mhwp has patient1 as one of his/her patients
+3. Username: admin1, Passowrd:
 
 ### App Features
 1. Login as Patient, MHWP, or Admin:
@@ -40,9 +40,9 @@ To experience Serenify, we recommend to use following accounts:
   - MHWPs can receive low mood alert if one of their patients demostrated low mood scores in three consecutive days. MHWPs can also receive notification when received new rating.
 
 #### Tech Stack
-The whole application was built using core Python and core Python libraries.
-It features a polished graphical and accessible user interface frontend built via Tkinter.
-Additionally, it boasts a powerful and scalable object-oriented backend resting on Pandas and Pickle.
+1. The whole application was built using core Python and core Python libraries.
+2. It features a polished graphical and accessible user interface frontend built via Tkinter.
+3. Additionally, it boasts a powerful and scalable object-oriented backend resting on Pandas and Pickle.
 
 ##### Authors
 <a href="https://github.com/timfarkas">
