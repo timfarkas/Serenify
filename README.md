@@ -46,4 +46,7 @@ Additionally, it boasts a powerful and scalable object-oriented backend resting 
 <a href="https://github.com/PeaceES">
   <img src="https://avatars.githubusercontent.com/u/88505176?v=4" style="border-radius: 50%; width: 50px;">
 </a>
+<a href="https://github.com/bielasekk">
+  <img src="https://avatars.githubusercontent.com/u/185803708?v=4" style="border-radius: 50%; width: 50px;">
+</a>
 
