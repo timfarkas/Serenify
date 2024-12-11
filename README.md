@@ -5,8 +5,10 @@ This software was developed for a MSc Computer Science course at UCL.
 
 ## Login Account
 To experience Serenify, we recommend to use following accounts:
-1. Username: patient1, Passowrd:       #this patient has been allocated to mhwp1
-2. Username: mhwp1, Passowrd:          #this mhwp has patient1 as one of his/her patients
+1. Username: patient1, Passowrd:
+    #this patient has been allocated to mhwp1
+2. Username: mhwp1, Passowrd:
+    #this mhwp has patient1 as one of his/her patients
 3. Username: admin1, Passowrd:
 
 ### App Features
