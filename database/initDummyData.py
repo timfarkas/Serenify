@@ -560,7 +560,7 @@ def initDummyDatabase(db, printOut = False):
     )
     appointment4 = Appointment(
         appointment_id=4,
-        room_name="Room D",
+        room_name="Room C",
         patient_id=7,
         mhwp_id=9,
         status='Confirmed',
