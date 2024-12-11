@@ -85,11 +85,16 @@ class Calendar(ttk.Frame):
         now = datetime.now()
         today = now.date()
 
+        
         if date_obj < today:
             return True
         elif date_obj == today:
             current_hour = now.hour
             return True if current_hour >= 16 else False
+        if date_obj.weekday() in (5, 6):
+            return True
+        if (date_obj.month == 12 and date_obj.day in (24, 25, 26, 31)) or (date_obj.month == 1 and date_obj.day in (1)):
+            return True
         if self._mindate and date_obj < self._mindate.date():
             return True
         if self._maxdate and date_obj > self._maxdate.date():

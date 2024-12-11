@@ -76,7 +76,7 @@ class AppointmentBooking:
 
         # Create calendar with date range restriction
         min_date = datetime.now()
-        max_date = min_date + timedelta(days=30)
+        max_date = min_date + timedelta(days=45)
         self.calendar = Calendar(
             calendar_frame,
             mindate=min_date,

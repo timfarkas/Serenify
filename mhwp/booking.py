@@ -55,7 +55,7 @@ class MHWPAppointmentManager():
        calendar_frame.pack(pady=10, padx=10)
 
        min_date = datetime.now()
-       max_date = min_date + timedelta(days=30)
+       max_date = min_date + timedelta(days=45)
        self.calendar = Calendar(
            calendar_frame,
            mindate=min_date,
