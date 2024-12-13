@@ -664,7 +664,7 @@ class AllocationSelection(UserSelectionApp):
 
 class KeyStatistics(tk.Toplevel):
     """
-    Window showing an overview of useful key statistics for the admin user.
+    Window showing an overview of useful key statistics and graphs for the admin user.
     """
     def __init__(self, parent):
         super().__init__()
@@ -707,6 +707,43 @@ class KeyStatistics(tk.Toplevel):
         canvas = tk.Canvas(self, width=1050, height=550)
         canvas.pack()
 
+        # Displaying key statistics retrieved from the database
+        patients = len(self.db.getRelation('User').getRowsWhereEqual('type', 'Patient'))
+        mhwps = len(self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP'))
+        patients_per_mhwp = round(patients / mhwps, 1) if mhwps > 0 else 0  
+        stats = [
+            f"No. Patients: {patients}",
+            f"No. MHWP: {mhwps}",
+            f"Patients Per MHWP: {patients_per_mhwp}",
+            f"Disabled Accounts: {len(self.db.getRelation('User').getRowsWhereEqual('is_disabled', True))}",
+            f"Unallocated Patients: {len(self.db.getRelation('Allocation').getRowsWhereEqual('mhwp_id', ''))}",
+            f"No. Journal Entries: {len(self.db.getRelation('JournalEntry'))}",
+            f"No. Patient Records: {len(self.db.getRelation('PatientRecord'))}",
+            f"Pending Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Pending'))}",
+            f"Confirmed Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Confirmed'))}",
+            f"Cancelled Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Cancelled'))}"
+        ]
+
+        key_stats_gap = 22
+        for i, stat in enumerate(stats[:5]):
+            canvas.create_text(402, 427 + key_stats_gap * i, text=stat, font=("Arial", 14))
+        for i, stat in enumerate(stats[5:]):
+            canvas.create_text(652, 427 + key_stats_gap * i, text=stat, font=("Arial", 14))
+
+        # If there is patient and MHWP users in the database, display graphs
+        if patients == 0 or mhwps == 0:
+            canvas.create_text(540, 200, text="No patient or MHWP data to display, please add some patients and MHWPs to the database to see graphs.", font=("Arial", 14))
+        
+        else:
+            self.draw_bar_chart(canvas)
+            self.draw_pie_chart(canvas, x_center=780, y_center=205, radius=100)
+
+        back_button = tk.Button(self, text="Back", command=self.go_back)
+        back_button.pack(pady=5)
+
+    # Create a bar chart for total appointments per MHWP
+    def draw_bar_chart(self, canvas):
+        
         canvas.create_text(300, 22, text="Total Appointments per MHWP", font=("Arial", 16, "bold"))
 
         categories = list(self.total_appointments)
@@ -735,40 +772,10 @@ class KeyStatistics(tk.Toplevel):
                 x_position, 350 - bar_height, x_position + bar_width, 350, fill="skyblue"
             )
             canvas.create_text(x_position + bar_width / 2, 360, text=categories[i], anchor="center")
-            # Increment position for next bar
             x_position += bar_width + bar_spacing  
-
+        
         canvas.create_text(20, 190, text="Number of Appointments", angle=90, font=("Arial", 14))
         canvas.create_text(300, 380, text="MHWP", font=("Arial", 14))
-
-        # Displaying key statistics retrieved from the database
-        patients = len(self.db.getRelation('User').getRowsWhereEqual('type', 'Patient'))
-        mhwps = len(self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP'))
-        patients_per_mhwp = round(patients / mhwps, 1) if mhwps > 0 else 0  
-        stats = [
-            f"No. Patients: {patients}",
-            f"No. MHWP: {mhwps}",
-            f"Patients Per MHWP: {patients_per_mhwp}",
-            f"Disabled Accounts: {len(self.db.getRelation('User').getRowsWhereEqual('is_disabled', True))}",
-            f"Unallocated Patients: {len(self.db.getRelation('Allocation').getRowsWhereEqual('mhwp_id', ''))}",
-            f"No. Journal Entries: {len(self.db.getRelation('JournalEntry'))}",
-            f"No. Patient Records: {len(self.db.getRelation('PatientRecord'))}",
-            f"Pending Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Pending'))}",
-            f"Confirmed Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Confirmed'))}",
-            f"Cancelled Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Cancelled'))}"
-        ]
-
-        key_stats_gap = 22
-        for i, stat in enumerate(stats[:5]):
-            canvas.create_text(402, 427 + key_stats_gap * i, text=stat, font=("Arial", 14))
-        for i, stat in enumerate(stats[5:]):
-            canvas.create_text(652, 427 + key_stats_gap * i, text=stat, font=("Arial", 14))
-
-        # Draw a pie chart for patient allocation distribution
-        self.draw_pie_chart(canvas, x_center=780, y_center=205, radius=100)
-
-        back_button = tk.Button(self, text="Back", command=self.go_back)
-        back_button.pack(pady=5)
 
     # Create a pie chart for patient allocations per MHWP
     def draw_pie_chart(self, canvas, x_center, y_center, radius):
