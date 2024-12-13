@@ -464,6 +464,8 @@ class MHWPEditApp(PatientEditApp):
             messagebox.showerror("Error", str(e))
             return False
 
+    # when a MHWP is deleted the system will keep appointment records associated with the MHWP
+    # but will label them as DeletedMHWP
     def delete_MHWP(self):
         user_relation = self.db.getRelation('User')
         response = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete this MHWP?")
@@ -787,7 +789,10 @@ class KeyStatistics(tk.Toplevel):
         # Drawing the arcs of the pie chart
         start_angle = 0
         for i, (mhwp_name, count) in enumerate(self.allocation_counts.items()):
-            extent_angle = (count / total) * 360
+            if len(self.allocation_counts) == 1:
+                extent_angle = 359.99
+            else:
+                extent_angle = (count / total) * 360
             fill_color = colors[i % len(colors)]
             canvas.create_arc(
                 x_center - radius, y_center - radius, x_center + radius, y_center + radius,
