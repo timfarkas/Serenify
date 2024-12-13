@@ -14,7 +14,7 @@ db = global_db
 
 class AllocationEdit(tk.Toplevel):
     """
-    Window for editing MHWP assignment to a patient.
+    Window for changing the allocated MWHP assigned to the patient. 
     """
 
     def __init__(self, patient_id, parent, db):
@@ -37,7 +37,7 @@ class AllocationEdit(tk.Toplevel):
         h1_label = tk.Label(self, text="Assign MHWP to Patient", font=("Arial", 24, "bold"))
         h1_label.pack()
 
-        # Fetch current MHWP allocation for the patient
+        # Fetch the current MHWP assigned to the patient
         patient_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", self.patient_id)
         if not patient_allocation:
             newPatient = self.db.getRelation('User').getRowsWhereEqual("user_id", self.patient_id)
@@ -48,7 +48,7 @@ class AllocationEdit(tk.Toplevel):
         else:
             self.patientIsNewlyCreated = False
 
-        # Set up the current assigned MHWP name
+        # Retrieve the MHWPs name assigned to the patient
         if not self.patientIsNewlyCreated:
             assigned_mhwp_id = patient_allocation[0][Allocation.MHWP_ID]
             self.allocation_id = patient_allocation[0][Allocation.ALLOCATION_ID]
@@ -73,18 +73,17 @@ class AllocationEdit(tk.Toplevel):
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
+    # Update MHWP allocated to the patient or if there is no assignment create a new allocation
     def save_mhwp(self):
         new_mhwp_name = self.mhwp_var.get()
         new_mhwp_id = self.mhwp_dict.get(new_mhwp_name)
 
         try:
             if not self.patientIsNewlyCreated:
-                # Update existing MHWP allocation
                 userRelation = self.db.getRelation('Allocation')
                 userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
                 messagebox.showinfo("Success", "MHWP updated successfully.")
             else:
-                # Create new allocation for the patient
                 allocation = Allocation(
                     admin_id=self.adminID,
                     patient_id=self.new_user_id,
@@ -106,6 +105,9 @@ class AllocationEdit(tk.Toplevel):
         self.destroy()
         
 class PatientEditApp(tk.Toplevel):
+    """
+    Window for allowing the admin to edit, delete or disable a patient.
+    """
     def __init__(self, user_id, parent, db):
         super(PatientEditApp, self).__init__()
         self.db = db  
@@ -129,12 +131,16 @@ class PatientEditApp(tk.Toplevel):
         user_frame = tk.Frame(self)
         user_frame.pack(fill='x', padx=10, pady=5)
 
-        # Create entry fields for user details
+        # A number of data integrity have been included by the database including: 
+        # only allowing email addresses in the correct format to be entered, limiting the characters which can entered into the name field
+        # and requiring a minimum length of password.
+        # The section below creates entry fields for each of the user's details.
+
         tk.Label(user_frame, text=f"User ID: {user['user_id']}", width=15).grid(row=0, column=0)
         tk.Label(user_frame, text="Username:").grid(row=1, column=0)
         self.username_entry = tk.Entry(user_frame)
         self.username_entry.insert(0, user['username'] if user['username'] else '')
-        self.username_entry.config(state='disabled')  # Initially disabled
+        self.username_entry.config(state='disabled')
         self.username_entry.grid(row=1, column=1)
 
         tk.Label(user_frame, text="Email:").grid(row=2, column=0)
@@ -179,11 +185,9 @@ class PatientEditApp(tk.Toplevel):
         self.is_disabled_check.config(state='disabled')
         self.is_disabled_check.grid(row=10, column=1)
 
-        # Edit button
         self.toggle_button = tk.Button(self, text="Edit", command=self.toggle_edit_save)
         self.toggle_button.pack(pady=0)
 
-        # Delete button
         self.delete_button = tk.Button(self, text=f"Delete {self.user_type}", command=self.delete_user)
         self.delete_button.pack(pady=0)
 
@@ -191,7 +195,6 @@ class PatientEditApp(tk.Toplevel):
         self.back_button.pack(pady=0)
 
     def fetch_user_details(self, user_id):
-        # Fetch user details from the database
         user_relation = self.db.getRelation('User')
         user = user_relation.getRowsWhereEqual('user_id', user_id)
 
@@ -213,7 +216,6 @@ class PatientEditApp(tk.Toplevel):
             return {}
 
     def toggle_edit_save(self):
-        # Toggle between editing and saving user details
         if self.username_entry.cget('state') == 'disabled': 
             self.username_entry.config(state='normal')
             self.email_entry.config(state='normal')
@@ -225,11 +227,9 @@ class PatientEditApp(tk.Toplevel):
             self.is_disabled_check.config(state='normal')
             self.toggle_button.config(text="Save Changes") 
         else:
-            # Save changes to the database
             success = self.save_changes_to_db()
             if success:
                 self.toggle_button.config(text="Edit")  
-                # Disable fields after saving
                 self.username_entry.config(state='disabled')
                 self.email_entry.config(state='disabled')
                 self.password_entry.config(state='disabled')
@@ -252,8 +252,9 @@ class PatientEditApp(tk.Toplevel):
             'is_disabled': self.is_disabled_var.get()
         }
 
+        # Update fields in database where the admin has made changes to the user's details
+        # Return an exception if there is an error
         try:
-            # Update fields where changes have been made
             for field, new_value in updated_data.items():
                 if self.original_data[field] != new_value:
                     user_relation.editFieldInRow(self.user_id, field, new_value)
@@ -267,6 +268,9 @@ class PatientEditApp(tk.Toplevel):
     def delete_user(self):
         user_relation = self.db.getRelation('User')
         response = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete this {self.user_type}?")
+
+        # Propogation of deletes have been included by the database so when a patient is removed all of their associated data is also 
+        # removed including their appointment bookings.
 
         if response:
             self.db.delete_patient(patientId=self.user_id)
@@ -284,7 +288,12 @@ class PatientEditApp(tk.Toplevel):
         self.db.close()
         self.destroy()
 
+# This class inherits from the PatientEditApp and is very similar
+# except with a couple of custom fields specifically for the MHWP including 'specialization'.
 class MHWPEditApp(PatientEditApp):
+    """
+    Window for allowing the admin to edit, disable or delete the MHWP. 
+    """
     def __init__(self, user_id, parent, db):
         super().__init__(user_id, parent, db)
 
@@ -301,12 +310,16 @@ class MHWPEditApp(PatientEditApp):
         user_frame = tk.Frame(self)
         user_frame.pack(fill='x', padx=10, pady=5)
 
-        # Create entry fields for user details
+        # A number of data integrity have been included by the database including: 
+        # only allowing email addresses in the correct format to be entered, limiting the characters which can entered into the name field
+        # and requiring a minimum length of password.
+        # The section below creates entry fields for each of the user's details.
+        
         tk.Label(user_frame, text=f"User ID: {user['user_id']}", width=15).grid(row=0, column=0)
         tk.Label(user_frame, text="Username:").grid(row=1, column=0)
         self.username_entry = tk.Entry(user_frame)
         self.username_entry.insert(0, user['username'] if user['username'] else '')
-        self.username_entry.config(state='disabled')  # Disabled for view-only mode
+        self.username_entry.config(state='disabled')
         self.username_entry.grid(row=1, column=1)
 
         tk.Label(user_frame, text="Email:").grid(row=2, column=0)
@@ -345,7 +358,6 @@ class MHWPEditApp(PatientEditApp):
         self.emergency_name_entry.config(state='disabled')
         self.emergency_name_entry.grid(row=7, column=1)
 
-        # Dropdown for specialization options
         specialization_options = [
             "Psychology", "Psychiatry", "Counseling", "Substance Abuse Counseling",
             "Clinical Psychology", "Child and Adolescent Psychology", "Geriatric Psychology",
@@ -377,12 +389,10 @@ class MHWPEditApp(PatientEditApp):
         self.back_button.pack(pady=0)
 
     def fetch_user_details(self, user_id):
-        # Fetch user details from the database
         user_relation = self.db.getRelation('User')
         user = user_relation.getRowsWhereEqual('user_id', user_id)
 
         if user:
-            # Return user data as a dictionary
             user_data = user[0]
             return {
                 'user_id': user_data[0],
@@ -402,7 +412,6 @@ class MHWPEditApp(PatientEditApp):
 
     def toggle_edit_save(self):
         if self.username_entry.cget('state') == 'disabled':
-            # Enable fields for editing
             self.username_entry.config(state='normal')
             self.email_entry.config(state='normal')
             self.password_entry.config(state='normal')
@@ -414,7 +423,7 @@ class MHWPEditApp(PatientEditApp):
             self.is_disabled_check.config(state='normal')
             self.toggle_button.config(text="Save Changes")
         else:
-            # Save changes and revert fields to view-only
+            # If save has been successful revert fields to view-only
             success = self.save_changes_to_db()
             if success:
                 self.toggle_button.config(text="Edit")
@@ -444,7 +453,7 @@ class MHWPEditApp(PatientEditApp):
         }
 
         try:
-            # Update only changed fields
+            # Update only changed fields to the database
             for field, new_value in updated_data.items():
                 if self.original_data[field] != new_value:
                     user_relation.editFieldInRow(self.user_id, field, new_value)
@@ -466,6 +475,9 @@ class MHWPEditApp(PatientEditApp):
             self.parent.deiconify()
 
 class UserSelectionApp(tk.Toplevel):
+    """
+    Window for allowing the admin to select a user to edit.
+    """
     def __init__(self, user_type, parent):
         super().__init__()
         self.db = Database()  
@@ -500,7 +512,7 @@ class UserSelectionApp(tk.Toplevel):
         scrollbar.config(command=self.tree.yview)
 
         self.tree["columns"] = ("ID", "First Name", "Last Name")
-        self.tree.column("#0", width=0, stretch=tk.NO)  # Hide default column
+        self.tree.column("#0", width=0, stretch=tk.NO)
         self.tree.column("ID", anchor=tk.CENTER, width=50)
         self.tree.column("First Name", anchor=tk.CENTER, width=150)
         self.tree.column("Last Name", anchor=tk.CENTER, width=150)
@@ -510,7 +522,7 @@ class UserSelectionApp(tk.Toplevel):
         self.tree.heading("First Name", text="First Name", anchor=tk.W)
         self.tree.heading("Last Name", text="Last Name", anchor=tk.W)
 
-        # Populate the tree view with users
+        # Populate the tree view with users from the database
         for user in self.users:
             self.tree.insert("", "end", values=(user[0], user[4], user[5]))
 
@@ -520,8 +532,8 @@ class UserSelectionApp(tk.Toplevel):
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
+    # Clear the tree view and reload users, this allows the tree view to update when you press back from the edit window
     def refresh_treeview(self):
-        # Clear the tree view and reload users
         for item in self.tree.get_children():
             self.tree.delete(item)
 
@@ -534,6 +546,7 @@ class UserSelectionApp(tk.Toplevel):
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0])  
             self.withdraw()  
+            # direct the admin to the correct edit window depending on the user type i.e Patient or MHWP.
             if self.user_type == "Patient":
                 app = PatientEditApp(self.selected_user_id, self, db=self.db)  
             else:
@@ -551,9 +564,13 @@ class UserSelectionApp(tk.Toplevel):
         self.destroy()
 
 class AllocationSelection(UserSelectionApp):
+    """
+    Window allowing the admin to select a patient to edit their allocated MHWP.
+    """
     def __init__(self, user_type, parent):
         super().__init__(user_type, parent)
 
+    # Clear the tree view and reload users, this allows the tree view to update when you press back from the edit allocation window
     def refresh_treeview(self):
         for item in self.tree.get_children():
             self.tree.delete(item)
@@ -562,14 +579,14 @@ class AllocationSelection(UserSelectionApp):
 
         for user in self.users:
             patient_id = user[0]
-            patient_name = f"{user[4]} {user[5]}"  # Construct patient name
+            patient_name = f"{user[4]} {user[5]}"  
 
             # Retrieve the patient's MHWP assignment
             mhwp_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
             mhwp_allocation_id = mhwp_allocation[0][3] if mhwp_allocation else None
 
+            # Fetch the assigned MHWP's name from the database, else label them as unassigned.
             if mhwp_allocation_id:
-                # Fetch the assigned MHWP's name
                 assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
                 assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
             else:
@@ -617,26 +634,26 @@ class AllocationSelection(UserSelectionApp):
         self.tree.heading("Patient Name", text="Patient Name", anchor=tk.W)
         self.tree.heading("Assigned MHWP", text="Assigned MHWP", anchor=tk.W)
 
-        # Populate the tree view with user data and their MHWP assignments
+        # Populate the tree view with patients name and the name of their assigned MHWP
         for user in self.users:
             patient_id = user[0]
             patient_name = f"{user[4]} {user[5]}"
 
-            # Retrieve the MHWP assignment for the patient
+            # Retrieve the MHWP assignment for the patient from the 'Allocation' table
             mhwp_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
             if mhwp_allocation and len(mhwp_allocation) > 0:
                 mhwp_allocation_id = mhwp_allocation[0][3]
             else:
                 mhwp_allocation_id = None
 
+            # Fetch the assigned MHWP's name from the 'User' table
             if mhwp_allocation_id:
-                # Fetch the assigned MHWP's name
                 assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
                 assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
             else:
                 assigned_mhwp_name = "Unassigned"  
 
-            # Insert patient and MHWP assignment details into the tree view
+            # Insert details into the tree view
             self.tree.insert("", "end", values=(user[0], patient_name, assigned_mhwp_name))
 
         select_button = tk.Button(self, text=f"Select {self.user_type}", command=self.edit_user)
@@ -646,6 +663,9 @@ class AllocationSelection(UserSelectionApp):
         self.back_button.pack(pady=0)
 
 class KeyStatistics(tk.Toplevel):
+    """
+    Window showing an overview of useful key statistics for the admin user.
+    """
     def __init__(self, parent):
         super().__init__()
         self.db = Database()  
@@ -656,6 +676,7 @@ class KeyStatistics(tk.Toplevel):
         self.create_ui()  
 
     def calculations(self):
+        
         # Calculate total appointments per MHWP
         self.total_appointments = {}
         for row in self.mhwps:
@@ -667,7 +688,7 @@ class KeyStatistics(tk.Toplevel):
 
             self.total_appointments.update({mhwp_name: mhwp_appointments})
 
-        # Calculate allocation counts per MHWP
+        # Calculate number of allocations per MHWP
         mhwp_counts = {}
         allocations = self.db.getRelation('Allocation').getAllRows()
         for alloc in allocations:
@@ -681,7 +702,7 @@ class KeyStatistics(tk.Toplevel):
         self.allocation_counts = mhwp_counts  
 
     def create_ui(self):
-        self.title("Bar Chart with Tkinter Canvas")
+        self.title("Admin Key Statistics")
 
         canvas = tk.Canvas(self, width=1050, height=550)
         canvas.pack()
@@ -690,39 +711,40 @@ class KeyStatistics(tk.Toplevel):
 
         categories = list(self.total_appointments)
         values = [len(self.total_appointments[cat]) for cat in categories]
-        max_value = max(values) if values else 1  # Avoid division by zero
+        max_value = max(values) if values else 1 
 
-        # Set bar chart dimensions and layout
+        # Set the dimensions and layout of the bar chart
         canvas_width = 520
         bar_spacing = 20
-        bar_width = max(10, (canvas_width - bar_spacing * (len(categories) - 1)) / len(categories))  # Minimum bar width
-        x_position = 60  # Initial X position for bars
+        bar_width = max(10, (canvas_width - bar_spacing * (len(categories) - 1)) / len(categories))  
+        x_position = 60  # Set the initial X position for the bar chart
 
-        # Draw axes for the bar chart
+        # Bar chart axis
         canvas.create_line(50, 350, 570, 350, width=1)  
         canvas.create_line(50, 50, 50, 350, width=1) 
 
-        # Add Y-axis labels
+        # Y-axis labels
         for i in range(0, max_value + 1, max(1, max_value // 5)):
             y_position = 350 - (i / max_value) * 300
             canvas.create_text(40, y_position, text=str(i), anchor="e")
 
-        # Draw bars on the chart
+        # Drawing the bars
         for i, value in enumerate(values):
-            bar_height = (value / max_value) * 300  # Scale bar height
+            bar_height = (value / max_value) * 300  
             canvas.create_rectangle(
                 x_position, 350 - bar_height, x_position + bar_width, 350, fill="skyblue"
             )
             canvas.create_text(x_position + bar_width / 2, 360, text=categories[i], anchor="center")
-            x_position += bar_width + bar_spacing  # Increment position for next bar
+            # Increment position for next bar
+            x_position += bar_width + bar_spacing  
 
         canvas.create_text(20, 190, text="Number of Appointments", angle=90, font=("Arial", 14))
         canvas.create_text(300, 380, text="MHWP", font=("Arial", 14))
 
-        # Calculate and display key statistics
+        # Displaying key statistics retrieved from the database
         patients = len(self.db.getRelation('User').getRowsWhereEqual('type', 'Patient'))
         mhwps = len(self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP'))
-        patients_per_mhwp = round(patients / mhwps, 1) if mhwps > 0 else 0  # Avoid division by zero
+        patients_per_mhwp = round(patients / mhwps, 1) if mhwps > 0 else 0  
         stats = [
             f"No. Patients: {patients}",
             f"No. MHWP: {mhwps}",
@@ -731,9 +753,9 @@ class KeyStatistics(tk.Toplevel):
             f"Unallocated Patients: {len(self.db.getRelation('Allocation').getRowsWhereEqual('mhwp_id', ''))}",
             f"No. Journal Entries: {len(self.db.getRelation('JournalEntry'))}",
             f"No. Patient Records: {len(self.db.getRelation('PatientRecord'))}",
-            f"Active Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'active'))}",
+            f"Pending Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Pending'))}",
             f"Confirmed Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Confirmed'))}",
-            f"Declined Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Declined'))}"
+            f"Cancelled Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Cancelled'))}"
         ]
 
         key_stats_gap = 22
@@ -742,19 +764,20 @@ class KeyStatistics(tk.Toplevel):
         for i, stat in enumerate(stats[5:]):
             canvas.create_text(652, 427 + key_stats_gap * i, text=stat, font=("Arial", 14))
 
-        # Draw a pie chart for allocation distribution
+        # Draw a pie chart for patient allocation distribution
         self.draw_pie_chart(canvas, x_center=780, y_center=205, radius=100)
 
         back_button = tk.Button(self, text="Back", command=self.go_back)
         back_button.pack(pady=5)
 
+    # Create a pie chart for patient allocations per MHWP
     def draw_pie_chart(self, canvas, x_center, y_center, radius):
-        # Create a pie chart for MHWP allocations
         canvas.create_text(x_center + 55, y_center - radius - 85, text="Patients per MHWP", font=("Arial", 16, "bold"))
 
         colors = ["lightgreen", "lavender", "mistyrose", "palegreen", "lightpink", "lightblue", "peachpuff"]
         total = sum(self.allocation_counts.values()) if self.allocation_counts else 1  
 
+        # Drawing the arcs of the pie chart
         start_angle = 0
         for i, (mhwp_name, count) in enumerate(self.allocation_counts.items()):
             extent_angle = (count / total) * 360
@@ -779,6 +802,9 @@ class KeyStatistics(tk.Toplevel):
         self.parent.deiconify()
 
 class AdminMainPage(tk.Tk):
+    """
+    Main page for the admin allowing them to navigate to their key functionalities.
+    """
     def __init__(self):
         super().__init__()
         self.db = Database()  
