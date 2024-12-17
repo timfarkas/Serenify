@@ -4,19 +4,17 @@ from datetime import datetime
 import os
 import sys
 
-# Adjust system path to access parent directory modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sessions import Session
 from database.database import Database
 from database.entities import User, Admin, Patient, MHWP, Allocation, Appointment
 
-# Global database connection
 from addfeature.globaldb import global_db
 db = global_db
 
 class AllocationEdit(tk.Toplevel):
     """
-    Window for editing MHWP assignment to a patient.
+    Window for changing the allocated MWHP assigned to the patient. 
     """
 
     def __init__(self, patient_id, parent, db):
@@ -34,14 +32,12 @@ class AllocationEdit(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def create_ui(self):
-        """Set up the UI for MHWP assignment."""
         self.title("Edit MHWP Assignment")
 
-        # Header label
         h1_label = tk.Label(self, text="Assign MHWP to Patient", font=("Arial", 24, "bold"))
         h1_label.pack()
 
-        # Fetch current MHWP allocation for the patient
+        # Fetch the current MHWP assigned to the patient
         patient_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", self.patient_id)
         if not patient_allocation:
             newPatient = self.db.getRelation('User').getRowsWhereEqual("user_id", self.patient_id)
@@ -52,7 +48,7 @@ class AllocationEdit(tk.Toplevel):
         else:
             self.patientIsNewlyCreated = False
 
-        # Set up the current assigned MHWP name
+        # Retrieve the MHWPs name assigned to the patient
         if not self.patientIsNewlyCreated:
             assigned_mhwp_id = patient_allocation[0][Allocation.MHWP_ID]
             self.allocation_id = patient_allocation[0][Allocation.ALLOCATION_ID]
@@ -67,31 +63,27 @@ class AllocationEdit(tk.Toplevel):
         self.mhwp_dict = {f"{mhwp[User.FNAME]} {mhwp[User.LNAME]}": mhwp[0] for mhwp in mhwps}
         mhwp_names = list(self.mhwp_dict.keys())
 
-        # MHWP dropdown
         tk.Label(self, text="Select New MHWP:").pack(pady=10)
         self.mhwp_var = tk.StringVar(value=assigned_mhwp_name)
         self.mhwp_dropdown = tk.OptionMenu(self, self.mhwp_var, *mhwp_names)
         self.mhwp_dropdown.pack(pady=10)
 
-        # Save and Back buttons
         save_button = tk.Button(self, text="Save", command=self.save_mhwp)
         save_button.pack(pady=0)
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
+    # Update MHWP allocated to the patient or if there is no assignment create a new allocation
     def save_mhwp(self):
-        """Save the MHWP assignment to the database."""
         new_mhwp_name = self.mhwp_var.get()
         new_mhwp_id = self.mhwp_dict.get(new_mhwp_name)
 
         try:
             if not self.patientIsNewlyCreated:
-                # Update existing MHWP allocation
                 userRelation = self.db.getRelation('Allocation')
                 userRelation.editFieldInRow(self.allocation_id, 'mhwp_id', new_mhwp_id)
                 messagebox.showinfo("Success", "MHWP updated successfully.")
             else:
-                # Create new allocation for the patient
                 allocation = Allocation(
                     admin_id=self.adminID,
                     patient_id=self.new_user_id,
@@ -105,49 +97,50 @@ class AllocationEdit(tk.Toplevel):
             messagebox.showerror("Error", str(e))
 
     def go_back(self):
-        """Close the window and refresh parent view."""
         self.destroy()
         self.parent.refresh_treeview()
         self.parent.deiconify()
 
     def on_close(self):
-        """Handle the window close event."""
         self.destroy()
         
 class PatientEditApp(tk.Toplevel):
+    """
+    Window for allowing the admin to edit, delete or disable a patient.
+    """
     def __init__(self, user_id, parent, db):
-        # Initialize the Toplevel window and set attributes
         super(PatientEditApp, self).__init__()
-        self.db = db  # Database instance
-        self.parent = parent  # Parent window reference
-        self.user_id = user_id  # ID of the user being edited
-        self.user_type = self.db.getRelation('User').getRowsWhereEqual("user_id", user_id)[0][6]  # User type
-        self.original_data = {}  # Store original user data for comparison
-        self.create_ui()  # Create the user interface
-        self.protocol("WM_DELETE_WINDOW", self.on_close)  # Handle window close event
+        self.db = db  
+        self.parent = parent  
+        self.user_id = user_id  
+        self.user_type = self.db.getRelation('User').getRowsWhereEqual("user_id", user_id)[0][6]  
+        self.original_data = {}  
+        self.create_ui()  
+        self.protocol("WM_DELETE_WINDOW", self.on_close)  
 
     def create_ui(self):
-        # Set up the window title
+
         self.title("Edit User Information")
 
-        # Add a header label displaying the user type
         h1_label = tk.Label(self, text=f"Edit {self.user_type} Information", font=("Arial", 24, "bold"))
         h1_label.pack()
 
-        # Fetch user details and save for later comparison
         user = self.fetch_user_details(self.user_id)
         self.original_data = user
 
-        # Create a frame to organize the form layout
         user_frame = tk.Frame(self)
         user_frame.pack(fill='x', padx=10, pady=5)
 
-        # Create entry fields for user details
+        # A number of data integrity have been included by the database including: 
+        # only allowing email addresses in the correct format to be entered, limiting the characters which can entered into the name field
+        # and requiring a minimum length of password.
+        # The section below creates entry fields for each of the user's details.
+
         tk.Label(user_frame, text=f"User ID: {user['user_id']}", width=15).grid(row=0, column=0)
         tk.Label(user_frame, text="Username:").grid(row=1, column=0)
         self.username_entry = tk.Entry(user_frame)
         self.username_entry.insert(0, user['username'] if user['username'] else '')
-        self.username_entry.config(state='disabled')  # Initially disabled
+        self.username_entry.config(state='disabled')
         self.username_entry.grid(row=1, column=1)
 
         tk.Label(user_frame, text="Email:").grid(row=2, column=0)
@@ -192,25 +185,21 @@ class PatientEditApp(tk.Toplevel):
         self.is_disabled_check.config(state='disabled')
         self.is_disabled_check.grid(row=10, column=1)
 
-        # Button to toggle edit mode
         self.toggle_button = tk.Button(self, text="Edit", command=self.toggle_edit_save)
         self.toggle_button.pack(pady=0)
 
-        # Button to delete the user
         self.delete_button = tk.Button(self, text=f"Delete {self.user_type}", command=self.delete_user)
         self.delete_button.pack(pady=0)
 
-        # Button to return to the parent view
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
     def fetch_user_details(self, user_id):
-        # Fetch user details from the database
         user_relation = self.db.getRelation('User')
         user = user_relation.getRowsWhereEqual('user_id', user_id)
 
         if user:
-            user_data = user[0]  # Extract the first matching record
+            user_data = user[0]
             return {
                 'user_id': user_data[0],
                 'username': user_data[1],
@@ -227,8 +216,7 @@ class PatientEditApp(tk.Toplevel):
             return {}
 
     def toggle_edit_save(self):
-        # Toggle between editing and saving user details
-        if self.username_entry.cget('state') == 'disabled':  # Enable fields for editing
+        if self.username_entry.cget('state') == 'disabled': 
             self.username_entry.config(state='normal')
             self.email_entry.config(state='normal')
             self.password_entry.config(state='normal')
@@ -237,13 +225,11 @@ class PatientEditApp(tk.Toplevel):
             self.emergency_email_entry.config(state='normal')
             self.emergency_name_entry.config(state='normal')
             self.is_disabled_check.config(state='normal')
-            self.toggle_button.config(text="Save Changes")  # Change button text
+            self.toggle_button.config(text="Save Changes") 
         else:
-            # Save changes to the database
             success = self.save_changes_to_db()
             if success:
-                self.toggle_button.config(text="Edit")  # Change button text
-                # Disable fields after saving
+                self.toggle_button.config(text="Edit")  
                 self.username_entry.config(state='disabled')
                 self.email_entry.config(state='disabled')
                 self.password_entry.config(state='disabled')
@@ -254,7 +240,6 @@ class PatientEditApp(tk.Toplevel):
                 self.is_disabled_check.config(state='disabled')
 
     def save_changes_to_db(self):
-        # Save updated user details to the database
         user_relation = self.db.getRelation('User')
         updated_data = {
             'username': self.username_entry.get(),
@@ -267,8 +252,9 @@ class PatientEditApp(tk.Toplevel):
             'is_disabled': self.is_disabled_var.get()
         }
 
+        # Update fields in database where the admin has made changes to the user's details
+        # Return an exception if there is an error
         try:
-            # Update fields where changes have been made
             for field, new_value in updated_data.items():
                 if self.original_data[field] != new_value:
                     user_relation.editFieldInRow(self.user_id, field, new_value)
@@ -280,11 +266,13 @@ class PatientEditApp(tk.Toplevel):
             return False
 
     def delete_user(self):
-        # Delete the user from the database
         user_relation = self.db.getRelation('User')
         response = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete this {self.user_type}?")
 
-        if response:  # Proceed if user confirms
+        # Propogation of deletes have been included by the database so when a patient is removed all of their associated data is also 
+        # removed including their appointment bookings.
+
+        if response:
             self.db.delete_patient(patientId=self.user_id)
             messagebox.showinfo("Success", f"{self.user_type} deleted successfully.")
             self.parent.refresh_treeview()
@@ -292,43 +280,46 @@ class PatientEditApp(tk.Toplevel):
             self.parent.deiconify()
 
     def go_back(self):
-        # Return to the parent view
         self.parent.refresh_treeview()
         self.destroy()
         self.parent.deiconify()
 
     def on_close(self):
-        # Handle window close event
         self.db.close()
         self.destroy()
 
+# This class inherits from the PatientEditApp and is very similar
+# except with a couple of custom fields specifically for the MHWP including 'specialization'.
 class MHWPEditApp(PatientEditApp):
+    """
+    Window for allowing the admin to edit, disable or delete the MHWP. 
+    """
     def __init__(self, user_id, parent, db):
-        # Initialize by inheriting attributes and methods from PatientEditApp
         super().__init__(user_id, parent, db)
 
     def create_ui(self):
-        # Set window title
+
         self.title("Edit User Information")
 
-        # Add a header label indicating the type of user being edited
         h1_label = tk.Label(self, text=f"Edit {self.user_type} Information", font=("Arial", 24, "bold"))
         h1_label.pack()
 
-        # Fetch user details and store them for comparison
         user = self.fetch_user_details(self.user_id)
         self.original_data = user
 
-        # Frame to organize user details form
         user_frame = tk.Frame(self)
         user_frame.pack(fill='x', padx=10, pady=5)
 
-        # Create entry fields for user details (disabled by default)
+        # A number of data integrity have been included by the database including: 
+        # only allowing email addresses in the correct format to be entered, limiting the characters which can entered into the name field
+        # and requiring a minimum length of password.
+        # The section below creates entry fields for each of the user's details.
+        
         tk.Label(user_frame, text=f"User ID: {user['user_id']}", width=15).grid(row=0, column=0)
         tk.Label(user_frame, text="Username:").grid(row=1, column=0)
         self.username_entry = tk.Entry(user_frame)
         self.username_entry.insert(0, user['username'] if user['username'] else '')
-        self.username_entry.config(state='disabled')  # Disabled for view-only mode
+        self.username_entry.config(state='disabled')
         self.username_entry.grid(row=1, column=1)
 
         tk.Label(user_frame, text="Email:").grid(row=2, column=0)
@@ -367,7 +358,6 @@ class MHWPEditApp(PatientEditApp):
         self.emergency_name_entry.config(state='disabled')
         self.emergency_name_entry.grid(row=7, column=1)
 
-        # Dropdown for specialization options (disabled by default)
         specialization_options = [
             "Psychology", "Psychiatry", "Counseling", "Substance Abuse Counseling",
             "Clinical Psychology", "Child and Adolescent Psychology", "Geriatric Psychology",
@@ -389,7 +379,6 @@ class MHWPEditApp(PatientEditApp):
         self.is_disabled_check.config(state='disabled')
         self.is_disabled_check.grid(row=10, column=1)
 
-        # Buttons for editing, deleting, and going back
         self.toggle_button = tk.Button(self, text="Edit", command=self.toggle_edit_save)
         self.toggle_button.pack(pady=0)
 
@@ -400,12 +389,10 @@ class MHWPEditApp(PatientEditApp):
         self.back_button.pack(pady=0)
 
     def fetch_user_details(self, user_id):
-        # Fetch user details from the database
         user_relation = self.db.getRelation('User')
         user = user_relation.getRowsWhereEqual('user_id', user_id)
 
         if user:
-            # Return user data as a dictionary
             user_data = user[0]
             return {
                 'user_id': user_data[0],
@@ -424,9 +411,7 @@ class MHWPEditApp(PatientEditApp):
             return {}
 
     def toggle_edit_save(self):
-        # Toggle between editing and saving changes to user details
         if self.username_entry.cget('state') == 'disabled':
-            # Enable fields for editing
             self.username_entry.config(state='normal')
             self.email_entry.config(state='normal')
             self.password_entry.config(state='normal')
@@ -438,7 +423,7 @@ class MHWPEditApp(PatientEditApp):
             self.is_disabled_check.config(state='normal')
             self.toggle_button.config(text="Save Changes")
         else:
-            # Save changes and revert fields to view-only mode
+            # If save has been successful revert fields to view-only
             success = self.save_changes_to_db()
             if success:
                 self.toggle_button.config(text="Edit")
@@ -453,7 +438,7 @@ class MHWPEditApp(PatientEditApp):
                 self.is_disabled_check.config(state='disabled')
 
     def save_changes_to_db(self):
-        # Save changes to the database and handle errors
+
         user_relation = self.db.getRelation('User')
         updated_data = {
             'username': self.username_entry.get(),
@@ -468,7 +453,7 @@ class MHWPEditApp(PatientEditApp):
         }
 
         try:
-            # Update only changed fields
+            # Update only changed fields to the database
             for field, new_value in updated_data.items():
                 if self.original_data[field] != new_value:
                     user_relation.editFieldInRow(self.user_id, field, new_value)
@@ -479,8 +464,9 @@ class MHWPEditApp(PatientEditApp):
             messagebox.showerror("Error", str(e))
             return False
 
+    # when a MHWP is deleted the system will keep appointment records associated with the MHWP
+    # but will label them as DeletedMHWP
     def delete_MHWP(self):
-        # Delete the MHWP from the database
         user_relation = self.db.getRelation('User')
         response = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete this MHWP?")
         if response:
@@ -491,73 +477,65 @@ class MHWPEditApp(PatientEditApp):
             self.parent.deiconify()
 
 class UserSelectionApp(tk.Toplevel):
+    """
+    Window for allowing the admin to select a user to edit.
+    """
     def __init__(self, user_type, parent):
-        # Initialize Toplevel window and attributes
         super().__init__()
-        self.db = Database()  # Create a new database connection
-        self.geometry("400x350")  # Set window size
-        self.resizable(True, False)  # Make window resizable only horizontally
-        self.user_type = user_type  # Type of user to display (e.g., Patient or MHWP)
-        self.parent = parent  # Reference to parent window
-        self.selected_user_id = None  # Track selected user ID
-        self.users = self.db.getRelation('User').getRowsWhereEqual("type", user_type)  # Fetch users of the given type
-        self.create_ui()  # Build the UI
-        self.protocol("WM_DELETE_WINDOW", self.on_close)  # Handle window close event
+        self.db = Database()  
+        self.geometry("400x350")  
+        self.resizable(True, False)  
+        self.user_type = user_type  
+        self.parent = parent  
+        self.selected_user_id = None  
+        self.users = self.db.getRelation('User').getRowsWhereEqual("type", user_type)  
+        self.create_ui()  
+        self.protocol("WM_DELETE_WINDOW", self.on_close)  
 
     def create_ui(self):
-        # Set window title
+
         self.title(f"Select {self.user_type}")
 
-        # Header label
         h1_label = tk.Label(self, text=f"Edit {self.user_type}", font=("Arial", 22, "bold"))
         h1_label.pack()
 
-        # Instruction label
         doc_to_user = tk.Label(self, text=f"Choose the {self.user_type} to edit:", font=("Arial", 12, "bold"))
         doc_to_user.pack()
 
-        # Create a frame for the tree view and scrollbar
         tree_frame = tk.Frame(self)
         tree_frame.pack(pady=10, fill="both", expand=True)
 
-        # Add scrollbar for the tree view
         scrollbar = ttk.Scrollbar(tree_frame)
         scrollbar.pack(side="right", fill="y")
 
-        # Create a treeview widget to display users
         self.tree = ttk.Treeview(tree_frame, yscrollcommand=scrollbar.set, selectmode="browse")
         self.tree.pack(fill="both", expand=True)
 
-        # Link scrollbar to the tree view
         scrollbar.config(command=self.tree.yview)
 
-        # Define columns for the tree view
         self.tree["columns"] = ("ID", "First Name", "Last Name")
-        self.tree.column("#0", width=0, stretch=tk.NO)  # Hide default column
+        self.tree.column("#0", width=0, stretch=tk.NO)
         self.tree.column("ID", anchor=tk.CENTER, width=50)
         self.tree.column("First Name", anchor=tk.CENTER, width=150)
         self.tree.column("Last Name", anchor=tk.CENTER, width=150)
 
-        # Set column headers
         self.tree.heading("#0", text="", anchor=tk.W)
         self.tree.heading("ID", text="ID", anchor=tk.W)
         self.tree.heading("First Name", text="First Name", anchor=tk.W)
         self.tree.heading("Last Name", text="Last Name", anchor=tk.W)
 
-        # Populate the tree view with users
+        # Populate the tree view with users from the database
         for user in self.users:
             self.tree.insert("", "end", values=(user[0], user[4], user[5]))
 
-        # Add a button to select a user
         select_button = tk.Button(self, text=f"Select {self.user_type}", command=self.edit_user)
         select_button.pack(pady=0)
 
-        # Add a back button to return to the parent window
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
+    # Clear the tree view and reload users, this allows the tree view to update when you press back from the edit window
     def refresh_treeview(self):
-        # Clear the tree view and reload users
         for item in self.tree.get_children():
             self.tree.delete(item)
 
@@ -566,155 +544,141 @@ class UserSelectionApp(tk.Toplevel):
             self.tree.insert("", "end", values=(user[0], user[4], user[5]))
 
     def edit_user(self):
-        # Open the appropriate edit window for the selected user
         selected_item = self.tree.selection()
         if selected_item:
-            self.selected_user_id = int(self.tree.item(selected_item, "values")[0])  # Get selected user ID
-            self.withdraw()  # Hide current window
+            self.selected_user_id = int(self.tree.item(selected_item, "values")[0])  
+            self.withdraw()  
+            # direct the admin to the correct edit window depending on the user type i.e Patient or MHWP.
             if self.user_type == "Patient":
-                app = PatientEditApp(self.selected_user_id, self, db=self.db)  # Open Patient editor
+                app = PatientEditApp(self.selected_user_id, self, db=self.db)  
             else:
-                app = MHWPEditApp(self.selected_user_id, self, db=self.db)  # Open MHWP editor
+                app = MHWPEditApp(self.selected_user_id, self, db=self.db)  
         else:
-            # Notify the user if no selection was made
             messagebox.showinfo(f"No {self.user_type} Selected", f"Please select a {self.user_type} to continue.")
 
     def go_back(self):
-        # Close the database connection and return to the parent window
         self.db.close()
         self.destroy()
         self.parent.deiconify()
 
     def on_close(self):
-        # Handle window close event by closing the database and destroying the window
         self.db.close()
         self.destroy()
 
 class AllocationSelection(UserSelectionApp):
+    """
+    Window allowing the admin to select a patient to edit their allocated MHWP.
+    """
     def __init__(self, user_type, parent):
-        # Initialize by inheriting from UserSelectionApp
         super().__init__(user_type, parent)
 
+    # Clear the tree view and reload users, this allows the tree view to update when you press back from the edit allocation window
     def refresh_treeview(self):
-        # Clear existing entries in the tree view
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        # Fetch users of the specified type
         self.users = self.db.getRelation('User').getRowsWhereEqual('type', self.user_type)
 
-        # Populate the tree view with patient and MHWP assignment details
         for user in self.users:
             patient_id = user[0]
-            patient_name = f"{user[4]} {user[5]}"  # Construct patient name
+            patient_name = f"{user[4]} {user[5]}"  
 
             # Retrieve the patient's MHWP assignment
             mhwp_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
             mhwp_allocation_id = mhwp_allocation[0][3] if mhwp_allocation else None
 
+            # Fetch the assigned MHWP's name from the database, else label them as unassigned.
             if mhwp_allocation_id:
-                # Fetch the assigned MHWP's name
                 assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
                 assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
             else:
-                assigned_mhwp_name = "Unassigned"  # Default for unassigned patients
+                assigned_mhwp_name = "Unassigned"  
 
-            # Insert patient details and assigned MHWP into the tree view
             self.tree.insert("", "end", values=(user[0], patient_name, assigned_mhwp_name))
 
     def edit_user(self):
-        # Open the allocation editor for the selected patient
         selected_item = self.tree.selection()
         if selected_item:
             self.selected_user_id = int(self.tree.item(selected_item, "values")[0]) 
             self.withdraw()  
             app = AllocationEdit(self.selected_user_id, self, db=self.db) 
         else:
-            # Notify the user if no patient is selected
             messagebox.showinfo("No Patient Selected", "Please select a patient to continue.")
 
     def create_ui(self):
-        # Set the window title
         self.title(f"Select {self.user_type}")
 
-        # Add a header label for the allocation selection window
         h1_label = tk.Label(self, text="Patient Allocations", font=("Arial", 22, "bold"))
         h1_label.pack()
 
-        # Instruction label for user guidance
         doc_to_user = tk.Label(self, text=f"Choose the Patient to edit:", font=("Arial", 12, "bold"))
         doc_to_user.pack()
 
-        # Create a frame for the tree view and its scrollbar
         tree_frame = tk.Frame(self)
         tree_frame.pack(pady=10, fill="both", expand=True)
 
-        # Add scrollbar for the tree view
         scrollbar = ttk.Scrollbar(tree_frame)
         scrollbar.pack(side="right", fill="y")
 
-        # Create a treeview widget to display patients and their MHWP assignments
         self.tree = ttk.Treeview(tree_frame, yscrollcommand=scrollbar.set, selectmode="browse")
         self.tree.pack(fill="both", expand=True)
 
-        # Link the scrollbar to the tree view
         scrollbar.config(command=self.tree.yview)
 
-        # Define the columns for the tree view
         self.tree["columns"] = ("ID", "Patient Name", "Assigned MHWP")
         self.tree.column("#0", width=0, stretch=tk.NO)  # Hide the default column
         self.tree.column("ID", anchor=tk.CENTER, width=50)
         self.tree.column("Patient Name", anchor=tk.CENTER, width=150)
         self.tree.column("Assigned MHWP", anchor=tk.CENTER, width=200)
 
-        # Set the column headers
         self.tree.heading("#0", text="", anchor=tk.W)
         self.tree.heading("ID", text="ID", anchor=tk.W)
         self.tree.heading("Patient Name", text="Patient Name", anchor=tk.W)
         self.tree.heading("Assigned MHWP", text="Assigned MHWP", anchor=tk.W)
 
-        # Populate the tree view with user data and their MHWP assignments
+        # Populate the tree view with patients name and the name of their assigned MHWP
         for user in self.users:
             patient_id = user[0]
             patient_name = f"{user[4]} {user[5]}"
 
-            # Retrieve the MHWP assignment for the patient
+            # Retrieve the MHWP assignment for the patient from the 'Allocation' table
             mhwp_allocation = self.db.getRelation('Allocation').getRowsWhereEqual("patient_id", patient_id)
             if mhwp_allocation and len(mhwp_allocation) > 0:
                 mhwp_allocation_id = mhwp_allocation[0][3]
             else:
                 mhwp_allocation_id = None
 
+            # Fetch the assigned MHWP's name from the 'User' table
             if mhwp_allocation_id:
-                # Fetch the assigned MHWP's name
                 assigned_mhwp = self.db.getRelation('User').getRowsWhereEqual("user_id", mhwp_allocation_id)
                 assigned_mhwp_name = f"{assigned_mhwp[0][4]} {assigned_mhwp[0][5]}"
             else:
                 assigned_mhwp_name = "Unassigned"  
 
-            # Insert patient and MHWP assignment details into the tree view
+            # Insert details into the tree view
             self.tree.insert("", "end", values=(user[0], patient_name, assigned_mhwp_name))
 
-        # Add a button to select a patient
         select_button = tk.Button(self, text=f"Select {self.user_type}", command=self.edit_user)
         select_button.pack()
 
-        # Add a back button to return to the parent window
         self.back_button = tk.Button(self, text="Back", command=self.go_back)
         self.back_button.pack(pady=0)
 
 class KeyStatistics(tk.Toplevel):
+    """
+    Window showing an overview of useful key statistics and graphs for the admin user.
+    """
     def __init__(self, parent):
-        # Initialize the Toplevel window for displaying key statistics
         super().__init__()
-        self.db = Database()  # Create a database connection
-        self.parent = parent  # Reference to the parent window
-        self.mhwps = self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP')  # Fetch MHWPs from the database
-        self.total_appointments = {}  # Initialize appointment data storage
-        self.calculations()  # Perform necessary calculations
-        self.create_ui()  # Build the UI for the window
+        self.db = Database()  
+        self.parent = parent  
+        self.mhwps = self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP')  
+        self.total_appointments = {}  
+        self.calculations()  
+        self.create_ui()  
 
     def calculations(self):
+        
         # Calculate total appointments per MHWP
         self.total_appointments = {}
         for row in self.mhwps:
@@ -726,7 +690,7 @@ class KeyStatistics(tk.Toplevel):
 
             self.total_appointments.update({mhwp_name: mhwp_appointments})
 
-        # Calculate allocation counts per MHWP
+        # Calculate number of allocations per MHWP
         mhwp_counts = {}
         allocations = self.db.getRelation('Allocation').getAllRows()
         for alloc in allocations:
@@ -737,56 +701,18 @@ class KeyStatistics(tk.Toplevel):
                     mhwp_name = f"{mhwp_user[0][4]} {mhwp_user[0][5]}"
                     mhwp_counts[mhwp_name] = mhwp_counts.get(mhwp_name, 0) + 1
 
-        self.allocation_counts = mhwp_counts  # Store MHWP allocation counts
+        self.allocation_counts = mhwp_counts  
 
     def create_ui(self):
-        # Create UI components to display key statistics
-        self.title("Bar Chart with Tkinter Canvas")
+        self.title("Admin Key Statistics")
 
-        # Create a Canvas widget for visualization
         canvas = tk.Canvas(self, width=1050, height=550)
         canvas.pack()
 
-        # Add a title to the graph
-        canvas.create_text(300, 22, text="Total Appointments per MHWP", font=("Arial", 16, "bold"))
-
-        # Prepare data for bar chart
-        categories = list(self.total_appointments)
-        values = [len(self.total_appointments[cat]) for cat in categories]
-        max_value = max(values) if values else 1  # Avoid division by zero
-
-        # Set bar chart dimensions and layout
-        canvas_width = 520
-        bar_spacing = 20
-        bar_width = max(10, (canvas_width - bar_spacing * (len(categories) - 1)) / len(categories))  # Minimum bar width
-        x_position = 60  # Initial X position for bars
-
-        # Draw axes for the bar chart
-        canvas.create_line(50, 350, 570, 350, width=1)  # X-axis
-        canvas.create_line(50, 50, 50, 350, width=1)  # Y-axis
-
-        # Add Y-axis labels
-        for i in range(0, max_value + 1, max(1, max_value // 5)):
-            y_position = 350 - (i / max_value) * 300
-            canvas.create_text(40, y_position, text=str(i), anchor="e")
-
-        # Draw bars on the chart
-        for i, value in enumerate(values):
-            bar_height = (value / max_value) * 300  # Scale bar height
-            canvas.create_rectangle(
-                x_position, 350 - bar_height, x_position + bar_width, 350, fill="skyblue"
-            )
-            canvas.create_text(x_position + bar_width / 2, 360, text=categories[i], anchor="center")
-            x_position += bar_width + bar_spacing  # Increment position for next bar
-
-        # Add axis labels
-        canvas.create_text(20, 190, text="Number of Appointments", angle=90, font=("Arial", 14))
-        canvas.create_text(300, 380, text="MHWP", font=("Arial", 14))
-
-        # Calculate and display key statistics
+        # Displaying key statistics retrieved from the database
         patients = len(self.db.getRelation('User').getRowsWhereEqual('type', 'Patient'))
         mhwps = len(self.db.getRelation('User').getRowsWhereEqual('type', 'MHWP'))
-        patients_per_mhwp = round(patients / mhwps, 1) if mhwps > 0 else 0  # Avoid division by zero
+        patients_per_mhwp = round(patients / mhwps, 1) if mhwps > 0 else 0  
         stats = [
             f"No. Patients: {patients}",
             f"No. MHWP: {mhwps}",
@@ -795,9 +721,9 @@ class KeyStatistics(tk.Toplevel):
             f"Unallocated Patients: {len(self.db.getRelation('Allocation').getRowsWhereEqual('mhwp_id', ''))}",
             f"No. Journal Entries: {len(self.db.getRelation('JournalEntry'))}",
             f"No. Patient Records: {len(self.db.getRelation('PatientRecord'))}",
-            f"Active Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'active'))}",
+            f"Pending Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Pending'))}",
             f"Confirmed Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Confirmed'))}",
-            f"Declined Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Declined'))}"
+            f"Cancelled Appointments: {len(self.db.getRelation('Appointment').getRowsWhereEqual('status', 'Cancelled'))}"
         ]
 
         key_stats_gap = 22
@@ -806,23 +732,67 @@ class KeyStatistics(tk.Toplevel):
         for i, stat in enumerate(stats[5:]):
             canvas.create_text(652, 427 + key_stats_gap * i, text=stat, font=("Arial", 14))
 
-        # Draw a pie chart for allocation distribution
-        self.draw_pie_chart(canvas, x_center=780, y_center=205, radius=100)
+        # If there is patient and MHWP users in the database, display graphs
+        if patients == 0 or mhwps == 0:
+            canvas.create_text(540, 200, text="No patient or MHWP data to display, please add some patients and MHWPs to the database to see graphs.", font=("Arial", 14))
+        
+        else:
+            self.draw_bar_chart(canvas)
+            self.draw_pie_chart(canvas, x_center=780, y_center=205, radius=100)
 
-        # Add a back button to return to the parent window
         back_button = tk.Button(self, text="Back", command=self.go_back)
         back_button.pack(pady=5)
 
+    # Create a bar chart for total appointments per MHWP
+    def draw_bar_chart(self, canvas):
+        
+        canvas.create_text(300, 22, text="Total Appointments per MHWP", font=("Arial", 16, "bold"))
+
+        categories = list(self.total_appointments)
+        values = [len(self.total_appointments[cat]) for cat in categories]
+        max_value = max(values) if values else 1 
+
+        # Set the dimensions and layout of the bar chart
+        canvas_width = 520
+        bar_spacing = 20
+        bar_width = max(10, (canvas_width - bar_spacing * (len(categories) - 1)) / len(categories))  
+        x_position = 60  # Set the initial X position for the bar chart
+
+        # Bar chart axis
+        canvas.create_line(50, 350, 570, 350, width=1)  
+        canvas.create_line(50, 50, 50, 350, width=1) 
+
+        # Y-axis labels
+        for i in range(0, max_value + 1, max(1, max_value // 5)):
+            y_position = 350 - (i / max_value) * 300
+            canvas.create_text(40, y_position, text=str(i), anchor="e")
+
+        # Drawing the bars
+        for i, value in enumerate(values):
+            bar_height = (value / max_value) * 300  
+            canvas.create_rectangle(
+                x_position, 350 - bar_height, x_position + bar_width, 350, fill="skyblue"
+            )
+            canvas.create_text(x_position + bar_width / 2, 360, text=categories[i], anchor="center")
+            x_position += bar_width + bar_spacing  
+        
+        canvas.create_text(20, 190, text="Number of Appointments", angle=90, font=("Arial", 14))
+        canvas.create_text(300, 380, text="MHWP", font=("Arial", 14))
+
+    # Create a pie chart for patient allocations per MHWP
     def draw_pie_chart(self, canvas, x_center, y_center, radius):
-        # Create a pie chart for MHWP allocations
         canvas.create_text(x_center + 55, y_center - radius - 85, text="Patients per MHWP", font=("Arial", 16, "bold"))
 
         colors = ["lightgreen", "lavender", "mistyrose", "palegreen", "lightpink", "lightblue", "peachpuff"]
-        total = sum(self.allocation_counts.values()) if self.allocation_counts else 1  # Avoid division by zero
+        total = sum(self.allocation_counts.values()) if self.allocation_counts else 1  
 
+        # Drawing the arcs of the pie chart
         start_angle = 0
         for i, (mhwp_name, count) in enumerate(self.allocation_counts.items()):
-            extent_angle = (count / total) * 360
+            if len(self.allocation_counts) == 1:
+                extent_angle = 359.99
+            else:
+                extent_angle = (count / total) * 360
             fill_color = colors[i % len(colors)]
             canvas.create_arc(
                 x_center - radius, y_center - radius, x_center + radius, y_center + radius,
@@ -830,40 +800,37 @@ class KeyStatistics(tk.Toplevel):
             )
             start_angle += extent_angle
 
-        # Add a legend for the pie chart
+        # Pie chart legend
         legend_x, legend_y = x_center + radius + 50, y_center - radius
         for i, (mhwp_name, count) in enumerate(self.allocation_counts.items()):
             canvas.create_rectangle(legend_x, legend_y + i * 20, legend_x + 20, legend_y + i * 20 + 15, fill=colors[i % len(colors)])
             canvas.create_text(legend_x + 30, legend_y + i * 20 + 7, text=f"{mhwp_name} ({count})", anchor="w", font=("Arial", 10))
 
-        # If no data is available, display a message
         if not self.allocation_counts:
             canvas.create_text(x_center, y_center, text="No Allocations Found", font=("Arial", 12))
 
     def go_back(self):
-        # Close the current window and return to the parent
         self.destroy()
         self.parent.deiconify()
 
 class AdminMainPage(tk.Tk):
+    """
+    Main page for the admin allowing them to navigate to their key functionalities.
+    """
     def __init__(self):
-        # Initialize the Admin Dashboard window
         super().__init__()
-        self.db = Database()  # Establish a database connection
-        self.title("Admin Dashboard")  # Set the window title
-        self.geometry("310x300")  # Set the window size
-        self.create_ui()  # Create the user interface
+        self.db = Database()  
+        self.title("Admin Dashboard") 
+        self.geometry("310x300") 
+        self.create_ui()  
 
     def create_ui(self):
-        # Add a header label for the dashboard
         h1_label = tk.Label(text="Admin Dashboard", font=("Arial", 24, "bold"))
         h1_label.pack(pady=10)
 
-        # Add a section label for quick actions
         quick_actions_label = tk.Label(text="Actions", font=("Arial", 14, "bold"))
         quick_actions_label.pack(pady=10)
 
-        # Add buttons for various admin actions
         tk.Button(text="Patients Allocations", command=self.patient_allocations, width=20).pack(pady=5)
         tk.Button(text="Edit Patients", command=self.edit_patient_info, width=20).pack(pady=5)
         tk.Button(text="Edit MHWPs", command=self.edit_MHWP_info, width=20).pack(pady=5)
@@ -871,28 +838,23 @@ class AdminMainPage(tk.Tk):
         tk.Button(text="Log Out", command=self.log_out, width=20).pack(pady=5)
 
     def patient_allocations(self):
-        # Open the Patient Allocations management window
         self.withdraw() 
         app = AllocationSelection("Patient", self) 
 
     def edit_patient_info(self):
-        # Open the Patient Info editing window
         self.withdraw()  
         app = UserSelectionApp("Patient", self) 
 
     def edit_MHWP_info(self):
-        # Open the MHWP Info editing window
         self.withdraw() 
         app = UserSelectionApp("MHWP", self)  
 
     def key_stats(self):
-        # Open the Key Statistics window
         self.withdraw() 
         app = KeyStatistics(self) 
 
     def log_out(self):
-        # Log out and return to the main application
-        from main import App  # Import the main application
+        from main import App 
         self.destroy()  
         app = App()  
 
