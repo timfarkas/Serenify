@@ -3,11 +3,11 @@ Serenify is an all-in-one enterprise mental-health and well-being clinic communi
 It supports extensive patient interactions, admin management, and MHWP (mental health & well-being practitioner) interactions.
 This software was developed for a MSc Computer Science course at UCL.
 
-## Login Account
-To experience Serenify, we recommend to use following accounts:
-1. Username: "patient1", Passowrd:""    #this patient has been allocated to mhwp1
-2. Username: "mhwp1", Passowrd:""    #this mhwp has patient1 as one of his/her patients
-3. Username: "admin1", Passowrd:""
+## Dummy Accounts
+To test Serenify, we recommend using the following dummy accounts:
+1. Username: "patient1", Password:""    #this patient has been allocated to mhwp1
+2. Username: "mhwp1", Password:""    #this mhwp has patient1 as one of his/her patients
+3. Username: "admin1", Password:""
 
 ### App Features
 1. Login as Patient, MHWP, or Admin:
@@ -35,9 +35,10 @@ To experience Serenify, we recommend to use following accounts:
   - MHWPs can record and access notes and diagnoses about their patients
   - Both patients and MHWPs can view mood records of paitents in their Dashboard, while patients will be able to see more information such as number and categoris of exercises taken. 
 7. Message Box:
-  - Patients and MHWPs can receive notification if received new message in ChatRoom
-  - Patients and MHWPs can receive notification on request, confirmation and cancelation of appointments (if change is made by the other party)
-  - MHWPs can receive low mood alert if one of their patients demostrated low mood scores in three consecutive days. MHWPs can also receive notification when received new rating.
+  - Patients and MHWPs receive notifications upon receiving new messages in the ChatRoom
+  - Patients and MHWPs receive notifications upon request, confirmation, or cancellation of appointments
+  - MHWPs receive low mood alert notifications if one of their patients logs low mood scores for three consecutive days
+  - MHWPs receive notifications upon receiving new patient ratings
 
 #### Tech Stack
 1. The whole application was built using core Python and core Python libraries.
